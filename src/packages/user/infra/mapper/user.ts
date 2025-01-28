@@ -4,6 +4,10 @@ interface UserDto {
     id: string;
     username: string;
     role: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deleted: boolean;
+    deletedAt: Date | null;
 }
 
 export class UserMapper {
@@ -11,7 +15,11 @@ export class UserMapper {
         return {
             id: user.id as string,
             username: user.username,
-            role: user.role
+            role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            deleted: user.deleted,
+            deletedAt: user.deletedAt
         }
     }
 }

@@ -8,6 +8,10 @@ export class UserRepository {
             username: document.username,
             password: document.password,
             role: document.role,
+            createdAt: document.createdAt,
+            updatedAt: document.updatedAt,
+            deleted: document.deleted,
+            deletedAt: document.deletedAt
         });
     }
 
@@ -16,6 +20,10 @@ export class UserRepository {
             username: user.username,
             password: user.password,
             role: user.role,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            deleted: user.deleted,
+            deletedAt: user.deletedAt
         };
     }
 
