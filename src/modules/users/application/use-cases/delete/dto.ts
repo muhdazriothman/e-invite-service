@@ -1,6 +1,6 @@
 import { IsString, validateSync } from 'class-validator';
-import { resolveValidationErrors } from '../../../../common/infra/error-resolver';
-
+import { resolveValidationErrors } from '../../../../common/infra/validation-error-resolver';
+import { ValidationError } from '../../../../common/application/exceptions';
 export interface DeleteUserProps {
     id: string;
 }
@@ -19,7 +19,7 @@ export class DeleteUserDTO {
 
         if (errors.length > 0) {
             const errorMessages = resolveValidationErrors(errors);
-            throw new Error(`Validation failed: ${errorMessages}`);
+            throw new ValidationError(`Validation failed: ${errorMessages}`);
         }
 
         return dto;

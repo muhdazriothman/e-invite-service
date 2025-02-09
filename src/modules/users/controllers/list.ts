@@ -32,6 +32,9 @@ export class ListUserController {
 
         const mappedUser = UserMapper.toDTOs(users);
 
-        return reply.send(mappedUser);
+        return reply.send({
+            success: true,
+            users: mappedUser,
+        });
     };
 }

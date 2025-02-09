@@ -2,6 +2,8 @@ import { User } from '../../../domain/entities/user';
 import { GetUserDTO } from './dto';
 import { UserRepository } from '../../../infra/repository/user/repository';
 
+import { BusinessLogicError } from '../../../../common/application/exceptions';
+
 interface Dependencies {
     userRepository: UserRepository;
 }
@@ -37,7 +39,7 @@ export class GetUserUseCase {
         });
 
         if (user === null) {
-            throw new Error('User not found');
+            throw new BusinessLogicError('User not found');
         }
 
         return user;

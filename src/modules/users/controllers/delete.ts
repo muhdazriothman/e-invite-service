@@ -37,6 +37,7 @@ export class DeleteUserController {
         await this.deleteUserUseCase.execute(dto);
 
         return reply.send({
+            success: true,
             message: 'User deleted successfully',
         });
     };

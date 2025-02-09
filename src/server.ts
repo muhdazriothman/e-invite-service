@@ -3,6 +3,7 @@ import { config } from './config';
 import { connectDB } from './database/mongodb';
 import { userRoutes } from './modules/users/routes';
 import { Service } from './service';
+import { ErrorResolver } from './modules/common/infra/error-resolver';
 
 const fastify = Fastify({ logger: true });
 
@@ -15,6 +16,11 @@ fastify.decorate('service', service);
 
 // Register Routes
 fastify.register(userRoutes);
+
+// Global error handler
+fastify.setErrorHandler((error, request, reply) => {
+    ErrorResolver.resolve(error, reply);
+});
 
 // Start the server
 const start = async (): Promise<void> => {

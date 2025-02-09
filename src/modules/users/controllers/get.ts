@@ -43,6 +43,9 @@ export class GetUserController {
 
         const mappedUser = UserMapper.toDTO(user);
 
-        return reply.send(mappedUser);
+        return reply.send({
+            success: true,
+            user: mappedUser,
+        });
     };
 }

@@ -2,20 +2,25 @@ import { IsString, validateSync } from 'class-validator';
 import { resolveValidationErrors } from '../../../../common/infra/validation-error-resolver';
 import { ValidationError } from '../../../../common/application/exceptions';
 
-export interface GetUserProps {
-    id: string;
+export interface LoginUserProps {
+    email: string;
+    password: string;
 }
 
-export class GetUserDTO {
+export class LoginUserDTO {
     @IsString()
-        id: string;
+        email: string;
 
-    constructor (props: GetUserProps) {
-        this.id = props.id;
+    @IsString()
+        password: string;
+
+    constructor(props: LoginUserProps) {
+        this.email = props.email;
+        this.password = props.password;
     }
 
-    static create (props: GetUserProps): GetUserDTO {
-        const dto = new GetUserDTO(props);
+    static create(props: LoginUserProps): LoginUserDTO {
+        const dto = new LoginUserDTO(props);
         const errors = validateSync(dto);
 
         if (errors.length > 0) {

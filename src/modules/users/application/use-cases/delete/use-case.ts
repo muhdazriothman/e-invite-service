@@ -1,6 +1,8 @@
 import { DeleteUserDTO } from './dto';
 import { UserRepository } from '../../../infra/repository/user/repository';
 
+import { BusinessLogicError, NotFoundError } from '../../../../common/application/exceptions';
+
 interface Dependencies {
     userRepository: UserRepository;
 }
@@ -44,11 +46,11 @@ export class DeleteUserUseCase {
         });
 
         if (user === null) {
-            throw new Error('User not found');
+            throw new NotFoundError('User not found');
         }
 
         if (user.deleted) {
-            throw new Error('User already deleted');
+            throw new BusinessLogicError('User already deleted');
         }
 
         await this.userRepository.delete(id);

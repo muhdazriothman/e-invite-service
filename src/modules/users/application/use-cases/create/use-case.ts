@@ -4,6 +4,8 @@ import { User } from '../../../domain/entities/user';
 import { CreateUserDTO } from './dto';
 import { UserRepository } from '../../../infra/repository/user/repository';
 
+import { BusinessLogicError } from '../../../../common/application/exceptions';
+
 interface Dependencies {
     userRepository: UserRepository;
 }
@@ -64,7 +66,7 @@ export class CreateUserUseCase {
         });
 
         if (sameEmailUser !== null) {
-            throw new Error('User already exists');
+            throw new BusinessLogicError('User already exists');
         }
 
         const hashedPassword = await bcrypt.hash(dto.password, this.saltRounds);
