@@ -1,0 +1,37 @@
+import { FastifyInstance } from 'fastify';
+
+import { Service } from '../../service';
+
+import { CreateUserController } from './controllers/create';
+import { ListUserController } from './controllers/list';
+import { GetUserController } from './controllers/get';
+import { DeleteUserController } from './controllers/delete';
+
+declare module 'fastify' {
+    interface FastifyInstance {
+        service: Service
+    }
+}
+
+export async function userRoutes(fastify: FastifyInstance): Promise<void> {
+    const createController = CreateUserController.create({
+        userRepository: fastify.service.userRepository,
+    });
+
+    const listController = ListUserController.create({
+        userRepository: fastify.service.userRepository,
+    });
+
+    const getController = GetUserController.create({
+        userRepository: fastify.service.userRepository,
+    });
+
+    const deleteController = DeleteUserController.create({
+        userRepository: fastify.service.userRepository,
+    });
+
+    fastify.get('/:id', getController.getUser);
+    fastify.get('/', listController.listUser);
+    fastify.post('/', createController.createUser);
+    fastify.delete('/:id', deleteController.deleteUser);
+}
