@@ -1,6 +1,7 @@
 import { IsEmail, IsString, MinLength, validateSync } from 'class-validator';
 import { resolveValidationErrors } from '../../../../common/infra/validation-error-resolver';
 import { ValidationError } from '../../../../common/application/exceptions';
+
 export interface CreateUserProps {
     name: string;
     email: string;
