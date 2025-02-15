@@ -15,7 +15,7 @@ export class UserRepository {
             createdAt: document.createdAt,
             updatedAt: document.updatedAt,
             deleted: document.deleted,
-            deletedAt: document.deletedAt,
+            deletedAt: document.deletedAt
         });
     }
 
@@ -29,7 +29,7 @@ export class UserRepository {
 
     async findAll(options: Options): Promise<User[]> {
         const {
-            returnDeleted = false,
+            returnDeleted = false
         } = options;
 
         const query: { deleted?: boolean } = {};
@@ -51,11 +51,11 @@ export class UserRepository {
 
     async findById(id: string, options: Options): Promise<User | null> {
         const {
-            returnDeleted = false,
+            returnDeleted = false
         } = options;
 
         const query: { _id: string; deleted?: boolean } = {
-            _id: id,
+            _id: id
         };
 
         if (!returnDeleted) {
@@ -73,11 +73,11 @@ export class UserRepository {
 
     async findByEmail(email: string, options: Options): Promise<User | null> {
         const {
-            returnDeleted = false,
+            returnDeleted = false
         } = options;
 
         const query: { email: string; deleted?: boolean } = {
-            email,
+            email
         };
 
         if (!returnDeleted) {
@@ -96,7 +96,7 @@ export class UserRepository {
     async delete(id: string): Promise<void> {
         await UserModel.findByIdAndUpdate(id, {
             deleted: true,
-            deletedAt: new Date(),
+            deletedAt: new Date()
         }).exec();
     }
 }

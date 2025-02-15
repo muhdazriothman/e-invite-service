@@ -19,8 +19,8 @@ const UserSchema: Schema = new Schema(
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
         deleted: { type: Boolean, default: false },
-        deletedAt: { type: Date, default: null },
-    },
+        deletedAt: { type: Date, default: null }
+    }
 );
 
 export const UserModel = mongoose.model<IUser>('User', UserSchema);

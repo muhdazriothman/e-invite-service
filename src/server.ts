@@ -1,7 +1,9 @@
 import Fastify from 'fastify';
+import 'reflect-metadata';
 import { config } from './config';
 import { connectDB } from './database/mongodb';
 import { userRoutes } from './modules/users/routes';
+import { invitationRoutes } from './modules/invitation/routes';
 import { Service } from './service';
 import { ErrorResolver } from './modules/common/infra/error-resolver';
 
@@ -16,6 +18,7 @@ fastify.decorate('service', service);
 
 // Register Routes
 fastify.register(userRoutes);
+fastify.register(invitationRoutes);
 
 // Global error handler
 fastify.setErrorHandler((error, request, reply) => {

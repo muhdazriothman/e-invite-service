@@ -1,14 +1,20 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { validate } from 'class-validator';
 
 import { config } from '../../../../../config';
 
+import { LoginUserDto } from './dto';
+
 import { User } from '../../../domain/entities/user';
-import { LoginUserDTO } from './dto';
 import { UserRepository } from '../../../infra/repository/user/repository';
 
-import { BusinessLogicError } from '../../../../common/application/exceptions';
+import {
+    ValidationError,
+    BusinessLogicError
+} from '../../../../common/application/exceptions';
 
+import { ValidationErrorResolver } from '../../../../common/infra/validation-error-resolver';
 interface Dependencies {
     userRepository: UserRepository;
 }
@@ -26,44 +32,50 @@ export class LoginUserUseCase {
 
     static create(dependencies: Dependencies): LoginUserUseCase {
         const {
-            userRepository,
+            userRepository
         } = dependencies;
 
         return new LoginUserUseCase({
-            userRepository,
+            userRepository
         });
     }
 
-    async execute(dto: LoginUserDTO): Promise<string> {
+    async execute(dto: LoginUserDto): Promise<string> {
+        await LoginUserUseCase.validateDto(dto);
+
         const {
             email,
-            password,
+            password
         } = dto;
 
         const user = await this.userRepository.findByEmail(email, {
-            returnDeleted: false,
+            returnDeleted: false
         });
-        
+
         if (!user) {
-            throw new BusinessLogicError('Invalid credentials');
+            throw new BusinessLogicError({
+                message: 'Invalid credentials'
+            });
         }
 
         const isPasswordValid = LoginUserUseCase.isPasswordValid({
             password,
-            hashedPassword: user.password,
+            hashedPassword: user.password
         });
 
         if (!isPasswordValid) {
-            throw new BusinessLogicError('Invalid credentials');
+            throw new BusinessLogicError({
+                message: 'Invalid credentials'
+            });
         }
 
         return LoginUserUseCase.generateToken(user);
     }
 
     static isPasswordValid(params: { password: string, hashedPassword: string }): boolean {
-        const { 
-            password, 
-            hashedPassword,
+        const {
+            password,
+            hashedPassword
         } = params;
 
         return bcrypt.compareSync(password, hashedPassword);
@@ -74,9 +86,26 @@ export class LoginUserUseCase {
 
         return jwt.sign({
             id: user.id,
-            email: user.email,
+            email: user.email
         }, jwtSecret as string, {
-            expiresIn: '1h',
+            expiresIn: '1h'
         });
+    }
+
+    static async validateDto(dto: LoginUserDto): Promise<void> {
+        if (!(dto instanceof LoginUserDto)) {
+            throw new Error('dto is not an instance of LoginUserDto');
+        }
+
+        const errors = await validate(dto);
+
+        if (errors.length > 0) {
+            const errorMessages = ValidationErrorResolver.resolveValidationErrors(errors);
+
+            throw new ValidationError({
+                message: 'Invalid parameters',
+                errors: errorMessages
+            });
+        }
     }
 }

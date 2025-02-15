@@ -19,7 +19,7 @@ export class UserMapper {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
             deleted: user.deleted,
-            deletedAt: user.deletedAt,
+            deletedAt: user.deletedAt
         };
     }
 

@@ -1,40 +1,17 @@
-import { IsEmail, IsString, MinLength, validateSync } from 'class-validator';
-import { resolveValidationErrors } from '../../../../common/infra/validation-error-resolver';
-import { ValidationError } from '../../../../common/application/exceptions';
+import {
+    IsEmail,
+    IsString,
+    MinLength
+} from 'class-validator';
 
-export interface CreateUserProps {
-    name: string;
-    email: string;
-    password: string;
-}
-
-export class CreateUserDTO {
+export class CreateUserDto {
     @IsString()
     @MinLength(3)
-        name: string;
+        name!: string;
 
     @IsEmail()
-        email: string;
+        email!: string;
 
     @IsString()
-        password: string;
-
-    constructor (props: CreateUserProps) {
-        this.name = props.name;
-        this.email = props.email;
-        this.password = props.password;
-    }
-
-    static create (props: CreateUserProps): CreateUserDTO {
-        const dto = new CreateUserDTO(props);
-        const errors = validateSync(dto);
-
-        if (errors.length > 0) {
-            const errorMessages = resolveValidationErrors(errors);
-
-            throw new ValidationError(`Validation failed: ${errorMessages}`);
-        }
-
-        return dto;
-    }
+        password!: string;
 }

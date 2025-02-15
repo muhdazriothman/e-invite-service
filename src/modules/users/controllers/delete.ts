@@ -1,8 +1,14 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Service } from '../../../service';
 
-import { DeleteUserDTO } from '../application/use-cases/delete/dto';
+import { plainToInstance } from 'class-transformer';
+
+import { DeleteUserDto } from '../application/use-cases/delete/dto';
 import { DeleteUserUseCase } from '../application/use-cases/delete/use-case';
+
+import { UserRepository } from '../infra/repository/user/repository';
+interface Service {
+    userRepository: UserRepository;
+}
 
 export class DeleteUserController {
     private deleteUserUseCase: DeleteUserUseCase;
@@ -17,28 +23,27 @@ export class DeleteUserController {
 
     static create(service: Service): DeleteUserController {
         const {
-            userRepository,
+            userRepository
         } = service;
 
         return new DeleteUserController(
             DeleteUserUseCase.create({
-                userRepository,
-            }),
+                userRepository
+            })
         );
     }
 
     deleteUser = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
         const { id } = request.params as { id: string };
 
-        const dto = DeleteUserDTO.create({
-            id,
+        const dto = plainToInstance(DeleteUserDto, {
+            id
         });
 
         await this.deleteUserUseCase.execute(dto);
 
         return reply.send({
-            success: true,
-            message: 'User deleted successfully',
+            success: true
         });
     };
 }

@@ -1,9 +1,15 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Service } from '../../../service';
 
-import { GetUserDTO } from '../application/use-cases/get/dto';
+import { plainToInstance } from 'class-transformer';
+
+import { GetUserDto } from '../application/use-cases/get/dto';
 import { GetUserUseCase } from '../application/use-cases/get/use-case';
 import { UserMapper } from '../infra/mappers/user';
+
+import { UserRepository } from '../infra/repository/user/repository';
+interface Service {
+    userRepository: UserRepository;
+}
 
 export class GetUserController {
     private getUserUseCase: GetUserUseCase;
@@ -18,21 +24,21 @@ export class GetUserController {
 
     static create(service: Service): GetUserController {
         const {
-            userRepository,
+            userRepository
         } = service;
 
         return new GetUserController(
             GetUserUseCase.create({
-                userRepository,
-            }),
+                userRepository
+            })
         );
     }
 
     getUser = async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
         const { id } = request.params as { id: string };
 
-        const dto = GetUserDTO.create({
-            id,
+        const dto = plainToInstance(GetUserDto, {
+            id
         });
 
         const user = await this.getUserUseCase.execute(dto);
@@ -45,7 +51,9 @@ export class GetUserController {
 
         return reply.send({
             success: true,
-            user: mappedUser,
+            data : {
+                user: mappedUser
+            }
         });
     };
 }

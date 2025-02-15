@@ -1,7 +1,16 @@
-import { DeleteUserDTO } from './dto';
+import { validate } from 'class-validator';
+
+import { DeleteUserDto } from './dto';
+
 import { UserRepository } from '../../../infra/repository/user/repository';
 
-import { BusinessLogicError, NotFoundError } from '../../../../common/application/exceptions';
+import {
+    ValidationError,
+    BusinessLogicError,
+    NotFoundError
+} from '../../../../common/application/exceptions';
+
+import { ValidationErrorResolver } from '../../../../common/infra/validation-error-resolver';
 
 interface Dependencies {
     userRepository: UserRepository;
@@ -12,7 +21,7 @@ export class DeleteUserUseCase {
 
     constructor(dependencies: Dependencies) {
         const {
-            userRepository,
+            userRepository
         } = dependencies;
 
         if (!(userRepository instanceof UserRepository)) {
@@ -24,35 +33,54 @@ export class DeleteUserUseCase {
 
     static create(dependencies: Dependencies): DeleteUserUseCase {
         const {
-            userRepository,
+            userRepository
         } = dependencies;
 
         return new DeleteUserUseCase({
-            userRepository,
+            userRepository
         });
     }
 
-    async execute(dto: DeleteUserDTO): Promise<void> {
-        if (!(dto instanceof DeleteUserDTO)) {
-            throw new Error('dto is not an instance of DeleteUserDTO');
-        };
+    async execute(dto: DeleteUserDto): Promise<void> {
+        await DeleteUserUseCase.validateDto(dto);
 
         const {
-            id,
+            id
         } = dto;
 
         const user = await this.userRepository.findById(id, {
-            returnDeleted: false,
+            returnDeleted: false
         });
 
         if (user === null) {
-            throw new NotFoundError('User not found');
+            throw new NotFoundError({
+                message: 'User not found'
+            });
         }
 
         if (user.deleted) {
-            throw new BusinessLogicError('User already deleted');
+            throw new BusinessLogicError({
+                message: 'User already deleted'
+            });
         }
 
         await this.userRepository.delete(id);
+    }
+
+    static async validateDto(dto: DeleteUserDto): Promise<void> {
+        if (!(dto instanceof DeleteUserDto)) {
+            throw new Error('dto is not an instance of DeleteUserDto');
+        }
+
+        const errors = await validate(dto);
+
+        if (errors.length > 0) {
+            const errorMessages = ValidationErrorResolver.resolveValidationErrors(errors);
+
+            throw new ValidationError({
+                message: 'Invalid parameters',
+                errors: errorMessages
+            });
+        }
     }
 }

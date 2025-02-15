@@ -1,8 +1,12 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { Service } from '../../../service';
 
 import { ListUserUseCase } from '../application/use-cases/list/use-case';
 import { UserMapper } from '../infra/mappers/user';
+
+import { UserRepository } from '../infra/repository/user/repository';
+interface Service {
+    userRepository: UserRepository;
+}
 
 export class ListUserController {
     private listUserUseCase: ListUserUseCase;
@@ -17,13 +21,13 @@ export class ListUserController {
 
     static create(service: Service): ListUserController {
         const {
-            userRepository,
+            userRepository
         } = service;
 
         return new ListUserController(
             ListUserUseCase.create({
-                userRepository,
-            }),
+                userRepository
+            })
         );
     }
 
@@ -34,7 +38,9 @@ export class ListUserController {
 
         return reply.send({
             success: true,
-            users: mappedUser,
+            data : {
+                users: mappedUser
+            }
         });
     };
 }

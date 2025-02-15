@@ -26,10 +26,10 @@ export class ValidationErrorResolver {
     }
 
     static processError(params: ProcessErrorParams): void {
-        const { 
-            error, 
-            formattedErrors, 
-            parentPath = '' 
+        const {
+            error,
+            formattedErrors,
+            parentPath = ''
         } = params;
 
         const propertyPath = parentPath ? `${parentPath}.${error.property}` : error.property;

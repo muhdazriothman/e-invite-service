@@ -1,8 +1,16 @@
+import { validate } from 'class-validator';
+
+import { GetUserDto } from './dto';
+
 import { User } from '../../../domain/entities/user';
-import { GetUserDTO } from './dto';
 import { UserRepository } from '../../../infra/repository/user/repository';
 
-import { BusinessLogicError } from '../../../../common/application/exceptions';
+import {
+    ValidationError,
+    BusinessLogicError
+} from '../../../../common/application/exceptions';
+
+import { ValidationErrorResolver } from '../../../../common/infra/validation-error-resolver';
 
 interface Dependencies {
     userRepository: UserRepository;
@@ -21,27 +29,48 @@ export class GetUserUseCase {
 
     static create(dependencies: Dependencies): GetUserUseCase {
         const {
-            userRepository,
+            userRepository
         } = dependencies;
 
         return new GetUserUseCase({
-            userRepository,
+            userRepository
         });
     }
 
-    async execute(dto: GetUserDTO): Promise<User> {
+    async execute(dto: GetUserDto): Promise<User> {
+        await GetUserUseCase.validateDto(dto);
+
         const {
-            id,
+            id
         } = dto;
 
         const user = await this.userRepository.findById(id, {
-            returnDeleted: false,
+            returnDeleted: false
         });
 
         if (user === null) {
-            throw new BusinessLogicError('User not found');
+            throw new BusinessLogicError({
+                message: 'User not found'
+            });
         }
 
         return user;
+    }
+
+    static async validateDto(dto: GetUserDto): Promise<void> {
+        if (!(dto instanceof GetUserDto)) {
+            throw new Error('dto is not an instance of GetUserDto');
+        }
+
+        const errors = await validate(dto);
+
+        if (errors.length > 0) {
+            const errorMessages = ValidationErrorResolver.resolveValidationErrors(errors);
+
+            throw new ValidationError({
+                message: 'Invalid parameters',
+                errors: errorMessages
+            });
+        }
     }
 }

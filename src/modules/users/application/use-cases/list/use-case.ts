@@ -18,17 +18,17 @@ export class ListUserUseCase {
 
     static create(dependencies: Dependencies): ListUserUseCase {
         const {
-            userRepository,
+            userRepository
         } = dependencies;
 
         return new ListUserUseCase({
-            userRepository,
+            userRepository
         });
     }
 
     async execute(): Promise<User[]> {
         return await this.userRepository.findAll({
-            returnDeleted: false,
+            returnDeleted: false
         });
     }
 }

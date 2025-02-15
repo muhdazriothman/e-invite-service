@@ -39,7 +39,7 @@ export class User {
             createdAt: props.createdAt ?? new Date(),
             updatedAt: props.updatedAt ?? new Date(),
             deleted: props.deleted ?? false,
-            deletedAt: props.deletedAt ?? null,
+            deletedAt: props.deletedAt ?? null
         });
     }
 }
