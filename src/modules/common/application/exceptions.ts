@@ -1,26 +1,22 @@
-interface ErrorContext {
-    [key: string]: any;
-}
-
 interface ApplicationErrorProps {
     message: string;
     statusCode?: number;
     errorCode?: string;
-    errors?: ErrorContext;
+    errors?: string[];
 }
 
 export class ApplicationError extends Error {
     status: 'fail' | 'error';
     statusCode: number;
     errorCode: string;
-    errors?: ErrorContext;
+    errors?: string[];
 
     constructor(props: ApplicationErrorProps) {
         const {
             message,
             statusCode = 500,
             errorCode = 'INTERNAL_SERVER_ERROR',
-            errors,
+            errors
         } = props;
 
         super(message);
@@ -37,13 +33,11 @@ export class ApplicationError extends Error {
 
 export class ValidationError extends ApplicationError {
     constructor(props: Omit<ApplicationErrorProps, 'statusCode' | 'errorCode'>) {
-        console.log('ValidationError props', props);
-        
         super({
             message: props.message,
             statusCode: 400,
             errorCode: 'VALIDATION_ERROR',
-            errors: props.errors,
+            errors: props.errors
         });
     }
 }
@@ -53,28 +47,27 @@ export class BusinessLogicError extends ApplicationError {
         super({
             message: props.message,
             statusCode: 409,
-            errorCode: 'BUSINESS_LOGIC_ERROR',
-            errors: props.errors,
+            errorCode: 'BUSINESS_LOGIC_ERROR'
         });
     }
 }
 
 export class NotFoundError extends ApplicationError {
-    constructor(message: string) {
+    constructor(props: Omit<ApplicationErrorProps, 'statusCode' | 'errorCode'>) {
         super({
-            message,
+            message: props.message,
             statusCode: 404,
-            errorCode: 'NOT_FOUND',
+            errorCode: 'NOT_FOUND'
         });
     }
 }
 
 export class InternalServerError extends ApplicationError {
-    constructor(message: string = 'Something went wrong. Please try again later.') {
+    constructor(props: Omit<ApplicationErrorProps, 'statusCode' | 'errorCode'>) {
         super({
-            message,
+            message : props.message,
             statusCode: 500,
-            errorCode: 'INTERNAL_SERVER_ERROR',
+            errorCode: 'INTERNAL_SERVER_ERROR'
         });
     }
 }
