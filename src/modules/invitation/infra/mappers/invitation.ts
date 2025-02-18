@@ -1,35 +1,52 @@
-import { Invitation } from '../../domain/entities/invitation';
+import {
+    Invitation,
+    InvitationType,
+    CelebratedPersonType
+ } from '../../domain/entities/invitation';
 
 export interface InvitationDto {
     id: string;
+    type: InvitationType;
     title: string;
-    groomsName: string;
-    bridesName: string;
-    firstHostName: string;
-    secondHostName: string;
-    weddingDate: WeddingDate;
-    weddingLocation: WeddingLocation;
-    itinerary: Itinerary[];
+    hosts: Host[];
+    celebratedPersons: CelebratedPerson[];
+    date: EventDate;
+    location: Location;
+    itineraries: Itinerary[];
     contactPersons: ContactPersons[];
+    rsdpDueDate: Date;
     createdAt: Date;
     updatedAt: Date;
     deleted: boolean;
     deletedAt: Date | null;
 }
 
-interface WeddingDate {
+interface Host {
+    name: string;
+    title: string;
+    phoneNumber?: string | null;
+    email?: string | null;
+}
+
+interface CelebratedPerson {
+    name: string;
+    celebrationDate: Date;
+    type: CelebratedPersonType;
+}
+
+interface EventDate {
     gregorionDate: Date;
     hijriDate?: string | null;
 }
 
-interface WeddingLocation {
+interface Location {
     address: string;
     wazeLink?: string | null;
     googleMapsLink?: string | null;
 }
 
 interface Itinerary {
-    activity: string;
+    activities: string[];
     startTime: Date;
     endTime: Date;
 }
@@ -44,15 +61,15 @@ export class InvitationMapper {
     static toDto (invitation: Invitation): InvitationDto {
         return {
             id: invitation.id,
+            type: invitation.type,
             title: invitation.title,
-            groomsName: invitation.groomsName,
-            bridesName: invitation.bridesName,
-            firstHostName: invitation.firstHostName,
-            secondHostName: invitation.secondHostName,
-            weddingDate: invitation.weddingDate,
-            weddingLocation: invitation.weddingLocation,
-            itinerary: invitation.itinerary,
+            hosts: invitation.hosts,
+            celebratedPersons: invitation.celebratedPersons,
+            date: invitation.date,
+            location: invitation.location,
+            itineraries: invitation.itineraries,
             contactPersons: invitation.contactPersons,
+            rsdpDueDate: invitation.rsvpDueDate,
             createdAt: invitation.createdAt,
             updatedAt: invitation.updatedAt,
             deleted : invitation.deleted,

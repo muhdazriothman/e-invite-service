@@ -1,31 +1,45 @@
+import {
+    InvitationType,
+    CelebratedPersonType
+} from '../../../domain/entities/invitation';
+
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IInvitation extends Document {
     _id: string;
+    type: InvitationType;
     title: string;
-    groomsName: string;
-    bridesName: string;
-    firstHostName: string;
-    secondHostName: string;
-    weddingDate: {
+    hosts: Array<{
+        name: string;
+        title: string;
+        phoneNumber?: string | null;
+        email?: string | null;
+    }>;
+    celebratedPersons: Array<{
+        name: string;
+        celebrationDate: Date;
+        type: CelebratedPersonType;
+    }>;
+    date: {
         gregorionDate: Date;
-        hijriDate?: string;
+        hijriDate?: string | null;
     };
-    weddingLocation: {
+    location: {
         address: string;
-        wazeLink?: string;
-        googleMapsLink?: string;
+        wazeLink?: string | null;
+        googleMapsLink?: string | null;
     };
-    itinerary: Array<{
-        activity: string;
+    itineraries: Array<{
+        activities: string[];
         startTime: Date;
         endTime: Date;
     }>;
     contactPersons: Array<{
         name: string;
-        phoneNumber?: string;
-        whatsappNumber?: string;
+        phoneNumber?: string | null;
+        whatsappNumber?: string | null;
     }>;
+    rsvpDueDate: Date;
     createdAt?: Date;
     updatedAt?: Date;
     deleted?: boolean;
@@ -34,34 +48,120 @@ export interface IInvitation extends Document {
 
 const InvitationSchema: Schema = new Schema(
     {
-        title: { type: String, required: true },
-        groomsName: { type: String, required: true },
-        bridesName: { type: String, required: true },
-        firstHostName: { type: String, required: true },
-        secondHostName: { type: String, required: true },
-        weddingDate: {
-            gregorionDate: { type: Date, required: true },
-            hijriDate: { type: String, required: false }
+        type: {
+            type: String,
+            enum: Object.values(InvitationType),
+            required: true
         },
-        weddingLocation: {
-            address: { type: String, required: true },
-            wazeLink: { type: String, required: false },
-            googleMapsLink: { type: String, required: false }
+        title: {
+            type: String,
+            required: true
         },
-        itinerary: [{
-            activity: { type: String, required: true },
-            startTime: { type: Date, required: true },
-            endTime: { type: Date, required: true }
+        hosts: [{
+            name: {
+                type: String,
+                required: true
+            },
+            title: {
+                type: String,
+                required: true
+            },
+            phoneNumber: {
+                type: String,
+                default: null
+            },
+            email: {
+                type: String,
+                default: null
+            }
+        }],
+        celebratedPersons: [{
+            name: {
+                type: String,
+                required: true
+            },
+            celebrationDate: {
+                type: Date,
+                required: true
+            },
+            type: {
+                type: String,
+                enum: Object.values(CelebratedPersonType),
+                required: true
+            }
+        }],
+        date: {
+            gregorionDate: {
+                type: Date,
+                required: true
+            },
+            hijriDate: {
+                type: String,
+                default: null
+            }
+        },
+        location: {
+            address: {
+                type: String,
+                required: true
+            },
+            wazeLink: {
+                type: String,
+                default: null
+            },
+            googleMapsLink: {
+                type: String,
+                default: null
+            }
+        },
+        itineraries: [{
+            activities: [{
+                type: [String],
+                required: true
+            }],
+            startTime: {
+                type: Date,
+                required: true
+            },
+            endTime: {
+                type: Date,
+                required: true
+            }
         }],
         contactPersons: [{
-            name: { type: String, required: true },
-            phoneNumber: { type: String, required: false },
-            whatsappNumber: { type: String, required: false }
+            name: {
+                type: String,
+                required: true
+            },
+            phoneNumber: {
+                type: String,
+                default: null
+            },
+            whatsappNumber: {
+                type: String,
+                default: null
+            }
         }],
-        createdAt: { type: Date, default: Date.now },
-        updatedAt: { type: Date, default: Date.now },
-        deleted: { type: Boolean, default: false },
-        deletedAt: { type: Date, default: null }
+        rsvpDueDate: {
+            type: Date,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        },
+        deleted: {
+            type: Boolean,
+            default: false
+        },
+        deletedAt: {
+            type: Date,
+            default: null
+        }
     }
 );
 

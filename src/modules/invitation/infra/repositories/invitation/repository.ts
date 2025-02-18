@@ -1,4 +1,5 @@
 import { Invitation } from '../../../domain/entities/invitation';
+import { InvitationFactory } from '../../../domain/factories/invitation';
 import { InvitationModel, IInvitation } from './model';
 
 interface Options {
@@ -7,22 +8,21 @@ interface Options {
 
 export class InvitationRepository {
     static toDomain(document: IInvitation): Invitation {
-        return Invitation.create({
+        return InvitationFactory.create({
             id: document._id.toString(),
+            type: document.type,
             title: document.title,
-            groomsName: document.groomsName,
-            bridesName: document.bridesName,
-            firstHostName: document.firstHostName,
-            secondHostName: document.secondHostName,
-            weddingDate: document.weddingDate,
-            weddingLocation: document.weddingLocation,
-            itinerary: document.itinerary,
+            hosts: document.hosts,
+            celebratedPersons: document.celebratedPersons,
+            date: document.date,
+            location: document.location,
+            itineraries: document.itineraries,
             contactPersons: document.contactPersons,
+            rsvpDueDate: document.rsvpDueDate,
             createdAt: document.createdAt,
             updatedAt: document.updatedAt,
             deleted: document.deleted,
             deletedAt: document.deletedAt
-            
         });
     }
 
