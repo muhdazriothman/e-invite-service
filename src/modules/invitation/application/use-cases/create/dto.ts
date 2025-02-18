@@ -15,7 +15,8 @@ import {
 import { IsDate } from '../../../../common/infra/data-transformer/date';
 import {
     CelebratedPersonType,
-    InvitationType
+    InvitationType,
+    RelationshipType
 } from '../../../domain/entities/invitation';
 
 export class CreateInvitationDto {
@@ -75,6 +76,10 @@ class HostDto {
     title!: string;
 
     @IsString()
+    @IsEnum(RelationshipType)
+    relationshipWithCelebratedPerson!: RelationshipType;
+
+    @IsString()
     @IsOptional()
     phoneNumber?: string;
 
@@ -87,6 +92,14 @@ class CelebratedPersonDto {
     @IsString()
     @IsNotEmpty()
     name!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    title!: string;
+
+    @IsString()
+    @IsEnum(RelationshipType)
+    relationshipWithHost!: RelationshipType;
 
     @IsDate()
     @IsNotEmpty()
@@ -144,6 +157,14 @@ class ContactPersonDto {
     @IsNotEmpty()
     @MinLength(2)
     name!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    title!: string;
+
+    @IsString()
+    @IsEnum(RelationshipType)
+    relationshipWithCelebratedPerson!: RelationshipType;
 
     @IsString()
     @IsOptional()

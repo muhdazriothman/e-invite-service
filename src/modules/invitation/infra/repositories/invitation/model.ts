@@ -1,6 +1,7 @@
 import {
     InvitationType,
-    CelebratedPersonType
+    CelebratedPersonType,
+    RelationshipType
 } from '../../../domain/entities/invitation';
 
 import mongoose, { Schema, Document } from 'mongoose';
@@ -12,11 +13,14 @@ export interface IInvitation extends Document {
     hosts: Array<{
         name: string;
         title: string;
+        relationshipWithCelebratedPerson: RelationshipType;
         phoneNumber?: string | null;
         email?: string | null;
     }>;
     celebratedPersons: Array<{
         name: string;
+        title: string;
+        relationshipWithHost: RelationshipType;
         celebrationDate: Date;
         type: CelebratedPersonType;
     }>;
@@ -36,6 +40,8 @@ export interface IInvitation extends Document {
     }>;
     contactPersons: Array<{
         name: string;
+        title: string;
+        relationshipWithCelebratedPerson: RelationshipType;
         phoneNumber?: string | null;
         whatsappNumber?: string | null;
     }>;
@@ -66,6 +72,11 @@ const InvitationSchema: Schema = new Schema(
                 type: String,
                 required: true
             },
+            relationshipWithCelebratedPerson: {
+                type: String,
+                enum: Object.values(RelationshipType),
+                required: true
+            },
             phoneNumber: {
                 type: String,
                 default: null
@@ -78,6 +89,15 @@ const InvitationSchema: Schema = new Schema(
         celebratedPersons: [{
             name: {
                 type: String,
+                required: true
+            },
+            title: {
+                type: String,
+                required: true
+            },
+            relationshipWithHost: {
+                type: String,
+                enum: Object.values(RelationshipType),
                 required: true
             },
             celebrationDate: {
@@ -131,6 +151,15 @@ const InvitationSchema: Schema = new Schema(
         contactPersons: [{
             name: {
                 type: String,
+                required: true
+            },
+            title: {
+                type: String,
+                required: true
+            },
+            relationshipWithCelebratedPerson: {
+                type: String,
+                enum: Object.values(RelationshipType),
                 required: true
             },
             phoneNumber: {

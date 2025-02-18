@@ -65,6 +65,7 @@ export class InvitationFactory {
             hosts.push({
                 name: host.name,
                 title: host.title,
+                relationshipWithCelebratedPerson: host.relationshipWithCelebratedPerson,
                 phoneNumber: host.phoneNumber ?? null,
                 email: host.email ?? null
             });
@@ -79,6 +80,8 @@ export class InvitationFactory {
         for (const celebratedPerson of props) {
             celebratedPersons.push({
                 name: celebratedPerson.name,
+                title: celebratedPerson.title,
+                relationshipWithHost: celebratedPerson.relationshipWithHost,
                 celebrationDate: celebratedPerson.celebrationDate ?? null,
                 type: celebratedPerson.type
             });
@@ -122,6 +125,8 @@ export class InvitationFactory {
         for (const contactPerson of props) {
             contactPersons.push({
                 name: contactPerson.name,
+                title: contactPerson.title,
+                relationshipWithCelebratedPerson: contactPerson.relationshipWithCelebratedPerson,
                 phoneNumber: contactPerson.phoneNumber ?? null,
                 whatsappNumber: contactPerson.whatsappNumber ?? null
             });

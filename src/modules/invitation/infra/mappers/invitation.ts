@@ -1,7 +1,8 @@
 import {
     Invitation,
     InvitationType,
-    CelebratedPersonType
+    CelebratedPersonType,
+    RelationshipType
  } from '../../domain/entities/invitation';
 
 export interface InvitationDto {
@@ -24,12 +25,15 @@ export interface InvitationDto {
 interface Host {
     name: string;
     title: string;
+    relationshipWithCelebratedPerson: RelationshipType;
     phoneNumber?: string | null;
     email?: string | null;
 }
 
 interface CelebratedPerson {
     name: string;
+    title: string;
+    relationshipWithHost: RelationshipType;
     celebrationDate: Date;
     type: CelebratedPersonType;
 }
@@ -53,6 +57,8 @@ interface Itinerary {
 
 interface ContactPersons {
     name: string;
+    title: string;
+    relationshipWithCelebratedPerson: RelationshipType;
     phoneNumber?: string | null;
     whatsappNumber?: string | null;
 }

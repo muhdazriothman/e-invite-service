@@ -25,6 +25,16 @@ export enum CelebratedPersonType {
     OTHER = 'other'
 }
 
+export enum RelationshipType {
+    PARENT = 'parent',
+    CHILD = 'child',
+    SIBLING = 'sibling',
+    SPOUSE = 'spouse',
+    FRIEND = 'friend',
+    RELATIVE = 'relative',
+    COLLEAGUE = 'colleague',
+    NEIGHBOR = 'neighbor'
+}
 export interface InvitationProps {
     id?: string;
     type: InvitationType;
@@ -45,12 +55,15 @@ export interface InvitationProps {
 export interface Host {
     name: string;
     title: string;
+    relationshipWithCelebratedPerson: RelationshipType;
     phoneNumber?: string | null;
     email?: string | null;
 }
 
 export interface CelebratedPerson {
     name: string;
+    title: string;
+    relationshipWithHost: RelationshipType;
     celebrationDate: Date;
     type: CelebratedPersonType;
 }
@@ -74,6 +87,8 @@ export interface Itinerary {
 
 export interface ContactPersons {
     name: string;
+    title: string;
+    relationshipWithCelebratedPerson: RelationshipType;
     phoneNumber?: string | null;
     whatsappNumber?: string | null;
 }
