@@ -1,118 +1,155 @@
 import { Type } from 'class-transformer';
 import {
+    ArrayMinSize,
+    ArrayNotEmpty,
     IsArray,
+    IsEmail,
+    IsEnum,
     IsNotEmpty,
-    IsString,
-    IsPhoneNumber,
     IsOptional,
+    IsString,
     IsUrl,
     MinLength,
-    ValidateNested,
-    ArrayMinSize
+    ValidateNested
 } from 'class-validator';
-
 import { IsDate } from '../../../../common/infra/data-transformer/date';
+import {
+    CelebratedPersonType,
+    InvitationType
+} from '../../../domain/entities/invitation';
 
 export class CreateInvitationDto {
-    @IsString()
+    @IsEnum(InvitationType)
     @IsNotEmpty()
-    @MinLength(3)
-        title!: string;
+    type!: InvitationType;
 
     @IsString()
     @IsNotEmpty()
     @MinLength(3)
-        groomsName!: string;
+    title!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(3)
-        bridesName!: string;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => HostDto)
+    @ArrayMinSize(1)
+    hosts!: HostDto[];
 
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(3)
-        firstHostName!: string;
-
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(3)
-        secondHostName!: string;
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => CelebratedPersonDto)
+    @ArrayMinSize(1)
+    celebratedPersons!: CelebratedPersonDto[];
 
     @ValidateNested()
-    @Type(() => WeddingDateDto)
-        weddingDate!: WeddingDateDto;
+    @Type(() => EventDateDto)
+    date!: EventDateDto;
 
     @ValidateNested()
-    @Type(() => WeddingLocationDto)
-        weddingLocation!: WeddingLocationDto;
+    @Type(() => LocationDto)
+    location!: LocationDto;
 
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => ItineraryDto)
     @ArrayMinSize(1)
-        itinerary!: ItineraryDto[];
+    itineraries!: ItineraryDto[];
+
+    @IsDate()
+    @IsNotEmpty()
+    rsvpDueDate!: Date;
 
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => ContactPersonDto)
     @ArrayMinSize(1)
-        contactPersons!: ContactPersonDto[];
+    contactPersons!: ContactPersonDto[];
 }
 
-class WeddingDateDto {
+class HostDto {
+    @IsString()
+    @IsNotEmpty()
+    name!: string;
+
+    @IsString()
+    @IsNotEmpty()
+    title!: string;
+
+    @IsString()
+    @IsOptional()
+    phoneNumber?: string;
+
+    @IsEmail()
+    @IsOptional()
+    email?: string;
+}
+
+class CelebratedPersonDto {
+    @IsString()
+    @IsNotEmpty()
+    name!: string;
+
     @IsDate()
     @IsNotEmpty()
-        gregorionDate!: Date;
+    celebrationDate!: Date;
 
-    @IsString()
-    @IsOptional()
-        hijriDate?: string | null;
+    @IsEnum(CelebratedPersonType)
+    @IsNotEmpty()
+    type!: CelebratedPersonType;
 }
 
-class WeddingLocationDto {
+class EventDateDto {
+    @IsDate()
+    @IsNotEmpty()
+    gregorionDate!: Date;
+
+    @IsString()
+    @IsOptional()
+    hijriDate?: string | null;
+}
+
+class LocationDto {
     @IsString()
     @IsNotEmpty()
-        address!: string;
+    address!: string;
 
     @IsString()
     @IsOptional()
     @IsUrl()
-        wazeLink?: string | null;
+    wazeLink?: string | null;
 
     @IsString()
     @IsOptional()
     @IsUrl()
-        googleMapsLink?: string | null;
+    googleMapsLink?: string | null;
 }
 
 class ItineraryDto {
-    @IsString()
-    @IsNotEmpty()
-        activity!: string;
+    @IsArray()
+    @ArrayNotEmpty()
+    @IsString({ each: true })
+    @MinLength(3, { each: true })
+    activities!: string[];
 
     @IsDate()
     @IsNotEmpty()
-        startTime!: Date;
+    startTime!: Date;
 
     @IsDate()
     @IsNotEmpty()
-        endTime!: Date;
+    endTime!: Date;
 }
 
 class ContactPersonDto {
     @IsString()
     @IsNotEmpty()
     @MinLength(2)
-        name!: string;
+    name!: string;
 
     @IsString()
-    @IsPhoneNumber()
     @IsOptional()
-        phoneNumber?: string | null;
+    phoneNumber?: string | null;
 
     @IsString()
-    @IsPhoneNumber()
     @IsOptional()
-        whatsappNumber?: string | null;
+    whatsappNumber?: string | null;
 }

@@ -3,6 +3,7 @@ import { validate } from 'class-validator';
 import { CreateInvitationDto} from './dto';
 
 import { Invitation } from '../../../domain/entities/invitation';
+import { InvitationFactory } from '../../../domain/factories/invitation';
 import { InvitationRepository } from '../../../infra/repositories/invitation/repository';
 
 import { ValidationError } from '../../../../common/application/exceptions';
@@ -41,50 +42,14 @@ export class CreateInvitationUseCase {
     async execute(dto: CreateInvitationDto): Promise<Invitation> {
         await CreateInvitationUseCase.validateDto(dto);
 
-        const itinerary = [];
-
-        for (const itineraryItem of dto.itinerary) {
-            itinerary.push({
-                activity: itineraryItem.activity,
-                startTime: itineraryItem.startTime,
-                endTime: itineraryItem.endTime
-            });
-        }
-
-        const contactPersons = [];
-
-        for (const contactPerson of dto.contactPersons) {
-            contactPersons.push({
-                name: contactPerson.name,
-                phoneNumber: contactPerson.phoneNumber
-            });
-        }
-
-        const invitation = Invitation.create({
-            title: dto.title,
-            groomsName: dto.groomsName,
-            bridesName: dto.bridesName,
-            firstHostName: dto.firstHostName,
-            secondHostName: dto.secondHostName,
-            weddingDate: {
-                gregorionDate: dto.weddingDate.gregorionDate,
-                hijriDate: dto.weddingDate.hijriDate
-            },
-            weddingLocation: {
-                address: dto.weddingLocation.address,
-                wazeLink: dto.weddingLocation.wazeLink,
-                googleMapsLink: dto.weddingLocation.googleMapsLink
-            },
-            itinerary,
-            contactPersons
-        });
+        const invitation = InvitationFactory.create(dto);
 
         return await this.invitationRepository.create(invitation);
     }
 
     static async validateDto(dto: CreateInvitationDto): Promise<void> {
         if (!(dto instanceof CreateInvitationDto)) {
-            throw new Error('dto is not an instance of CreateInvitationDTO');
+            throw new Error('dto is not an instance of CreateInvitationDto');
         }
 
         const errors = await validate(dto);
@@ -93,7 +58,7 @@ export class CreateInvitationUseCase {
             const errorMessages = ValidationErrorResolver.resolveValidationErrors(errors);
 
             throw new ValidationError({
-                message: 'Invalid invitation data',
+                message: 'Invalid parameters',
                 errors: errorMessages
             });
         }
