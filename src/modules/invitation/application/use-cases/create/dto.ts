@@ -12,6 +12,7 @@ import {
     MinLength,
     ValidateNested
 } from 'class-validator';
+
 import { IsDate } from '../../../../common/infra/data-transformer/date';
 import {
     CelebratedPersonType,
@@ -136,7 +137,7 @@ class LocationDto {
     googleMapsLink?: string | null;
 }
 
-class ItineraryDto {
+export class ItineraryDto {
     @IsArray()
     @ArrayNotEmpty()
     @IsString({ each: true })

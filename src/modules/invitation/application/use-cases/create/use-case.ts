@@ -1,13 +1,18 @@
 import { validate } from 'class-validator';
 
-import { CreateInvitationDto} from './dto';
+import {
+    CreateInvitationDto,
+    ItineraryDto
+ } from './dto';
 
 import { Invitation } from '../../../domain/entities/invitation';
 import { InvitationFactory } from '../../../domain/factories/invitation';
 import { InvitationRepository } from '../../../infra/repositories/invitation/repository';
 
-import { ValidationError } from '../../../../common/application/exceptions';
-
+import {
+    ValidationError,
+    BusinessLogicError
+} from '../../../../common/application/exceptions';
 import { ValidationErrorResolver } from '../../../../common/infra/validation-error-resolver';
 
 interface Dependencies {
@@ -42,7 +47,20 @@ export class CreateInvitationUseCase {
     async execute(dto: CreateInvitationDto): Promise<Invitation> {
         await CreateInvitationUseCase.validateDto(dto);
 
-        const invitation = InvitationFactory.create(dto);
+        const sortedItineraries = [...dto.itineraries].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
+        const hasOverlappingItineraries = CreateInvitationUseCase.hasOverlappingItineraries(sortedItineraries);
+
+        if (hasOverlappingItineraries) {
+            throw new BusinessLogicError({
+                message: 'Itineraries cannot overlap'
+            });
+        }
+
+        const invitation = InvitationFactory.create({
+            ...dto,
+            itineraries: sortedItineraries
+        });
 
         return await this.invitationRepository.create(invitation);
     }
@@ -62,5 +80,19 @@ export class CreateInvitationUseCase {
                 errors: errorMessages
             });
         }
+    }
+
+    static hasOverlappingItineraries(itineraries: ItineraryDto[]): boolean {
+        // Check if there are overlapping itineraries
+        for (let i = 0; i < itineraries.length - 1; i++) {
+            const current = itineraries[i];
+            const next = itineraries[i + 1];
+
+            if (current.endTime > next.startTime) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
