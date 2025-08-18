@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./",
+        "paths": {
+            "@common/*": [
+                "src/packages/common/*"
+            ],
+            "@flight/*": [
+                "src/packages/flight/*"
+            ],
+            "@modules/*": [
+                "src/modules/*"
+            ],
+            "@test/*": [
+                "src/test/*"
+            ],
+            "@user/*": [
+                "src/packages/user/*"
+            ],
+            "test/*": [
+                "test/*"
+            ]
+        }
+    }
+}
