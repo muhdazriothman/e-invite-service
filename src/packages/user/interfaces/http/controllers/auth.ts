@@ -4,7 +4,10 @@ import { RegisterUserUseCase } from '@user/application/use-cases/register';
 import { LoginDto } from '@user/interfaces/http/dtos/login';
 import { LoginUseCase } from '@user/application/use-cases/login';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
-import { UserMapper } from '@user/interfaces/http/mappers/user';
+import {
+    UserDto,
+    UserMapper
+} from '@user/interfaces/http/mappers/user';
 
 @Controller('auth')
 export class AuthController {
@@ -35,9 +38,16 @@ export class AuthController {
     @Get('users')
     async listUsers() {
         const users = await this.listUsersUseCase.execute();
+
+        const data: UserDto[] = [];
+
+        for (const user of users) {
+            data.push(UserMapper.toDto(user));
+        }
+
         return {
             statusCode: 200,
-            data: users.map(user => UserMapper.toListDto(user)),
+            data,
         };
     }
 }

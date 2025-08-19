@@ -155,7 +155,7 @@ describe('@user/interfaces/http/controllers/auth', () => {
             expect(listUsersUseCase.execute).toHaveBeenCalledTimes(1);
             expect(result).toEqual({
                 statusCode: 200,
-                data: mockUsers.map(user => UserMapper.toListDto(user)),
+                data: mockUsers.map(user => UserMapper.toDto(user)),
             });
         });
 
