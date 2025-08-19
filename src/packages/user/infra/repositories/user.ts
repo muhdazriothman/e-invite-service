@@ -31,6 +31,21 @@ export class UserRepositoryImpl implements UserRepository {
         });
     }
 
+    async findAll(): Promise<User[]> {
+        const docs = await this.userModel.find({ isDeleted: false }).lean();
+
+        return docs.map(doc => new User({
+            id: (doc as any)._id?.toString?.() ?? '',
+            username: doc.username,
+            email: doc.email,
+            passwordHash: doc.passwordHash,
+            isDeleted: doc.isDeleted,
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt,
+            deletedAt: doc.deletedAt,
+        }));
+    }
+
     async findByUsername(username: string): Promise<User | null> {
         const doc = await this.userModel.findOne({ username, isDeleted: false }).lean();
         if (!doc) return null;

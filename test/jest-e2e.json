@@ -12,5 +12,13 @@
     },
     "setupFiles": [
         "<rootDir>/setup-env.ts"
-    ]
+    ],
+    "moduleNameMapper": {
+        "^@common/(.*)$": "<rootDir>/../src/packages/common/$1",
+        "^@flight/(.*)$": "<rootDir>/../src/packages/flight/$1",
+        "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
+        "^@test/(.*)$": "<rootDir>/$1",
+        "^@user/(.*)$": "<rootDir>/../src/packages/user/$1",
+        "^test/(.*)$": "<rootDir>/$1"
+    }
 }

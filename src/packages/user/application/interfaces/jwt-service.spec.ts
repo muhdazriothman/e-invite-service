@@ -11,7 +11,7 @@ describe('@user/application/interfaces/jwt-service', () => {
         });
     });
 
-    describe('sign', () => {
+    describe('#sign', () => {
         it('should sign a payload and return a token', () => {
             const payload = { userId: '123', username: 'testuser' };
             const token = 'jwt.token.string';
@@ -25,7 +25,7 @@ describe('@user/application/interfaces/jwt-service', () => {
         });
     });
 
-    describe('verify', () => {
+    describe('#verify', () => {
         it('should verify a valid token and return the decoded payload', () => {
             const token = 'valid.jwt.token';
             const decodedPayload = { userId: '123', username: 'testuser' };

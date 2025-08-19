@@ -5,7 +5,7 @@ import { RegisterDto } from '@user/interfaces/http/dtos/register';
 import { User } from '@user/domain/entities/user';
 
 @Injectable()
-export class RegisterUseCase {
+export class RegisterUserUseCase {
     constructor(
         @Inject('UserRepository') private readonly userRepository: UserRepository,
         @Inject('HashService') private readonly hashService: HashService,

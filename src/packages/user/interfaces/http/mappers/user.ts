@@ -1,4 +1,6 @@
 import { User } from '@user/domain/entities/user';
+import { RegisterResponseDto } from '@user/interfaces/http/dtos/register';
+import { ListUsersResponseDto } from '@user/interfaces/http/dtos/list-users';
 
 export interface UserDto {
     id: string;
@@ -11,19 +13,23 @@ export interface UserDto {
 }
 
 export class UserMapper {
-    static toDto(user: User): UserDto {
+    static toDto(user: User): RegisterResponseDto {
         return {
             id: user.id,
             username: user.username,
             email: user.email,
-            isDeleted: user.isDeleted,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
-            deletedAt: user.deletedAt,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
         };
     }
 
-    static toListDto(users: User[]): UserDto[] {
-        return users.map((u) => this.toDto(u));
+    static toListDto(user: User): ListUsersResponseDto {
+        return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            createdAt: user.createdAt.toISOString(),
+            updatedAt: user.updatedAt.toISOString(),
+        };
     }
 }

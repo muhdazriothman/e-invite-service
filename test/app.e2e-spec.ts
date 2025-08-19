@@ -16,10 +16,14 @@ describe('AppController (e2e)', () => {
         await app.init();
     });
 
-    it('/ (GET)', () => {
+    it('/auth/users (GET)', () => {
         return request(app.getHttpServer())
-            .get('/')
+            .get('/auth/users')
             .expect(200)
-            .expect('Hello World!');
+            .expect((res) => {
+                expect(res.body).toHaveProperty('statusCode', 200);
+                expect(res.body).toHaveProperty('data');
+                expect(Array.isArray(res.body.data)).toBe(true);
+            });
     });
 });

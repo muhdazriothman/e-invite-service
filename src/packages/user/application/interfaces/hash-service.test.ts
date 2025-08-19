@@ -11,7 +11,7 @@ describe('@user/application/interfaces/hash-service', () => {
         });
     });
 
-    describe('hash', () => {
+    describe('#hash', () => {
         it('should hash a password', async () => {
             const password = 'test-password';
             const hashedPassword = 'hashed-password';
@@ -39,7 +39,7 @@ describe('@user/application/interfaces/hash-service', () => {
         });
     });
 
-    describe('compare', () => {
+    describe('#compare', () => {
         it('should return true when plain password matches the hash', async () => {
             const plainPassword = 'test-password';
             const hashedPassword = 'hashed-password';

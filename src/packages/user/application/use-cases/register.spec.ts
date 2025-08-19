@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 
-import { RegisterUseCase } from './register';
+import { RegisterUserUseCase } from './register';
 import { RegisterDto } from '@user/interfaces/http/dtos/register';
 import { UserRepository } from '@user/domain/repositories/user';
 import { HashService } from '@user/application/interfaces/hash-service';
@@ -10,7 +10,7 @@ import { User } from '@user/domain/entities/user';
 import { createMock } from '@test/utils/mocks';
 
 describe('@user/application/use-cases/register', () => {
-    let registerUseCase: RegisterUseCase;
+    let registerUseCase: RegisterUserUseCase;
     let mockUserRepository: jest.Mocked<UserRepository>;
     let mockHashService: jest.Mocked<HashService>;
 
@@ -20,7 +20,7 @@ describe('@user/application/use-cases/register', () => {
 
         const moduleRef = await Test.createTestingModule({
             providers: [
-                RegisterUseCase,
+                RegisterUserUseCase,
                 {
                     provide: 'UserRepository',
                     useValue: mockUserRepository,
@@ -32,7 +32,7 @@ describe('@user/application/use-cases/register', () => {
             ],
         }).compile();
 
-        registerUseCase = moduleRef.get<RegisterUseCase>(RegisterUseCase);
+        registerUseCase = moduleRef.get<RegisterUserUseCase>(RegisterUserUseCase);
     });
 
     it('should be defined', () => {
