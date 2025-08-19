@@ -8,21 +8,21 @@ import { FlightServiceImpl } from '@flight/infra/services/flight';
 import { FlightMapper } from '@flight/infra/mappers/flight-mapper';
 
 @Module({
-    imports: [
-        HttpModule,
-        ConfigModule.forRoot({
-            isGlobal: true,
-            envFilePath: '.env',
-        }),
-    ],
-    controllers: [FlightController],
-    providers: [
-        SearchFlightUseCase,
-        FlightMapper,
-        {
-            provide: 'FlightService',
-            useClass: FlightServiceImpl
-        },
-    ]
+  imports: [
+    HttpModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+  ],
+  controllers: [FlightController],
+  providers: [
+    SearchFlightUseCase,
+    FlightMapper,
+    {
+      provide: 'FlightService',
+      useClass: FlightServiceImpl,
+    },
+  ],
 })
-export class FlightModule { }
+export class FlightModule {}

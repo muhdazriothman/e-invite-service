@@ -1,56 +1,56 @@
-import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { JwtServiceImpl } from '@user/infra/services/jwt';
+import { JwtService } from '@nestjs/jwt';
+import { createMock } from '@test/utils/mocks';
 
 describe('@user/infra/services/jwt', () => {
-    let jwtService: JwtServiceImpl;
-    let nestJwtService: NestJwtService;
+  let jwtServiceImpl: JwtServiceImpl;
+  let mockJwtService: jest.Mocked<JwtService>;
 
-    beforeEach(() => {
-        nestJwtService = {
-            sign: jest.fn(),
-            verify: jest.fn()
-        } as unknown as NestJwtService;
+  beforeEach(() => {
+    mockJwtService = createMock<JwtService>({
+      sign: jest.fn(),
+      verify: jest.fn(),
+    });
+    jwtServiceImpl = new JwtServiceImpl(mockJwtService);
+  });
 
-        jwtService = new JwtServiceImpl(nestJwtService);
+  describe('#sign', () => {
+    it('should sign a payload and return a token', () => {
+      const payload = { userId: '123', username: 'testuser' };
+      const token = 'signed.jwt.token';
+
+      (mockJwtService.sign as jest.Mock).mockReturnValue(token);
+
+      const result = jwtServiceImpl.sign(payload);
+
+      expect(result).toBe(token);
+      expect(mockJwtService.sign).toHaveBeenCalledWith(payload);
+    });
+  });
+
+  describe('#verify', () => {
+    it('should verify a token and return the decoded payload', () => {
+      const token = 'valid.jwt.token';
+      const decodedPayload = { userId: '123', username: 'testuser' };
+
+      (mockJwtService.verify as jest.Mock).mockReturnValue(decodedPayload);
+
+      const result = jwtServiceImpl.verify(token);
+
+      expect(result).toBe(decodedPayload);
+      expect(mockJwtService.verify).toHaveBeenCalledWith(token);
     });
 
-    describe('#sign', () => {
-        it('should sign a payload and return a token', () => {
-            const payload = { userId: '123', username: 'testuser' };
-            const token = 'signed.jwt.token';
+    it('should throw an error when token is invalid', () => {
+      const invalidToken = 'invalid.token';
+      const error = new Error('Invalid token');
 
-            (nestJwtService.sign as jest.Mock).mockReturnValue(token);
+      (mockJwtService.verify as jest.Mock).mockImplementation(() => {
+        throw error;
+      });
 
-            const result = jwtService.sign(payload);
-
-            expect(result).toBe(token);
-            expect(nestJwtService.sign).toHaveBeenCalledWith(payload);
-        });
+      expect(() => jwtServiceImpl.verify(invalidToken)).toThrow(error);
+      expect(mockJwtService.verify).toHaveBeenCalledWith(invalidToken);
     });
-
-    describe('#verify', () => {
-        it('should verify a token and return the decoded payload', () => {
-            const token = 'valid.jwt.token';
-            const decodedPayload = { userId: '123', username: 'testuser' };
-
-            (nestJwtService.verify as jest.Mock).mockReturnValue(decodedPayload);
-
-            const result = jwtService.verify(token);
-
-            expect(result).toBe(decodedPayload);
-            expect(nestJwtService.verify).toHaveBeenCalledWith(token);
-        });
-
-        it('should throw an error when token is invalid', () => {
-            const invalidToken = 'invalid.token';
-            const error = new Error('Invalid token');
-
-            (nestJwtService.verify as jest.Mock).mockImplementation(() => {
-                throw error;
-            });
-
-            expect(() => jwtService.verify(invalidToken)).toThrow(error);
-            expect(nestJwtService.verify).toHaveBeenCalledWith(invalidToken);
-        });
-    });
+  });
 });

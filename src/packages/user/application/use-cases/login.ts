@@ -7,35 +7,38 @@ import { UserRepository } from '@user/domain/repositories/user';
 
 @Injectable()
 export class LoginUseCase {
-    constructor(
-        @Inject('UserRepository')
-        private readonly userRepository: UserRepository,
+  constructor(
+    @Inject('UserRepository')
+    private readonly userRepository: UserRepository,
 
-        @Inject('JwtService')
-        private readonly jwtService: JwtService,
+    @Inject('JwtService')
+    private readonly jwtService: JwtService,
 
-        @Inject('HashService')
-        private readonly hashService: HashService
-    ) { }
+    @Inject('HashService')
+    private readonly hashService: HashService,
+  ) {}
 
-    async execute(loginDto: LoginDto) {
-        const {
-            username,
-            password
-        } = loginDto;
+  async execute(loginDto: LoginDto) {
+    const { username, password } = loginDto;
 
-        const user = await this.userRepository.findByUsername(username);
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        const isPasswordValid = await this.hashService.compare(password, user.passwordHash);
-        if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-
-        const token = this.jwtService.sign({ sub: user.id, username: user.username });
-
-        return { accessToken: token };
+    const user = await this.userRepository.findByUsername(username);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
     }
+
+    const isPasswordValid = await this.hashService.compare(
+      password,
+      user.passwordHash,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const token = this.jwtService.sign({
+      sub: user.id,
+      username: user.username,
+    });
+
+    return { accessToken: token };
+  }
 }

@@ -6,106 +6,104 @@ import { LoginDto } from '@user/interfaces/http/dtos/login';
 import { UserRepository } from '@user/domain/repositories/user';
 import { JwtService } from '@user/application/interfaces/jwt-service';
 import { HashService } from '@user/application/interfaces/hash-service';
-import { User } from '@user/domain/entities/user';
+import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 
 describe('@user/application/use-cases/login', () => {
-    let loginUseCase: LoginUseCase;
-    let mockUserRepository: jest.Mocked<UserRepository>;
-    let mockJwtService: jest.Mocked<JwtService>;
-    let mockHashService: jest.Mocked<HashService>;
+  let loginUseCase: LoginUseCase;
+  let mockUserRepository: jest.Mocked<UserRepository>;
+  let mockJwtService: jest.Mocked<JwtService>;
+  let mockHashService: jest.Mocked<HashService>;
 
-    beforeEach(async () => {
-        mockUserRepository = {
-            findByUsername: jest.fn(),
-        } as jest.Mocked<UserRepository>;
+  beforeEach(async () => {
+    mockUserRepository = createMock<UserRepository>({});
+    mockJwtService = createMock<JwtService>({});
+    mockHashService = createMock<HashService>({});
 
-        mockJwtService = {
-            sign: jest.fn(),
-            verify: jest.fn(),
-        } as jest.Mocked<JwtService>;
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        LoginUseCase,
+        {
+          provide: 'UserRepository',
+          useValue: mockUserRepository,
+        },
+        {
+          provide: 'JwtService',
+          useValue: mockJwtService,
+        },
+        {
+          provide: 'HashService',
+          useValue: mockHashService,
+        },
+      ],
+    }).compile();
 
-        mockHashService = {
-            hash: jest.fn(),
-            compare: jest.fn(),
-        } as jest.Mocked<HashService>;
+    loginUseCase = moduleRef.get<LoginUseCase>(LoginUseCase);
+  });
 
-        const moduleRef = await Test.createTestingModule({
-            providers: [
-                LoginUseCase,
-                {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
-                },
-                {
-                    provide: 'JwtService',
-                    useValue: mockJwtService,
-                },
-                {
-                    provide: 'HashService',
-                    useValue: mockHashService,
-                },
-            ],
-        }).compile();
+  it('should be defined', () => {
+    expect(loginUseCase).toBeDefined();
+  });
 
-        loginUseCase = moduleRef.get<LoginUseCase>(LoginUseCase);
+  describe('#execute', () => {
+    const loginDto: LoginDto = {
+      username: 'admin',
+      password: 'admin',
+    };
+
+    const mockUser = UserFixture.getAdminUser();
+
+    it('should return an access token when credentials are valid', async () => {
+      mockUserRepository.findByUsername.mockResolvedValue(mockUser);
+      mockHashService.compare.mockResolvedValue(true);
+      mockJwtService.sign.mockReturnValue('jwt_token');
+
+      const result = await loginUseCase.execute(loginDto);
+
+      expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(
+        loginDto.username,
+      );
+      expect(mockHashService.compare).toHaveBeenCalledWith(
+        loginDto.password,
+        mockUser.passwordHash,
+      );
+      expect(mockJwtService.sign).toHaveBeenCalledWith({
+        sub: mockUser.id,
+        username: mockUser.username,
+      });
+      expect(result).toEqual({ accessToken: 'jwt_token' });
     });
 
-    it('should be defined', () => {
-        expect(loginUseCase).toBeDefined();
+    it('should throw UnauthorizedException when user is not found', async () => {
+      mockUserRepository.findByUsername.mockResolvedValue(null);
+
+      await expect(loginUseCase.execute(loginDto)).rejects.toThrow(
+        new UnauthorizedException('Invalid credentials'),
+      );
+
+      expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(
+        loginDto.username,
+      );
+      expect(mockHashService.compare).not.toHaveBeenCalled();
+      expect(mockJwtService.sign).not.toHaveBeenCalled();
     });
 
-    describe('execute', () => {
-        const loginDto: LoginDto = {
-            username: 'admin',
-            password: 'admin',
-        };
+    it('should throw UnauthorizedException when password is invalid', async () => {
+      mockUserRepository.findByUsername.mockResolvedValue(mockUser);
+      mockHashService.compare.mockResolvedValue(false);
 
-        const mockUser = new User({
-            id: '1',
-            username: 'admin',
-            email: 'admin@example.com',
-            passwordHash: 'hashed_password',
-        });
+      await expect(loginUseCase.execute(loginDto)).rejects.toThrow(
+        new UnauthorizedException('Invalid credentials'),
+      );
 
-        it('should return an access token when credentials are valid', async () => {
-            mockUserRepository.findByUsername.mockResolvedValue(mockUser);
-            mockHashService.compare.mockResolvedValue(true);
-            mockJwtService.sign.mockReturnValue('jwt_token');
-
-            const result = await loginUseCase.execute(loginDto);
-
-            expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(loginDto.username);
-            expect(mockHashService.compare).toHaveBeenCalledWith(loginDto.password, mockUser.passwordHash);
-            expect(mockJwtService.sign).toHaveBeenCalledWith({
-                sub: mockUser.id,
-                username: mockUser.username
-            });
-            expect(result).toEqual({ accessToken: 'jwt_token' });
-        });
-
-        it('should throw UnauthorizedException when user is not found', async () => {
-            mockUserRepository.findByUsername.mockResolvedValue(null);
-
-            await expect(loginUseCase.execute(loginDto)).rejects.toThrow(
-                new UnauthorizedException('Invalid credentials')
-            );
-
-            expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(loginDto.username);
-            expect(mockHashService.compare).not.toHaveBeenCalled();
-            expect(mockJwtService.sign).not.toHaveBeenCalled();
-        });
-
-        it('should throw UnauthorizedException when password is invalid', async () => {
-            mockUserRepository.findByUsername.mockResolvedValue(mockUser);
-            mockHashService.compare.mockResolvedValue(false);
-
-            await expect(loginUseCase.execute(loginDto)).rejects.toThrow(
-                new UnauthorizedException('Invalid credentials')
-            );
-
-            expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(loginDto.username);
-            expect(mockHashService.compare).toHaveBeenCalledWith(loginDto.password, mockUser.passwordHash);
-            expect(mockJwtService.sign).not.toHaveBeenCalled();
-        });
+      expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(
+        loginDto.username,
+      );
+      expect(mockHashService.compare).toHaveBeenCalledWith(
+        loginDto.password,
+        mockUser.passwordHash,
+      );
+      expect(mockJwtService.sign).not.toHaveBeenCalled();
     });
+  });
 });

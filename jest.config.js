@@ -11,5 +11,6 @@ module.exports = {
         '^.+\\.tsx?$': 'ts-jest'
     },
     testEnvironment: 'node',
-    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node']
+    moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+    setupFiles: ['<rootDir>/test/setup-env.ts']
 };

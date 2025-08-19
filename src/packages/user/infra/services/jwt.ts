@@ -4,13 +4,13 @@ import { JwtService } from '@user/application/interfaces/jwt-service';
 
 @Injectable()
 export class JwtServiceImpl implements JwtService {
-    constructor(private readonly jwtService: NestJwtService) { }
+  constructor(private readonly jwtService: NestJwtService) {}
 
-    sign(payload: any): string {
-        return this.jwtService.sign(payload);
-    }
+  sign(payload: any): string {
+    return this.jwtService.sign(payload);
+  }
 
-    verify(token: string): any {
-        return this.jwtService.verify(token);
-    }
+  verify(token: string): any {
+    return this.jwtService.verify(token);
+  }
 }

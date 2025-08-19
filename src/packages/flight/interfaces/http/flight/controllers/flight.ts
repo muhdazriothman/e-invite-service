@@ -7,17 +7,15 @@ import { FlightMapper } from '@flight/interfaces/http/flight/mappers/flight';
 
 @Controller('flight')
 export class FlightController {
-    constructor(
-        private readonly searchFlightUseCase: SearchFlightUseCase,
-    ) { }
+  constructor(private readonly searchFlightUseCase: SearchFlightUseCase) {}
 
-    @Get('search')
-    @UseGuards(JwtAuthGuard)
-    async searchFlight(@Query() query: SearchFlightDto) {
-        const flights = await this.searchFlightUseCase.execute(query);
-        return {
-            statusCode: 200,
-            data: FlightMapper.toListDto(flights),
-        };
-    }
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  async searchFlight(@Query() query: SearchFlightDto) {
+    const flights = await this.searchFlightUseCase.execute(query);
+    return {
+      statusCode: 200,
+      data: FlightMapper.toListDto(flights),
+    };
+  }
 }

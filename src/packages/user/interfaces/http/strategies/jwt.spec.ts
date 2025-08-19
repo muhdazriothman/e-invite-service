@@ -1,49 +1,37 @@
 import { JwtStrategy } from '@user/interfaces/http/strategies/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createMock } from '@test/utils/mocks';
 
 describe('@user/interfaces/http/strategies/jwt', () => {
-    let jwtStrategy: JwtStrategy;
-    let configService: ConfigService;
+  let jwtStrategy: JwtStrategy;
+  let mockConfigService: jest.Mocked<ConfigService>;
 
-    beforeEach(() => {
-        configService = {
-            get: jest.fn().mockReturnValue('test-jwt-secret')
-        } as any;
-
-        jwtStrategy = new JwtStrategy(configService);
+  beforeEach(() => {
+    mockConfigService = createMock<ConfigService>({
+      get: jest.fn().mockReturnValue('test-jwt-secret'),
     });
+    jwtStrategy = new JwtStrategy(mockConfigService);
+  });
 
-    it('should be properly instantiated', () => {
-        expect(jwtStrategy).toBeDefined();
-        expect(jwtStrategy.validate).toBeDefined();
+  describe('#constructor', () => {
+    it('should throw error when JWT_SECRET is not configured', () => {
+      mockConfigService = createMock<ConfigService>({
+        get: jest.fn().mockReturnValue(undefined),
+      });
+
+      expect(() => new JwtStrategy(mockConfigService)).toThrow(
+        'JWT_SECRET environment variable is not set',
+      );
     });
+  });
 
-    describe('#constructor', () => {
-        it('should throw error if JWT_SECRET is not set', () => {
-            const configServiceWithoutSecret = {
-                get: jest.fn().mockReturnValue(undefined)
-            } as any;
+  describe('#validate', () => {
+    it('should return user payload when JWT is valid', async () => {
+      const payload = { sub: 'user-id', username: 'testuser' };
 
-            expect(() => new JwtStrategy(configServiceWithoutSecret))
-                .toThrow('JWT_SECRET environment variable is not set');
-        });
+      const result = await jwtStrategy.validate(payload);
 
-        it('should be configured with the correct options', () => {
-            expect(jwtStrategy).toBeDefined();
-            expect(configService.get).toHaveBeenCalledWith('JWT_SECRET');
-        });
+      expect(result).toEqual(payload);
     });
-
-    describe('#validate', () => {
-        it('should return the payload unchanged', async () => {
-            const payload = {
-                sub: '123',
-                username: 'testuser'
-            };
-
-            const result = await jwtStrategy.validate(payload);
-
-            expect(result).toBe(payload);
-        });
-    });
+  });
 });
