@@ -16,6 +16,10 @@ export class UserRepositoryImpl implements UserRepository {
         private readonly userModel: Model<UserMongoDocument>,
     ) { }
 
+    static getCollectionName(): string {
+        return 'users';
+    }
+
     async create(user: CreateUserDto): Promise<User> {
         const created = await this.userModel.create(user);
         const doc = created.toObject();

@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MongooseModule } from '@nestjs/mongoose';
-import { connect, disconnect, Connection as MongoConnection } from 'mongoose';
+import {
+    connect,
+    disconnect,
+    Connection as MongoConnection,
+} from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 export interface MongoTestSetupOptions {
@@ -85,12 +89,4 @@ export async function setupRepositoryTest(
     providers: any[] = []
 ): Promise<MongoTestContext> {
     return MongoTestSetup.setup({ schemas, providers });
-}
-
-// Helper function to clean collections before each test
-export async function cleanCollections(collections: string[]): Promise<void> {
-    const connection = MongoTestSetup.getConnection();
-    for (const collectionName of collections) {
-        await connection.collection(collectionName).deleteMany({});
-    }
 }

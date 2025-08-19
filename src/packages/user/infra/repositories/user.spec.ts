@@ -3,19 +3,20 @@ import { UserRepositoryImpl } from '@user/infra/repositories/user';
 import {
     UserMongoSchema,
     UserMongoModelName,
+    UserMongoDocument,
 } from '@user/infra/schemas/user';
 import { CreateUserDto } from '@user/domain/dtos/user';
-import { Types } from 'mongoose';
+import { Types, Model } from 'mongoose';
 import { TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/mongoose';
 import {
     setupRepositoryTest,
-    cleanCollections,
     MongoTestSetup,
 } from '@test/utils/mongo-test-setup';
 
 describe('@user/infra/repositories/user', () => {
     let userRepository: UserRepositoryImpl;
-    let connection: any;
+    let userModel: Model<UserMongoDocument>;
     let module: TestingModule;
 
     beforeAll(async () => {
@@ -24,9 +25,9 @@ describe('@user/infra/repositories/user', () => {
             [UserRepositoryImpl]
         );
 
-        connection = testContext.connection;
         module = testContext.module;
         userRepository = module.get<UserRepositoryImpl>(UserRepositoryImpl);
+        userModel = module.get<Model<UserMongoDocument>>(getModelToken(UserMongoModelName));
     });
 
     afterAll(async () => {
@@ -35,8 +36,7 @@ describe('@user/infra/repositories/user', () => {
     });
 
     beforeEach(async () => {
-        // Clear the collection before each test
-        await cleanCollections(['users']);
+        await userModel.deleteMany({});
     });
 
     describe('#create', () => {
@@ -60,7 +60,7 @@ describe('@user/infra/repositories/user', () => {
             expect(result.deletedAt).toBeNull();
 
             // Verify the user was actually saved to the database
-            const savedUser = await connection.collection('users').findOne({ username: 'newuser' });
+            const savedUser = await userModel.findOne({ username: 'newuser' }).lean();
             expect(savedUser).toBeDefined();
             expect(savedUser?.username).toBe('newuser');
             expect(savedUser?.email).toBe('newuser@example.com');
@@ -89,7 +89,7 @@ describe('@user/infra/repositories/user', () => {
             expect(result2.username).toBe('user2');
 
             // Verify both users were saved
-            const savedUsers = await connection.collection('users').find({}).toArray();
+            const savedUsers = await userModel.find({}).lean();
             expect(savedUsers).toHaveLength(2);
         });
     });
@@ -209,7 +209,7 @@ describe('@user/infra/repositories/user', () => {
             expect(deletedUser).toBeNull();
 
             // Verify the user still exists in database but is marked as deleted
-            const dbUser = await connection.collection('users').findOne({ _id: new Types.ObjectId(user.id) });
+            const dbUser = await userModel.findOne({ _id: new Types.ObjectId(user.id) }).lean();
             expect(dbUser?.isDeleted).toBe(true);
             expect(dbUser?.deletedAt).toBeInstanceOf(Date);
         });
