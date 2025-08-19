@@ -11,13 +11,10 @@
             "@modules/*": [
                 "src/modules/*"
             ],
-            "@test/*": [
-                "src/test/*"
-            ],
             "@user/*": [
                 "src/packages/user/*"
             ],
-            "test/*": [
+            "@test/*": [
                 "test/*"
             ]
         }
