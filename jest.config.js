@@ -1,5 +1,6 @@
 module.exports = {
     moduleNameMapper: {
+        '^@auth/(.*)$': '<rootDir>/src/packages/auth/$1',
         '^@common/(.*)$': '<rootDir>/src/packages/common/$1',
         '^@flight/(.*)$': '<rootDir>/src/packages/flight/$1',
         '^@modules/(.*)$': '<rootDir>/src/modules/$1',

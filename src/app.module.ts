@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { FlightModule } from '@modules/flight';
-import { AuthModule } from '@modules/auth';
+import { AuthModule } from '@auth/auth.module';
+import { UserModule } from '@user/user.module';
 import {
-    ConfigModule, ConfigService
+    ConfigModule,
+    ConfigService,
 } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
@@ -21,8 +22,8 @@ import { MongooseModule } from '@nestjs/mongoose';
                     }),
                 }),
             ]),
-        FlightModule,
         AuthModule,
+        UserModule,
     ],
     controllers: [],
     providers: [],

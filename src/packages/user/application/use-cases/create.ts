@@ -1,11 +1,11 @@
+import { Inject, Injectable, ConflictException } from '@nestjs/common';
 import { UserRepository } from '@user/infra/repository';
 import { User } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { HashService } from '@common/services/hash';
-import { Injectable, Inject, ConflictException } from '@nestjs/common';
 
 @Injectable()
-export class RegisterUserUseCase {
+export class CreateUserUseCase {
     constructor(
         @Inject('UserRepository')
         private readonly userRepository: UserRepository,
@@ -33,3 +33,4 @@ export class RegisterUserUseCase {
         return await this.userRepository.create(userData);
     }
 }
+

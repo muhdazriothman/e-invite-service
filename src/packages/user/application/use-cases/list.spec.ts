@@ -1,17 +1,21 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { ListUsersUseCase } from './list';
-import { UserRepository } from '@user/domain/repositories/user';
-import { createMock } from '@test/utils/mocks';
+import { UserRepository } from '@user/infra/repository';
 import { UserFixture } from '@test/fixture/user';
 
-describe('@user/application/use-cases/list', () => {
+describe('ListUsersUseCase', () => {
     let useCase: ListUsersUseCase;
-    let mockUserRepository: jest.Mocked<UserRepository>;
+    let userRepository: jest.Mocked<UserRepository>;
 
     beforeEach(async () => {
-        mockUserRepository = createMock<UserRepository>({});
+        const mockUserRepository = {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findByUsername: jest.fn(),
+            delete: jest.fn(),
+        };
 
-        const moduleRef = await Test.createTestingModule({
+        const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ListUsersUseCase,
                 {
@@ -21,7 +25,8 @@ describe('@user/application/use-cases/list', () => {
             ],
         }).compile();
 
-        useCase = moduleRef.get<ListUsersUseCase>(ListUsersUseCase);
+        useCase = module.get<ListUsersUseCase>(ListUsersUseCase);
+        userRepository = module.get('UserRepository');
     });
 
     it('should be defined', () => {
@@ -45,20 +50,20 @@ describe('@user/application/use-cases/list', () => {
                 }),
             ];
 
-            mockUserRepository.findAll.mockResolvedValue(mockUsers);
+            userRepository.findAll.mockResolvedValue(mockUsers);
 
             const result = await useCase.execute();
 
-            expect(mockUserRepository.findAll).toHaveBeenCalledTimes(1);
+            expect(userRepository.findAll).toHaveBeenCalledTimes(1);
             expect(result).toEqual(mockUsers);
         });
 
         it('should return empty array when no users exist', async () => {
-            mockUserRepository.findAll.mockResolvedValue([]);
+            userRepository.findAll.mockResolvedValue([]);
 
             const result = await useCase.execute();
 
-            expect(mockUserRepository.findAll).toHaveBeenCalledTimes(1);
+            expect(userRepository.findAll).toHaveBeenCalledTimes(1);
             expect(result).toEqual([]);
         });
     });

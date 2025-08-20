@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from './app.module';
-import { FlightModule } from '@modules/flight';
+import { AuthModule } from '@auth/auth.module';
+import { UserModule } from '@user/user.module';
 
 describe('AppModule', () => {
     let module: TestingModule;
@@ -16,9 +17,14 @@ describe('AppModule', () => {
     });
 
     describe('imports', () => {
-        it('should have FlightModule', () => {
+        it('should have AuthModule', () => {
             const metadata = Reflect.getMetadata('imports', AppModule);
-            expect(metadata).toContain(FlightModule);
+            expect(metadata).toContain(AuthModule);
+        });
+
+        it('should have UserModule', () => {
+            const metadata = Reflect.getMetadata('imports', AppModule);
+            expect(metadata).toContain(UserModule);
         });
     });
 

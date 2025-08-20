@@ -2,6 +2,9 @@
     "compilerOptions": {
         "baseUrl": "./",
         "paths": {
+            "@auth/*": [
+                "src/packages/auth/*"
+            ],
             "@common/*": [
                 "src/packages/common/*"
             ],
