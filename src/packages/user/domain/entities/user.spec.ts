@@ -22,6 +22,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.username).toBe(userProps.username);
             expect(user.email).toBe(userProps.email);
             expect(user.passwordHash).toBe(userProps.passwordHash);
+            expect(user.type).toBe(userProps.type);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);

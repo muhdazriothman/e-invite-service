@@ -28,6 +28,7 @@ export class CreateUserUseCase {
             username: createUserDto.username,
             email: createUserDto.email,
             passwordHash,
+            type: createUserDto.type,
         };
 
         return await this.userRepository.create(userData);

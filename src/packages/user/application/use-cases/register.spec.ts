@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { RegisterUserUseCase } from './register';
 import { UserRepository } from '@user/infra/repository';
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { HashService } from '@common/services/hash';
 import { UserFixture } from '@test/fixture/user';
@@ -53,6 +53,7 @@ describe('RegisterUserUseCase', () => {
             username: 'newuser',
             email: 'newuser@example.com',
             password: 'strongpass',
+            type: UserType.USER,
         };
 
         it('should create a new user and return the user entity', async () => {

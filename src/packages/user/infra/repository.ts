@@ -18,7 +18,7 @@ export class UserRepository {
         return 'users';
     }
 
-    async create(user: { username: string; email: string; passwordHash: string }): Promise<User> {
+    async create(user: { username: string; email: string; passwordHash: string; userType?: string }): Promise<User> {
         const created = await this.userModel.create(user);
         const doc = created.toObject();
         return new User({
@@ -26,6 +26,7 @@ export class UserRepository {
             username: doc.username,
             email: doc.email,
             passwordHash: doc.passwordHash,
+            type: doc.userType,
             isDeleted: doc.isDeleted,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
@@ -41,6 +42,7 @@ export class UserRepository {
             username: doc.username,
             email: doc.email,
             passwordHash: doc.passwordHash,
+            type: doc.userType,
             isDeleted: doc.isDeleted,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
@@ -57,6 +59,7 @@ export class UserRepository {
             username: doc.username,
             email: doc.email,
             passwordHash: doc.passwordHash,
+            type: doc.userType,
             isDeleted: doc.isDeleted,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
@@ -73,6 +76,7 @@ export class UserRepository {
             username: doc.username,
             email: doc.email,
             passwordHash: doc.passwordHash,
+            type: doc.userType,
             isDeleted: doc.isDeleted,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,

@@ -1,5 +1,6 @@
 import { validate } from 'class-validator';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
+import { UserType } from '@user/domain/entities/user';
 
 describe('@user/interfaces/http/dtos/create', () => {
     describe('#validation', () => {
@@ -8,6 +9,7 @@ describe('@user/interfaces/http/dtos/create', () => {
             dto.username = 'testuser';
             dto.email = 'test@example.com';
             dto.password = 'password123';
+            dto.type = UserType.USER;
 
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
@@ -18,6 +20,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 const dto = new CreateUserDto();
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -29,6 +32,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 (dto as any).username = 123;
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -41,6 +45,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 const dto = new CreateUserDto();
                 dto.username = 'testuser';
                 dto.password = 'password123';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -52,6 +57,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.username = 'testuser';
                 dto.email = 'invalid-email';
                 dto.password = 'password123';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -64,6 +70,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 const dto = new CreateUserDto();
                 dto.username = 'testuser';
                 dto.email = 'test@example.com';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -75,6 +82,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.username = 'testuser';
                 dto.email = 'test@example.com';
                 (dto as any).password = 123;
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -86,10 +94,47 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.username = 'testuser';
                 dto.email = 'test@example.com';
                 dto.password = '12345';
+                dto.type = UserType.USER;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('password');
+            });
+        });
+
+        describe('type', () => {
+            it('should fail validation when type is not provided', async () => {
+                const dto = new CreateUserDto();
+                dto.username = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('userType');
+            });
+
+            it('should fail validation when type is not a valid enum value', async () => {
+                const dto = new CreateUserDto();
+                dto.username = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+                (dto as any).type = 'invalid';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('userType');
+            });
+
+            it('should pass validation with valid type values', async () => {
+                const dto = new CreateUserDto();
+                dto.username = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+                dto.type = UserType.ADMIN;
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
             });
         });
     });

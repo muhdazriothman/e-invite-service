@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './controller';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 import { UserMapper } from '@user/interfaces/http/mapper';
 
 describe('@user/interfaces/http/controller', () => {
@@ -48,6 +48,7 @@ describe('@user/interfaces/http/controller', () => {
                 username: 'testuser',
                 email: 'test@example.com',
                 password: 'password123',
+                type: UserType.USER,
             };
 
             const mockUser = new User({
@@ -55,6 +56,7 @@ describe('@user/interfaces/http/controller', () => {
                 username: createUserDto.username,
                 email: createUserDto.email,
                 passwordHash: 'hashedPassword123',
+                type: UserType.USER,
             });
 
             createUserUseCase.execute.mockResolvedValue(mockUser);
@@ -77,12 +79,14 @@ describe('@user/interfaces/http/controller', () => {
                     email: 'user1@example.com',
                     passwordHash: 'hashedPassword1',
                     username: 'User 1',
+                    type: UserType.USER,
                 }),
                 new User({
                     id: '2',
                     email: 'user2@example.com',
                     passwordHash: 'hashedPassword2',
                     username: 'User 2',
+                    type: UserType.USER,
                 }),
             ];
 

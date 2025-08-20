@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
+import { UserType } from '@user/domain/entities/user';
+
 @Schema({ timestamps: true })
 export class UserMongoDocument extends Document {
     @Prop({ required: true, unique: true, index: true })
@@ -11,6 +13,14 @@ export class UserMongoDocument extends Document {
 
     @Prop({ required: true })
     passwordHash: string;
+
+    @Prop({
+        type: String,
+        enum: Object.values(UserType),
+        default: UserType.USER,
+        required: true
+    })
+    userType: UserType;
 
     @Prop({ default: false, index: true })
     isDeleted: boolean;

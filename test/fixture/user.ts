@@ -1,4 +1,4 @@
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 
 export class UserFixture {
     static getUserProps(props: Partial<User> = {}) {
@@ -7,6 +7,7 @@ export class UserFixture {
             username = 'testuser',
             email = 'testuser@example.com',
             passwordHash = 'hashed_password',
+            type = UserType.USER,
         } = props;
 
         return {
@@ -14,6 +15,7 @@ export class UserFixture {
             username,
             email,
             passwordHash,
+            type,
         };
     }
 
@@ -27,6 +29,7 @@ export class UserFixture {
             username: 'admin',
             email: 'admin@example.com',
             passwordHash: 'hashed_password',
+            type: UserType.ADMIN,
         });
     }
 
@@ -36,6 +39,7 @@ export class UserFixture {
             username: 'newuser',
             email: 'newuser@example.com',
             passwordHash: 'hashed_password',
+            type: UserType.USER,
         });
     }
 }

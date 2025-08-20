@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create';
 import { UserRepository } from '@user/infra/repository';
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { HashService } from '@common/services/hash';
 
@@ -52,6 +52,7 @@ describe('CreateUserUseCase', () => {
             username: 'testuser',
             email: 'test@example.com',
             password: 'password123',
+            type: UserType.USER,
         };
 
         it('should create a new user when username does not exist', async () => {
@@ -61,6 +62,7 @@ describe('CreateUserUseCase', () => {
                 username: createUserDto.username,
                 email: createUserDto.email,
                 passwordHash: hashedPassword,
+                type: createUserDto.type,
             });
 
             userRepository.findByUsername.mockResolvedValue(null);
@@ -75,6 +77,7 @@ describe('CreateUserUseCase', () => {
                 username: createUserDto.username,
                 email: createUserDto.email,
                 passwordHash: hashedPassword,
+                type: createUserDto.type,
             });
             expect(result).toEqual(expectedUser);
         });
@@ -85,6 +88,7 @@ describe('CreateUserUseCase', () => {
                 username: createUserDto.username,
                 email: 'existing@example.com',
                 passwordHash: 'existingHash',
+                type: UserType.USER,
             });
 
             userRepository.findByUsername.mockResolvedValue(existingUser);
