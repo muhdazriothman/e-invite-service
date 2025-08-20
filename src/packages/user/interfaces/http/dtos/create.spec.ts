@@ -111,7 +111,7 @@ describe('@user/interfaces/http/dtos/create', () => {
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('userType');
+                expect(errors[0].property).toBe('type');
             });
 
             it('should fail validation when type is not a valid enum value', async () => {
@@ -123,7 +123,7 @@ describe('@user/interfaces/http/dtos/create', () => {
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('userType');
+                expect(errors[0].property).toBe('type');
             });
 
             it('should pass validation with valid type values', async () => {

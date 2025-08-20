@@ -73,12 +73,14 @@ describe('CreateUserUseCase', () => {
 
             expect(userRepository.findByUsername).toHaveBeenCalledWith(createUserDto.username);
             expect(hashService.hash).toHaveBeenCalledWith(createUserDto.password);
-            expect(userRepository.create).toHaveBeenCalledWith({
-                username: createUserDto.username,
-                email: createUserDto.email,
-                passwordHash: hashedPassword,
-                type: createUserDto.type,
-            });
+            expect(userRepository.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    username: createUserDto.username,
+                    email: createUserDto.email,
+                    passwordHash: hashedPassword,
+                    type: createUserDto.type,
+                })
+            );
             expect(result).toEqual(expectedUser);
         });
 

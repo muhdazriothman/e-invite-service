@@ -18,8 +18,15 @@ export class UserRepository {
         return 'users';
     }
 
-    async create(user: { username: string; email: string; passwordHash: string; userType?: string }): Promise<User> {
-        const created = await this.userModel.create(user);
+    async create(user: User): Promise<User> {
+        const userData = {
+            username: user.username,
+            email: user.email,
+            passwordHash: user.passwordHash,
+            userType: user.type,
+        };
+
+        const created = await this.userModel.create(userData);
         const doc = created.toObject();
         return new User({
             id: (doc as any)._id?.toString?.() ?? '',

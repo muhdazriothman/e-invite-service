@@ -24,14 +24,15 @@ export class CreateUserUseCase {
 
         const passwordHash = await this.hashService.hash(createUserDto.password);
 
-        const userData = {
+        const user = new User({
+            id: '', // Will be set by the database
             username: createUserDto.username,
             email: createUserDto.email,
             passwordHash,
             type: createUserDto.type,
-        };
+        });
 
-        return await this.userRepository.create(userData);
+        return await this.userRepository.create(user);
     }
 }
 

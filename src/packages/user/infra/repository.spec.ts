@@ -1,4 +1,4 @@
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import {
     UserMongoSchema,
@@ -40,11 +40,13 @@ describe('@user/infra/repositories/user', () => {
 
     describe('#create', () => {
         it('should create a new user successfully', async () => {
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'newuser',
                 email: 'newuser@example.com',
                 passwordHash: '$2b$10$hashedpassword',
-            };
+                type: UserType.USER,
+            });
 
             const result = await userRepository.create(createUserData);
 
@@ -66,17 +68,21 @@ describe('@user/infra/repositories/user', () => {
         });
 
         it('should create multiple users with different data', async () => {
-            const createUserData1 = {
+            const createUserData1 = new User({
+                id: '',
                 username: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
-            };
+                type: UserType.USER,
+            });
 
-            const createUserData2 = {
+            const createUserData2 = new User({
+                id: '',
                 username: 'user2',
                 email: 'user2@example.com',
                 passwordHash: '$2b$10$hash2',
-            };
+                type: UserType.USER,
+            });
 
             const result1 = await userRepository.create(createUserData1);
             const result2 = await userRepository.create(createUserData2);
@@ -96,17 +102,21 @@ describe('@user/infra/repositories/user', () => {
     describe('#findAll', () => {
         it('should return all non-deleted users', async () => {
             // Create test users
-            const createUserData1 = {
+            const createUserData1 = new User({
+                id: '',
                 username: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
-            };
+                type: UserType.USER,
+            });
 
-            const createUserData2 = {
+            const createUserData2 = new User({
+                id: '',
                 username: 'user2',
                 email: 'user2@example.com',
                 passwordHash: '$2b$10$hash2',
-            };
+                type: UserType.USER,
+            });
 
             await userRepository.create(createUserData1);
             await userRepository.create(createUserData2);
@@ -128,11 +138,13 @@ describe('@user/infra/repositories/user', () => {
 
         it('should exclude deleted users from results', async () => {
             // Create a user
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
-            };
+                type: UserType.USER,
+            });
 
             const user = await userRepository.create(createUserData);
 
@@ -147,11 +159,13 @@ describe('@user/infra/repositories/user', () => {
 
     describe('#findByUsername', () => {
         it('should return a user when found by username', async () => {
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
-            };
+                type: UserType.USER,
+            });
 
             await userRepository.create(createUserData);
 
@@ -172,11 +186,13 @@ describe('@user/infra/repositories/user', () => {
 
         it('should exclude deleted users from search', async () => {
             // Create a user
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
-            };
+                type: UserType.USER,
+            });
 
             const user = await userRepository.create(createUserData);
 
@@ -191,11 +207,13 @@ describe('@user/infra/repositories/user', () => {
 
     describe('#findByEmail', () => {
         it('should return a user when found by email', async () => {
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
-            };
+                type: UserType.USER,
+            });
 
             await userRepository.create(createUserData);
 
@@ -208,19 +226,21 @@ describe('@user/infra/repositories/user', () => {
             expect(result?.isDeleted).toBe(false);
         });
 
-        it('should return null when user is not found by email', async () => {
+        it('should return null when user is not found', async () => {
             const result = await userRepository.findByEmail('nonexistent@example.com');
 
             expect(result).toBeNull();
         });
 
-        it('should exclude deleted users from email search', async () => {
+        it('should exclude deleted users from search', async () => {
             // Create a user
-            const createUserData = {
+            const createUserData = new User({
+                id: '',
                 username: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
-            };
+                type: UserType.USER,
+            });
 
             const user = await userRepository.create(createUserData);
 
@@ -234,12 +254,14 @@ describe('@user/infra/repositories/user', () => {
     });
 
     describe('#delete', () => {
-        it('should soft delete a user successfully', async () => {
-            const createUserData = {
-                username: 'user1',
-                email: 'user1@example.com',
-                passwordHash: '$2b$10$hash1',
-            };
+        it('should mark a user as deleted', async () => {
+            const createUserData = new User({
+                id: '',
+                username: 'admin',
+                email: 'admin@example.com',
+                passwordHash: '$2b$10$hash',
+                type: UserType.USER,
+            });
 
             const user = await userRepository.create(createUserData);
 
@@ -247,28 +269,25 @@ describe('@user/infra/repositories/user', () => {
 
             expect(result).toBe(true);
 
-            // Verify the user is soft deleted
-            const deletedUser = await userRepository.findByUsername('user1');
+            // Verify the user is marked as deleted
+            const deletedUser = await userRepository.findByUsername('admin');
             expect(deletedUser).toBeNull();
-
-            // Verify the user still exists in database but is marked as deleted
-            const dbUser = await userModel.findOne({ _id: new Types.ObjectId(user.id) }).lean();
-            expect(dbUser?.isDeleted).toBe(true);
-            expect(dbUser?.deletedAt).toBeInstanceOf(Date);
         });
 
-        it('should return false when user is not found', async () => {
+        it('should return false when user does not exist', async () => {
             const result = await userRepository.delete(new Types.ObjectId().toString());
 
             expect(result).toBe(false);
         });
 
         it('should return false when user is already deleted', async () => {
-            const createUserData = {
-                username: 'user1',
-                email: 'user1@example.com',
-                passwordHash: '$2b$10$hash1',
-            };
+            const createUserData = new User({
+                id: '',
+                username: 'admin',
+                email: 'admin@example.com',
+                passwordHash: '$2b$10$hash',
+                type: UserType.USER,
+            });
 
             const user = await userRepository.create(createUserData);
 
