@@ -3,7 +3,7 @@ import { ListUsersUseCase } from './list';
 import { UserRepository } from '@user/infra/repository';
 import { UserFixture } from '@test/fixture/user';
 
-describe('ListUsersUseCase', () => {
+describe('@user/application/use-cases/list', () => {
     let useCase: ListUsersUseCase;
     let userRepository: jest.Mocked<UserRepository>;
 
@@ -11,7 +11,6 @@ describe('ListUsersUseCase', () => {
         const mockUserRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
-            findByUsername: jest.fn(),
             delete: jest.fn(),
         };
 
@@ -38,13 +37,13 @@ describe('ListUsersUseCase', () => {
             const mockUsers = [
                 UserFixture.getUserEntity({
                     id: '1',
-                    username: 'user1',
+                    name: 'user1',
                     email: 'user1@example.com',
                     passwordHash: 'hash1',
                 }),
                 UserFixture.getUserEntity({
                     id: '2',
-                    username: 'user2',
+                    name: 'user2',
                     email: 'user2@example.com',
                     passwordHash: 'hash2',
                 }),

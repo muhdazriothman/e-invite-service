@@ -1,4 +1,4 @@
-import { User } from '@user/domain/entities/user';
+import { User, UserType } from '@user/domain/entities/user';
 import { UserFixture } from '@test/fixture/user';
 
 describe('@user/domain/entities/user', () => {
@@ -8,7 +8,7 @@ describe('@user/domain/entities/user', () => {
     beforeEach(() => {
         userProps = UserFixture.getUserProps({
             id: '123',
-            username: 'testuser',
+            name: 'testuser',
             email: 'test@example.com',
             passwordHash: 'hashedpassword123',
         });
@@ -19,14 +19,14 @@ describe('@user/domain/entities/user', () => {
             user = new User(userProps);
 
             expect(user.id).toBe(userProps.id);
-            expect(user.username).toBe(userProps.username);
+            expect(user.name).toBe(userProps.name);
             expect(user.email).toBe(userProps.email);
             expect(user.passwordHash).toBe(userProps.passwordHash);
             expect(user.type).toBe(userProps.type);
-            expect(user.isDeleted).toBe(false);
-            expect(user.createdAt).toBeInstanceOf(Date);
-            expect(user.updatedAt).toBeInstanceOf(Date);
-            expect(user.deletedAt).toBeNull();
+            expect(user.isDeleted).toBe(userProps.isDeleted);
+            expect(user.createdAt).toBe(userProps.createdAt);
+            expect(user.updatedAt).toBe(userProps.updatedAt);
+            expect(user.deletedAt).toBe(userProps.deletedAt);
         });
 
         it('should create a User instance with custom audit fields', () => {
@@ -43,6 +43,117 @@ describe('@user/domain/entities/user', () => {
             expect(userWithAudit.createdAt).toBe(customDate);
             expect(userWithAudit.updatedAt).toBe(customDate);
             expect(userWithAudit.deletedAt).toBe(customDate);
+        });
+
+        it('should handle null deletedAt properly', () => {
+            const userWithNullDeletedAt = new User({
+                ...userProps,
+                deletedAt: null,
+            });
+
+            expect(userWithNullDeletedAt.deletedAt).toBeNull();
+        });
+    });
+
+    describe('#createNew', () => {
+        it('should create a new User instance with default values', () => {
+            const createProps = {
+                name: 'newuser',
+                email: 'newuser@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.USER,
+            };
+
+            const user = User.createNew(createProps);
+
+            expect(user.id).toBe('');
+            expect(user.name).toBe(createProps.name);
+            expect(user.email).toBe(createProps.email);
+            expect(user.passwordHash).toBe(createProps.passwordHash);
+            expect(user.type).toBe(createProps.type);
+            expect(user.isDeleted).toBe(false);
+            expect(user.createdAt).toBeInstanceOf(Date);
+            expect(user.updatedAt).toBeInstanceOf(Date);
+            expect(user.deletedAt).toBeNull();
+        });
+
+        it('should create an admin user with default values', () => {
+            const createProps = {
+                name: 'admin',
+                email: 'admin@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.ADMIN,
+            };
+
+            const user = User.createNew(createProps);
+
+            expect(user.type).toBe(UserType.ADMIN);
+            expect(user.name).toBe('admin');
+            expect(user.isDeleted).toBe(false);
+            expect(user.createdAt).toBeInstanceOf(Date);
+            expect(user.updatedAt).toBeInstanceOf(Date);
+            expect(user.deletedAt).toBeNull();
+        });
+
+        it('should set createdAt and updatedAt to the same timestamp', () => {
+            const createProps = {
+                name: 'newuser',
+                email: 'newuser@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.USER,
+            };
+
+            const user = User.createNew(createProps);
+
+            expect(user.createdAt.getTime()).toBe(user.updatedAt.getTime());
+        });
+    });
+
+    describe('#createFromDb', () => {
+        it('should create a User instance from database props', () => {
+            const dbProps = {
+                id: 'db-user-id',
+                name: 'dbuser',
+                email: 'dbuser@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.USER,
+                isDeleted: false,
+                createdAt: new Date('2023-01-01'),
+                updatedAt: new Date('2023-01-02'),
+                deletedAt: null,
+            };
+
+            const user = User.createFromDb(dbProps);
+
+            expect(user.id).toBe(dbProps.id);
+            expect(user.name).toBe(dbProps.name);
+            expect(user.email).toBe(dbProps.email);
+            expect(user.passwordHash).toBe(dbProps.passwordHash);
+            expect(user.type).toBe(dbProps.type);
+            expect(user.isDeleted).toBe(dbProps.isDeleted);
+            expect(user.createdAt).toBe(dbProps.createdAt);
+            expect(user.updatedAt).toBe(dbProps.updatedAt);
+            expect(user.deletedAt).toBe(dbProps.deletedAt);
+        });
+
+        it('should create a User instance with deleted status', () => {
+            const deletedDate = new Date('2023-01-03');
+            const dbProps = {
+                id: 'deleted-user-id',
+                name: 'deleteduser',
+                email: 'deleted@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.USER,
+                isDeleted: true,
+                createdAt: new Date('2023-01-01'),
+                updatedAt: new Date('2023-01-03'),
+                deletedAt: deletedDate,
+            };
+
+            const user = User.createFromDb(dbProps);
+
+            expect(user.isDeleted).toBe(true);
+            expect(user.deletedAt).toBe(deletedDate);
         });
     });
 });

@@ -4,29 +4,38 @@ export class UserFixture {
     static getUserProps(props: Partial<User> = {}) {
         const {
             id = '1',
-            username = 'testuser',
+            name = 'testuser',
             email = 'testuser@example.com',
             passwordHash = 'hashed_password',
             type = UserType.USER,
+            isDeleted = false,
+            createdAt = new Date(),
+            updatedAt = new Date(),
+            deletedAt = null,
         } = props;
 
         return {
             id,
-            username,
+            name,
             email,
             passwordHash,
             type,
+            isDeleted,
+            createdAt,
+            updatedAt,
+            deletedAt,
         };
     }
 
     static getUserEntity(params: Partial<User> = {}) {
-        return new User(UserFixture.getUserProps(params));
+        const props = UserFixture.getUserProps(params);
+        return new User(props);
     }
 
     static getAdminUser() {
         return UserFixture.getUserEntity({
             id: '1',
-            username: 'admin',
+            name: 'admin',
             email: 'admin@example.com',
             passwordHash: 'hashed_password',
             type: UserType.ADMIN,
@@ -36,7 +45,7 @@ export class UserFixture {
     static getNewUser() {
         return UserFixture.getUserEntity({
             id: '123',
-            username: 'newuser',
+            name: 'newuser',
             email: 'newuser@example.com',
             passwordHash: 'hashed_password',
             type: UserType.USER,

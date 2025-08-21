@@ -9,7 +9,7 @@ import { UserType } from '@user/domain/entities/user';
 
 export class CreateUserDto {
     @IsString()
-    username: string;
+    name: string;
 
     @IsEmail()
     email: string;

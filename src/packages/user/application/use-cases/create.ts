@@ -14,19 +14,18 @@ export class CreateUserUseCase {
     ) { }
 
     async execute(createUserDto: CreateUserDto): Promise<User> {
-        const existingUser = await this.userRepository.findByUsername(
-            createUserDto.username,
+        const existingUser = await this.userRepository.findByEmail(
+            createUserDto.email,
         );
 
         if (existingUser) {
-            throw new ConflictException('User already exists');
+            throw new ConflictException('User with this email already exists');
         }
 
         const passwordHash = await this.hashService.hash(createUserDto.password);
 
-        const user = new User({
-            id: '', // Will be set by the database
-            username: createUserDto.username,
+        const user = User.createNew({
+            name: createUserDto.name,
             email: createUserDto.email,
             passwordHash,
             type: createUserDto.type,

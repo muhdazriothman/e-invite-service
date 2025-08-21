@@ -2,11 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create';
 import { UserRepository } from '@user/infra/repository';
-import { User, UserType } from '@user/domain/entities/user';
+import { UserType } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { HashService } from '@common/services/hash';
+import { UserFixture } from '@test/fixture/user';
 
-describe('CreateUserUseCase', () => {
+describe('@user/application/use-cases/create', () => {
     let useCase: CreateUserUseCase;
     let userRepository: jest.Mocked<UserRepository>;
     let hashService: jest.Mocked<HashService>;
@@ -15,7 +16,8 @@ describe('CreateUserUseCase', () => {
         const mockUserRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
-            findByUsername: jest.fn(),
+            findByName: jest.fn(),
+            findByEmail: jest.fn(),
             delete: jest.fn(),
         };
 
@@ -49,33 +51,33 @@ describe('CreateUserUseCase', () => {
 
     describe('execute', () => {
         const createUserDto: CreateUserDto = {
-            username: 'testuser',
+            name: 'testuser',
             email: 'test@example.com',
             password: 'password123',
             type: UserType.USER,
         };
 
-        it('should create a new user when username does not exist', async () => {
+        it('should create a new user when email does not exist', async () => {
             const hashedPassword = 'hashedPassword123';
-            const expectedUser = new User({
+            const expectedUser = UserFixture.getUserEntity({
                 id: '1',
-                username: createUserDto.username,
+                name: createUserDto.name,
                 email: createUserDto.email,
                 passwordHash: hashedPassword,
                 type: createUserDto.type,
             });
 
-            userRepository.findByUsername.mockResolvedValue(null);
+            userRepository.findByEmail.mockResolvedValue(null);
             userRepository.create.mockResolvedValue(expectedUser);
             hashService.hash.mockResolvedValue(hashedPassword);
 
             const result = await useCase.execute(createUserDto);
 
-            expect(userRepository.findByUsername).toHaveBeenCalledWith(createUserDto.username);
+            expect(userRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
             expect(hashService.hash).toHaveBeenCalledWith(createUserDto.password);
             expect(userRepository.create).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    username: createUserDto.username,
+                    name: createUserDto.name,
                     email: createUserDto.email,
                     passwordHash: hashedPassword,
                     type: createUserDto.type,
@@ -84,19 +86,19 @@ describe('CreateUserUseCase', () => {
             expect(result).toEqual(expectedUser);
         });
 
-        it('should throw ConflictException when username already exists', async () => {
-            const existingUser = new User({
+        it('should throw ConflictException when email already exists', async () => {
+            const existingUser = UserFixture.getUserEntity({
                 id: '1',
-                username: createUserDto.username,
-                email: 'existing@example.com',
+                name: 'existinguser',
+                email: createUserDto.email,
                 passwordHash: 'existingHash',
                 type: UserType.USER,
             });
 
-            userRepository.findByUsername.mockResolvedValue(existingUser);
+            userRepository.findByEmail.mockResolvedValue(existingUser);
 
             await expect(useCase.execute(createUserDto)).rejects.toThrow(ConflictException);
-            expect(userRepository.findByUsername).toHaveBeenCalledWith(createUserDto.username);
+            expect(userRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
             expect(userRepository.create).not.toHaveBeenCalled();
         });
     });

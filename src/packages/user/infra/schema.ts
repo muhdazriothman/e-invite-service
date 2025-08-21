@@ -1,12 +1,24 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, ObjectId } from 'mongoose';
 
 import { UserType } from '@user/domain/entities/user';
 
+export interface UserDocumentSchema {
+    _id: unknown;
+    name: string;
+    email: string;
+    passwordHash: string;
+    type: UserType;
+    isDeleted?: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt?: Date | null;
+}
+
 @Schema({ timestamps: true })
 export class UserMongoDocument extends Document {
-    @Prop({ required: true, unique: true, index: true })
-    username: string;
+    @Prop({ required: true, index: true })
+    name: string;
 
     @Prop({ required: true, unique: true, index: true })
     email: string;
@@ -20,7 +32,7 @@ export class UserMongoDocument extends Document {
         default: UserType.USER,
         required: true
     })
-    userType: UserType;
+    type: UserType;
 
     @Prop({ default: false, index: true })
     isDeleted: boolean;

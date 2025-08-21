@@ -5,36 +5,63 @@ export enum UserType {
 
 export interface UserProps {
     id: string;
-    username: string;
+    name: string;
     email: string;
     passwordHash: string;
     type: UserType;
-    isDeleted?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
-    deletedAt?: Date;
+    isDeleted: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+}
+
+export interface CreateUserProps {
+    name: string;
+    email: string;
+    passwordHash: string;
+    type: UserType;
 }
 
 export class User {
-    public id: string;
-    public username: string;
-    public email: string;
+    public readonly id: string;
+    public name: string;
+    public readonly email: string;
     public passwordHash: string;
-    public type: UserType;
+    public readonly type: UserType;
     public isDeleted: boolean;
-    public createdAt: Date;
+    public readonly createdAt: Date;
     public updatedAt: Date;
     public deletedAt: Date | null;
 
-    constructor(user: UserProps) {
-        this.id = user.id;
-        this.username = user.username;
-        this.email = user.email;
-        this.passwordHash = user.passwordHash;
-        this.type = user.type;
-        this.isDeleted = user.isDeleted ?? false;
-        this.createdAt = user.createdAt ?? new Date();
-        this.updatedAt = user.updatedAt ?? new Date();
-        this.deletedAt = user.deletedAt ?? null;
+    constructor(props: UserProps) {
+        this.id = props.id;
+        this.name = props.name;
+        this.email = props.email;
+        this.passwordHash = props.passwordHash;
+        this.type = props.type;
+        this.isDeleted = props.isDeleted;
+        this.createdAt = props.createdAt;
+        this.updatedAt = props.updatedAt;
+        this.deletedAt = props.deletedAt;
+    }
+
+    static createNew(props: CreateUserProps): User {
+        const now = new Date();
+
+        return new User({
+            id: '', // Will be set by the database
+            name: props.name,
+            email: props.email,
+            passwordHash: props.passwordHash,
+            type: props.type,
+            isDeleted: false,
+            createdAt: now,
+            updatedAt: now,
+            deletedAt: null,
+        });
+    }
+
+    static createFromDb(props: UserProps): User {
+        return new User(props);
     }
 }

@@ -9,7 +9,7 @@ describe('@user/interfaces/http/mapper', () => {
     beforeEach(() => {
         userProps = UserFixture.getUserProps({
             id: '123',
-            username: 'testuser',
+            name: 'testuser',
             email: 'test@example.com',
             passwordHash: 'hashedpassword123',
         });
@@ -22,7 +22,7 @@ describe('@user/interfaces/http/mapper', () => {
 
             expect(result).toEqual({
                 id: userProps.id,
-                username: userProps.username,
+                name: userProps.name,
                 email: userProps.email,
                 createdAt: user.createdAt.toISOString(),
                 updatedAt: user.updatedAt.toISOString(),
@@ -34,7 +34,7 @@ describe('@user/interfaces/http/mapper', () => {
 
             expect(result).not.toHaveProperty('passwordHash');
             expect(Object.keys(result)).toHaveLength(5);
-            expect(Object.keys(result)).toEqual(['id', 'username', 'email', 'createdAt', 'updatedAt']);
+            expect(Object.keys(result)).toEqual(['id', 'name', 'email', 'createdAt', 'updatedAt']);
         });
 
         it('should return a new object instance', () => {

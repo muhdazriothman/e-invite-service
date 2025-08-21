@@ -2,8 +2,11 @@ import { Module } from '@nestjs/common';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 
 import { UserController } from '@user/interfaces/http/controller';
-import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
+import { ListUsersUseCase } from '@user/application/use-cases/list';
+import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
+import { UpdateUserUseCase } from '@user/application/use-cases/update';
+import { DeleteUserUseCase } from '@user/application/use-cases/delete';
 import { UserRepository } from '@user/infra/repository';
 import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
 import { HashService } from '@common/services/hash';
@@ -49,8 +52,11 @@ const createUserRepository = (userModel: any) =>
             provide: 'HashService',
             useClass: HashService,
         },
-        ListUsersUseCase,
         CreateUserUseCase,
+        ListUsersUseCase,
+        GetUserByIdUseCase,
+        UpdateUserUseCase,
+        DeleteUserUseCase,
     ],
     exports: ['UserRepository'],
 })
