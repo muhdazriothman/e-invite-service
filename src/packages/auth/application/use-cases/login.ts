@@ -7,6 +7,7 @@ import { JwtService } from '@common/services/jwt';
 import { HashService } from '@common/services/hash';
 import { UserRepository } from '@user/infra/repository';
 import { LoginDto } from '@auth/interfaces/http/dtos/login';
+import { JwtPayload } from '@auth/interfaces/http/strategies/jwt';
 
 @Injectable()
 export class LoginUseCase {
@@ -37,10 +38,13 @@ export class LoginUseCase {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        const token = this.jwtService.sign({
+        const jwtPayload: JwtPayload = {
             sub: user.id,
             email: user.email,
-        });
+            type: user.type,
+        };
+
+        const token = this.jwtService.sign(jwtPayload);
 
         return { token };
     }

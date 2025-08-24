@@ -7,6 +7,7 @@ import {
     Body,
     Inject,
     Param,
+    UseGuards,
 } from '@nestjs/common';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
@@ -19,9 +20,10 @@ import {
     UserDto,
     UserMapper
 } from '@user/interfaces/http/mapper';
+import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
 
 @Controller('users')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(AdminAuthGuard)
 export class UserController {
     constructor(
         @Inject(ListUsersUseCase)

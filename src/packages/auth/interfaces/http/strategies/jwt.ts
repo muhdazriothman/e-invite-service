@@ -3,13 +3,24 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 
+export interface JwtPayload {
+    sub: string;
+    email: string;
+    type: string;
+    iat?: number;
+    exp?: number;
+}
+
+export interface JwtUser {
+    userId: string;
+    email: string;
+    type: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(private configService: ConfigService) {
-        const secret = configService.get<string>('JWT_SECRET');
-        if (!secret) {
-            throw new Error('JWT_SECRET is not configured');
-        }
+    constructor(configService: ConfigService) {
+        const secret = configService.get<string>('JWT_SECRET')!;
 
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -18,7 +29,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         });
     }
 
-    async validate(payload: any) {
-        return { userId: payload.sub, email: payload.email };
+    /**
+     * Transforms JWT payload into user object format
+     * Required by Passport.js - cannot rename this method
+     */
+    validate(payload: JwtPayload): JwtUser {
+        return {
+            userId: payload.sub,
+            email: payload.email,
+            type: payload.type,
+        };
     }
 }

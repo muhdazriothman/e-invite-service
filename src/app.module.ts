@@ -6,10 +6,20 @@ import {
     ConfigService,
 } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import * as Joi from 'joi';
 
 @Module({
     imports: [
-        ConfigModule.forRoot({ isGlobal: true }),
+        ConfigModule.forRoot({
+            isGlobal: true,
+            ...(process.env.NODE_ENV !== 'test' && {
+                validationSchema: Joi.object({
+                    JWT_SECRET: Joi.string().required(),
+                    MONGODB_URI: Joi.string().uri().required(),
+                    PORT: Joi.number().default(3000),
+                }),
+            }),
+        }),
         ...(process.env.NODE_ENV === 'test'
             ? []
             : [

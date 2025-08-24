@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
+import { AuthModule } from '@auth/auth.module';
 
 import { UserController } from '@user/interfaces/http/controller';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
@@ -10,6 +11,7 @@ import { DeleteUserUseCase } from '@user/application/use-cases/delete';
 import { UserRepository } from '@user/infra/repository';
 import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
 import { HashService } from '@common/services/hash';
+import { UserAuthService } from '@user/application/services/user-auth.service';
 
 // Mock factory for testing
 const createMockUserRepository = () =>
@@ -27,6 +29,7 @@ const createUserRepository = (userModel: any) =>
 
 @Module({
     imports: [
+        AuthModule,
         ...(process.env.NODE_ENV === 'test'
             ? []
             : [
@@ -57,7 +60,14 @@ const createUserRepository = (userModel: any) =>
         GetUserByIdUseCase,
         UpdateUserUseCase,
         DeleteUserUseCase,
+        {
+            provide: 'UserAuthService',
+            useClass: UserAuthService,
+        },
     ],
-    exports: ['UserRepository'],
+    exports: [
+        'UserRepository',
+        'UserAuthService',
+    ],
 })
 export class UserModule { }

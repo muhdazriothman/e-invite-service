@@ -6,6 +6,7 @@ import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 import { AuthController } from '@auth/interfaces/http/controller';
 import { JwtStrategy } from '@auth/interfaces/http/strategies/jwt';
 import { JwtAuthGuard } from '@auth/interfaces/http/guards/jwt-auth';
+import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
 
 import { LoginUseCase } from '@auth/application/use-cases/login';
 
@@ -51,6 +52,7 @@ const createUserRepository = (userModel: any) =>
     providers: [
         JwtStrategy,
         JwtAuthGuard,
+        AdminAuthGuard,
         {
             provide: 'UserRepository',
             useFactory:
@@ -72,6 +74,12 @@ const createUserRepository = (userModel: any) =>
         },
         LoginUseCase,
     ],
-    exports: ['JwtService', 'HashService', 'UserRepository', JwtAuthGuard],
+    exports: [
+        'JwtService',
+        'HashService',
+        'UserRepository',
+        JwtAuthGuard,
+        AdminAuthGuard,
+    ],
 })
 export class AuthModule { }

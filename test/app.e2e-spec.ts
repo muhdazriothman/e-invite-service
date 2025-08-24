@@ -16,14 +16,19 @@ describe('AppController (e2e)', () => {
         await app.init();
     });
 
-    it('/auth/users (GET)', () => {
+    it('/users (GET) - should require admin authentication', () => {
         return request(app.getHttpServer())
-            .get('/auth/users')
-            .expect(200)
-            .expect((res) => {
-                expect(res.body).toHaveProperty('statusCode', 200);
-                expect(res.body).toHaveProperty('data');
-                expect(Array.isArray(res.body.data)).toBe(true);
-            });
+            .get('/users')
+            .expect(401); // Should return 401 Unauthorized without JWT token
+    });
+
+    it('/auth/login (POST) - should allow login', () => {
+        return request(app.getHttpServer())
+            .post('/auth/login')
+            .send({
+                email: 'test@example.com',
+                password: 'password123'
+            })
+            .expect(401); // Should fail with invalid credentials, but endpoint should be accessible
     });
 });
