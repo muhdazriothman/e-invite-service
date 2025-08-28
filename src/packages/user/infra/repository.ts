@@ -20,7 +20,7 @@ export class UserRepository {
         return 'users';
     }
 
-    private toDomain(doc: UserDocumentSchema): User {
+    static toDomain(doc: UserDocumentSchema): User {
         return User.createFromDb({
             id: (doc._id as unknown)?.toString() ?? '',
             name: doc.name,
@@ -35,49 +35,63 @@ export class UserRepository {
     }
 
     async create(user: User): Promise<User> {
-        const userData = {
+        const createdUser = await this.userModel.create({
             name: user.name,
             email: user.email,
             passwordHash: user.passwordHash,
             type: user.type,
-        };
+            isDeleted: user.isDeleted,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            deletedAt: user.deletedAt,
+        });
 
-        const created = await this.userModel.create(userData);
-        const doc = created.toObject();
-        return this.toDomain(doc);
+        const document = createdUser.toObject();
+        return UserRepository.toDomain(document);
     }
 
     async findAll(): Promise<User[]> {
-        const docs = await this.userModel.find({ isDeleted: false }).lean();
+        const documents = await this.userModel.find({
+            isDeleted: false,
+        }).lean();
 
-        return docs.map(doc => this.toDomain(doc));
+        return documents.map(document => UserRepository.toDomain(document));
     }
 
     async findByName(name: string): Promise<User | null> {
-        const doc = await this.userModel.findOne({ name, isDeleted: false }).lean();
-        if (!doc) {
+        const document = await this.userModel.findOne({
+            name,
+            isDeleted: false,
+        }).lean();
+        if (!document) {
             return null;
         }
 
-        return this.toDomain(doc);
+        return UserRepository.toDomain(document);
     }
 
     async findByEmail(email: string): Promise<User | null> {
-        const doc = await this.userModel.findOne({ email, isDeleted: false }).lean();
-        if (!doc) {
+        const document = await this.userModel.findOne({
+            email,
+            isDeleted: false,
+        }).lean();
+        if (!document) {
             return null;
         }
 
-        return this.toDomain(doc);
+        return UserRepository.toDomain(document);
     }
 
     async findById(id: string): Promise<User | null> {
-        const doc = await this.userModel.findOne({ _id: id, isDeleted: false }).lean();
-        if (!doc) {
+        const document = await this.userModel.findOne({
+            _id: id,
+            isDeleted: false,
+        }).lean();
+        if (!document) {
             return null;
         }
 
-        return this.toDomain(doc);
+        return UserRepository.toDomain(document);
     }
 
     async update(id: string, updates: Partial<Pick<UserProps, 'name' | 'passwordHash'>>): Promise<User | null> {
@@ -86,7 +100,7 @@ export class UserRepository {
             updatedAt: new Date(),
         };
 
-        const result = await this.userModel.findOneAndUpdate(
+        const document = await this.userModel.findOneAndUpdate(
             {
                 _id: id,
                 isDeleted: false
@@ -98,17 +112,24 @@ export class UserRepository {
             }
         );
 
-        if (!result) {
+        if (!document) {
             return null;
         }
 
-        return this.toDomain(result);
+        return UserRepository.toDomain(document);
     }
 
     async delete(id: string): Promise<boolean> {
         const result = await this.userModel.updateOne(
-            { _id: id, isDeleted: false },
-            { isDeleted: true, deletedAt: new Date(), updatedAt: new Date() }
+            {
+                _id: id,
+                isDeleted: false,
+            },
+            {
+                isDeleted: true,
+                deletedAt: new Date(),
+                updatedAt: new Date(),
+            }
         );
 
         return result.modifiedCount > 0;
