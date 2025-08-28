@@ -22,7 +22,8 @@ export function IsDateFormat(
                         return false;
                     }
 
-                    return DateValidator.isValidFormat(value, format);
+                    const dateValidator = new DateValidator({ format: format });
+                    return dateValidator.isValidFormat(value);
                 },
                 defaultMessage(args: ValidationArguments) {
                     return `${args.property} must be a valid date in ${format} format`;

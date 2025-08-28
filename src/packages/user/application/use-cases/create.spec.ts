@@ -1,4 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import {
+    Test,
+    TestingModule,
+} from '@nestjs/testing';
 import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create';
 import { UserRepository } from '@user/infra/repository';

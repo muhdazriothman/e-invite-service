@@ -6,6 +6,7 @@ module.exports = {
         '^@modules/(.*)$': '<rootDir>/src/modules/$1',
         '^@test/(.*)$': '<rootDir>/test/$1',
         '^@user/(.*)$': '<rootDir>/src/packages/user/$1',
+        '^@invitation/(.*)$': '<rootDir>/src/packages/invitation/$1',
         '^test/(.*)$': '<rootDir>/test/$1'
     },
     transform: {
@@ -13,5 +14,6 @@ module.exports = {
     },
     testEnvironment: 'node',
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-    setupFiles: ['<rootDir>/test/setup-env.ts']
+    setupFiles: ['<rootDir>/test/setup-env.ts'],
+    setupFilesAfterEnv: ['<rootDir>/test/setup/matchers.ts']
 };

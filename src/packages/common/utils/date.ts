@@ -15,9 +15,19 @@ interface DaysBetweenDatesParams {
     secondDate: DateTime;
 }
 
+export interface DateValidatorOptions {
+    format?: string;
+}
+
 export class DateValidator {
-    static parseDate(value: string, format: string): DateTime {
-        const date = DateTime.fromFormat(value, format);
+    private format: string;
+
+    constructor(options: DateValidatorOptions = {}) {
+        this.format = options.format || 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
+    }
+
+    parseDate(value: string): DateTime {
+        const date = DateTime.fromFormat(value, this.format);
 
         if (!date.isValid) {
             throw new Error('Invalid date');
@@ -26,45 +36,45 @@ export class DateValidator {
         return date;
     }
 
-    static isValidFormat(value: any, format: string): boolean {
+    isValidFormat(value: any): boolean {
         try {
-            DateValidator.parseDate(value, format);
+            this.parseDate(value);
             return true;
         } catch (error) {
             return false;
         }
     }
 
-    static isPastDate(date: DateTime): boolean {
-        if (!DateValidator._isValidDate(date)) {
+    isPastDate(date: DateTime): boolean {
+        if (!this._isValidDate(date)) {
             throw new Error('Invalid date');
         }
 
         return date < DateTime.utc();
     }
 
-    static isBeforeDate(params: DateComparisonParams): boolean {
+    isBeforeDate(params: DateComparisonParams): boolean {
         const { targetDate, referenceDate } = params;
 
-        if (!DateValidator._isValidDate(targetDate)) {
+        if (!this._isValidDate(targetDate)) {
             throw new Error('Invalid targetDate');
         }
 
-        if (!DateValidator._isValidDate(referenceDate)) {
+        if (!this._isValidDate(referenceDate)) {
             throw new Error('Invalid referenceDate');
         }
 
         return targetDate <= referenceDate;
     }
 
-    static getDaysBetweenDates(params: DaysBetweenDatesParams): number {
+    getDaysBetweenDates(params: DaysBetweenDatesParams): number {
         const { firstDate, secondDate } = params;
 
-        if (!DateValidator._isValidDate(firstDate)) {
+        if (!this._isValidDate(firstDate)) {
             throw new Error('Invalid firstDate');
         }
 
-        if (!DateValidator._isValidDate(secondDate)) {
+        if (!this._isValidDate(secondDate)) {
             throw new Error('Invalid secondDate');
         }
 
@@ -79,7 +89,7 @@ export class DateValidator {
         return endDate.diff(startDate, 'days').days;
     }
 
-    static _isValidDate(date: DateTime): boolean {
+    private _isValidDate(date: DateTime): boolean {
         return date instanceof DateTime && date.isValid;
     }
 }

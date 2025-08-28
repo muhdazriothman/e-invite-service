@@ -17,6 +17,9 @@
             "@user/*": [
                 "src/packages/user/*"
             ],
+            "@invitation/*": [
+                "src/packages/invitation/*"
+            ],
             "@test/*": [
                 "test/*"
             ]

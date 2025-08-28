@@ -17,6 +17,7 @@
         "^@auth/(.*)$": "<rootDir>/../src/packages/auth/$1",
         "^@common/(.*)$": "<rootDir>/../src/packages/common/$1",
         "^@flight/(.*)$": "<rootDir>/../src/packages/flight/$1",
+        "^@invitation/(.*)$": "<rootDir>/../src/packages/invitation/$1",
         "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
         "^@test/(.*)$": "<rootDir>/$1",
         "^@user/(.*)$": "<rootDir>/../src/packages/user/$1",
