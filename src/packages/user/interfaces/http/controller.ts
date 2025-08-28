@@ -9,6 +9,11 @@ import {
     Param,
     UseGuards,
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+} from '@nestjs/swagger';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
@@ -22,6 +27,7 @@ import {
 } from '@user/interfaces/http/mapper';
 import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
 
+@ApiTags('users')
 @Controller('users')
 @UseGuards(AdminAuthGuard)
 export class UserController {
@@ -43,6 +49,19 @@ export class UserController {
     ) { }
 
     @Post()
+    @ApiOperation({ summary: 'Create a new user' })
+    @ApiResponse({
+        status: 201,
+        description: 'User created successfully',
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Bad request - validation error',
+    })
+    @ApiResponse({
+        status: 409,
+        description: 'Conflict - user already exists',
+    })
     async createUser(@Body() createUserDto: CreateUserDto) {
         const user = await this.createUserUseCase.execute(createUserDto);
         return {
@@ -52,6 +71,11 @@ export class UserController {
     }
 
     @Get()
+    @ApiOperation({ summary: 'Get all users' })
+    @ApiResponse({
+        status: 200,
+        description: 'List of users retrieved successfully',
+    })
     async listUsers() {
         const users = await this.listUsersUseCase.execute();
 
@@ -68,6 +92,15 @@ export class UserController {
     }
 
     @Get(':id')
+    @ApiOperation({ summary: 'Get user by ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'User retrieved successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'User not found',
+    })
     async getUserById(@Param('id') id: string) {
         const user = await this.getUserByIdUseCase.execute(id);
 
@@ -78,6 +111,19 @@ export class UserController {
     }
 
     @Put(':id')
+    @ApiOperation({ summary: 'Update user by ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'User updated successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'User not found',
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Bad request - validation error',
+    })
     async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
         const user = await this.updateUserUseCase.execute(id, updateUserDto);
 
@@ -88,6 +134,15 @@ export class UserController {
     }
 
     @Delete(':id')
+    @ApiOperation({ summary: 'Delete user by ID' })
+    @ApiResponse({
+        status: 200,
+        description: 'User deleted successfully',
+    })
+    @ApiResponse({
+        status: 404,
+        description: 'User not found',
+    })
     async deleteUser(@Param('id') id: string) {
         await this.deleteUserUseCase.execute(id);
 

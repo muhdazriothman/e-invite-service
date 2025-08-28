@@ -3,9 +3,16 @@ import {
     Controller,
     Post
 } from '@nestjs/common';
+import {
+    ApiTags,
+    ApiOperation,
+    ApiResponse,
+} from '@nestjs/swagger';
+
 import { LoginDto } from '@auth/interfaces/http/dtos/login';
 import { LoginUseCase } from '@auth/application/use-cases/login';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     constructor(
@@ -13,6 +20,19 @@ export class AuthController {
     ) { }
 
     @Post('login')
+    @ApiOperation({ summary: 'User login' })
+    @ApiResponse({
+        status: 200,
+        description: 'User logged in successfully',
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Bad request - validation error',
+    })
+    @ApiResponse({
+        status: 401,
+        description: 'Unauthorized - invalid credentials',
+    })
     async login(@Body() loginDto: LoginDto) {
         const token = await this.loginUseCase.execute(loginDto);
         return {
