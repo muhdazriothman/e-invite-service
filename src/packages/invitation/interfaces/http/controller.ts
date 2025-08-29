@@ -10,6 +10,7 @@ import {
     UseGuards,
     HttpCode,
     HttpStatus,
+    Query,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -19,6 +20,7 @@ import {
 } from '@nestjs/swagger';
 import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 import { UpdateInvitationDto } from '@invitation/interfaces/http/dtos/update';
+import { ListInvitationsQueryDto } from '@invitation/interfaces/http/dtos/list';
 import { CreateInvitationUseCase } from '@invitation/application/use-cases/create';
 import { ListInvitationsUseCase } from '@invitation/application/use-cases/list';
 import { GetInvitationByIdUseCase } from '@invitation/application/use-cases/get-by-id';
@@ -76,25 +78,40 @@ export class InvitationController {
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    @ApiOperation({ summary: 'Get all invitations for the current user' })
+    @ApiOperation({ summary: 'Get all invitations for the current user with bidirectional cursor pagination' })
     @ApiResponse({
         status: 200,
         description: 'List of invitations retrieved successfully',
         type: InvitationListResponseDto,
     })
-    async listInvitations(@Request() req: RequestWithUser) {
+    async listInvitations(
+        @Query() query: ListInvitationsQueryDto,
+        @Request() req: RequestWithUser
+    ) {
         const userId = req.user.id;
-        const invitations = await this.listInvitationsUseCase.execute(userId);
+        const result = await this.listInvitationsUseCase.execute(
+            userId,
+            query.next,
+            query.previous,
+            query.limit
+        );
 
         const data: InvitationDto[] = [];
 
-        for (const invitation of invitations) {
+        for (const invitation of result.data) {
             data.push(InvitationMapper.toDto(invitation));
         }
 
         return {
             message: 'Invitations retrieved successfully',
             data,
+            pagination: {
+                nextCursor: result.nextCursor,
+                previousCursor: result.previousCursor,
+                hasNextPage: result.hasNextPage,
+                hasPreviousPage: result.hasPreviousPage,
+                count: result.count,
+            },
         };
     }
 

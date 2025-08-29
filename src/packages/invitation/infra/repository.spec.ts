@@ -379,6 +379,160 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
     });
 
+    describe('#findAllWithPagination', () => {
+        it('should return paginated invitations with default limit (forward)', async () => {
+            // Create multiple invitations
+            const invitations: Invitation[] = [];
+            for (let i = 0; i < 25; i++) {
+                const invitation = InvitationFixture.getInvitationEntity({
+                    title: `Wedding Celebration ${i + 1}`,
+                    type: InvitationType.WEDDING,
+                });
+                invitations.push(await invitationRepository.create(invitation));
+            }
+
+            const result = await invitationRepository.findAllWithPagination();
+
+            expect(result.data).toHaveLength(20); // default limit
+            expect(result.hasNextPage).toBe(true);
+            expect(result.hasPreviousPage).toBe(false); // First page
+            expect(result.count).toBe(20);
+            expect(result.nextCursor).toBeDefined();
+            expect(result.previousCursor).toBeUndefined(); // First page has no previous cursor
+            expect(result.data[0]).toBeInstanceOf(Invitation);
+        });
+
+        it('should return paginated invitations with custom limit (forward)', async () => {
+            // Create multiple invitations
+            const invitations: Invitation[] = [];
+            for (let i = 0; i < 15; i++) {
+                const invitation = InvitationFixture.getInvitationEntity({
+                    title: `Wedding Celebration ${i + 1}`,
+                    type: InvitationType.WEDDING,
+                });
+                invitations.push(await invitationRepository.create(invitation));
+            }
+
+            const result = await invitationRepository.findAllWithPagination(undefined, undefined, undefined, 10);
+
+            expect(result.data).toHaveLength(10);
+            expect(result.hasNextPage).toBe(true);
+            expect(result.hasPreviousPage).toBe(false);
+            expect(result.count).toBe(10);
+            expect(result.nextCursor).toBeDefined();
+            expect(result.previousCursor).toBeUndefined(); // First page has no previous cursor
+        });
+
+        it('should return paginated invitations with next cursor (forward pagination)', async () => {
+            // Create multiple invitations
+            const invitations: Invitation[] = [];
+            for (let i = 0; i < 15; i++) {
+                const invitation = InvitationFixture.getInvitationEntity({
+                    title: `Wedding Celebration ${i + 1}`,
+                    type: InvitationType.WEDDING,
+                });
+                invitations.push(await invitationRepository.create(invitation));
+            }
+
+            // Get first page
+            const firstPage = await invitationRepository.findAllWithPagination(undefined, undefined, undefined, 5);
+            expect(firstPage.data).toHaveLength(5);
+            expect(firstPage.hasNextPage).toBe(true);
+            expect(firstPage.hasPreviousPage).toBe(false);
+            expect(firstPage.nextCursor).toBeDefined();
+            expect(firstPage.previousCursor).toBeUndefined(); // First page has no previous cursor
+
+            // Get second page using next cursor
+            const secondPage = await invitationRepository.findAllWithPagination(undefined, firstPage.nextCursor, undefined, 5);
+            expect(secondPage.data).toHaveLength(5);
+            expect(secondPage.data[0].id).not.toBe(firstPage.data[0].id);
+            expect(secondPage.hasPreviousPage).toBe(true);
+        });
+
+        it('should return paginated invitations with previous cursor (backward pagination)', async () => {
+            // Create multiple invitations
+            const invitations: Invitation[] = [];
+            for (let i = 0; i < 15; i++) {
+                const invitation = InvitationFixture.getInvitationEntity({
+                    title: `Wedding Celebration ${i + 1}`,
+                    type: InvitationType.WEDDING,
+                });
+                invitations.push(await invitationRepository.create(invitation));
+            }
+
+            // Get first page
+            const firstPage = await invitationRepository.findAllWithPagination(undefined, undefined, undefined, 5);
+
+            // Get second page using next cursor
+            const secondPage = await invitationRepository.findAllWithPagination(undefined, firstPage.nextCursor, undefined, 5);
+
+            // Go back to first page using previous cursor
+            const backToFirstPage = await invitationRepository.findAllWithPagination(undefined, undefined, secondPage.previousCursor, 5);
+
+            expect(backToFirstPage.data).toHaveLength(5);
+            expect(backToFirstPage.data[0].id).toBe(firstPage.data[0].id);
+            expect(backToFirstPage.hasNextPage).toBe(true);
+            expect(backToFirstPage.hasPreviousPage).toBe(false);
+        });
+
+        it('should return empty pagination result when no invitations exist', async () => {
+            const result = await invitationRepository.findAllWithPagination();
+
+            expect(result.data).toEqual([]);
+            expect(result.hasNextPage).toBe(false);
+            expect(result.hasPreviousPage).toBe(false);
+            expect(result.count).toBe(0);
+            expect(result.nextCursor).toBeUndefined();
+            expect(result.previousCursor).toBeUndefined();
+        });
+
+        it('should filter by userId when provided', async () => {
+            const user1Invitation = InvitationFixture.getInvitationEntity({
+                userId: 'user1',
+                title: 'User 1 Wedding',
+            });
+            const user2Invitation = InvitationFixture.getInvitationEntity({
+                userId: 'user2',
+                title: 'User 2 Wedding',
+            });
+
+            await invitationRepository.create(user1Invitation);
+            await invitationRepository.create(user2Invitation);
+
+            const result = await invitationRepository.findAllWithPagination('user1');
+
+            expect(result.data).toHaveLength(1);
+            expect(result.data[0].userId).toBe('user1');
+            expect(result.data[0].title).toBe('User 1 Wedding');
+        });
+
+        it('should handle invalid next cursor gracefully', async () => {
+            // Create an invitation
+            const invitation = InvitationFixture.getInvitationEntity({
+                title: 'Wedding Celebration',
+            });
+            await invitationRepository.create(invitation);
+
+            const result = await invitationRepository.findAllWithPagination(undefined, 'invalid-cursor');
+
+            expect(result.data).toHaveLength(1);
+            expect(result.hasNextPage).toBe(false);
+        });
+
+        it('should handle invalid previous cursor gracefully', async () => {
+            // Create an invitation
+            const invitation = InvitationFixture.getInvitationEntity({
+                title: 'Wedding Celebration',
+            });
+            await invitationRepository.create(invitation);
+
+            const result = await invitationRepository.findAllWithPagination(undefined, undefined, 'invalid-cursor');
+
+            expect(result.data).toHaveLength(1);
+            expect(result.hasPreviousPage).toBe(false);
+        });
+    });
+
     describe('#findById', () => {
         it('should return an invitation when found by id', async () => {
             const createInvitationData = InvitationFixture.getInvitationEntity({

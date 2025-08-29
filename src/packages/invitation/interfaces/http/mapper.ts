@@ -1,9 +1,8 @@
 import {
     Invitation,
-    CreateInvitationProps,
 } from '@invitation/domain/entities/invitation';
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
+import { PaginationMetaDto } from '@common/dtos/pagination-result';
 
 export class InvitationDto {
     @ApiProperty()
@@ -148,6 +147,9 @@ export class InvitationListResponseDto {
 
     @ApiProperty({ type: [InvitationDto] })
     data: InvitationDto[];
+
+    @ApiProperty({ type: PaginationMetaDto })
+    pagination: PaginationMetaDto;
 }
 
 export class InvitationMapper {

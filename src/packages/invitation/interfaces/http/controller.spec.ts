@@ -9,6 +9,7 @@ import { InvitationMapper } from './mapper';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { RequestWithUser } from './middleware/user-context.middleware';
 import { UserFixture } from '@test/fixture/user';
+import { PaginationResult } from '@common/domain/value-objects/pagination-result';
 
 describe('@invitation/interfaces/http/controller', () => {
     let controller: InvitationController;
@@ -109,7 +110,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('listInvitations', () => {
-        it('should return list of invitations', async () => {
+        it('should return paginated list of invitations', async () => {
             const mockInvitations = [
                 InvitationFixture.getInvitationEntity({
                     id: 'invitation-1',
@@ -121,14 +122,29 @@ describe('@invitation/interfaces/http/controller', () => {
                 }),
             ];
 
-            listInvitationsUseCase.execute.mockResolvedValue(mockInvitations);
+            const mockPaginationResult = PaginationResult.create(
+                mockInvitations,
+                '000000000000000000000002',
+                '000000000000000000000001',
+                true,
+                false
+            );
 
-            const result = await controller.listInvitations(mockRequest);
+            listInvitationsUseCase.execute.mockResolvedValue(mockPaginationResult);
 
-            expect(listInvitationsUseCase.execute).toHaveBeenCalledWith('000000000000000000000001');
+            const result = await controller.listInvitations({}, mockRequest);
+
+            expect(listInvitationsUseCase.execute).toHaveBeenCalledWith('000000000000000000000001', undefined, undefined, undefined);
             expect(result).toEqual({
                 message: 'Invitations retrieved successfully',
                 data: mockInvitations.map(invitation => InvitationMapper.toDto(invitation)),
+                pagination: {
+                    nextCursor: '000000000000000000000002',
+                    previousCursor: '000000000000000000000001',
+                    hasNextPage: true,
+                    hasPreviousPage: false,
+                    count: 2,
+                },
             });
         });
     });

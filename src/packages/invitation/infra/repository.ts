@@ -7,6 +7,7 @@ import {
     InvitationDocumentSchema,
 } from '@invitation/infra/schema';
 import { Invitation } from '@invitation/domain/entities/invitation';
+import { PaginationResult } from '@common/domain/value-objects/pagination-result';
 
 @Injectable()
 export class InvitationRepository {
@@ -78,6 +79,141 @@ export class InvitationRepository {
         return documents.map(document =>
             InvitationRepository.toDomain(document)
         );
+    }
+
+    async findAllWithPagination(
+        userId?: string,
+        next?: string,
+        previous?: string,
+        limit: number = 20
+    ): Promise<PaginationResult<Invitation>> {
+        const filter: {
+            isDeleted: boolean;
+            userId?: string;
+            _id?: { $gt?: string; $lt?: string };
+        } = {
+            isDeleted: false,
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
+        let sortDirection: 1 | -1 = 1; // 1 for ascending (forward), -1 for descending (backward)
+        let hasNextPage = false;
+        let hasPreviousPage = false;
+
+        // Handle cursor filtering
+        if (next) {
+            // Forward pagination
+            if (/^[0-9a-fA-F]{24}$/.test(next)) {
+                filter._id = { $gt: next };
+            } else {
+                console.warn('Invalid next cursor format provided:', next);
+            }
+        } else if (previous) {
+            // Backward pagination
+            sortDirection = -1;
+            if (/^[0-9a-fA-F]{24}$/.test(previous)) {
+                filter._id = { $lt: previous };
+            } else {
+                console.warn('Invalid previous cursor format provided:', previous);
+            }
+        }
+
+        // Fetch one extra item to determine if there are more pages
+        const documents = await this.invitationModel
+            .find(filter)
+            .sort({ _id: sortDirection })
+            .limit(limit + 1)
+            .lean();
+
+        if (sortDirection === 1) {
+            // Forward pagination
+            hasNextPage = documents.length > limit;
+            const data = documents.slice(0, limit).map(document =>
+                InvitationRepository.toDomain(document)
+            );
+
+            let nextCursor: string | undefined;
+            let previousCursor: string | undefined;
+
+            if (hasNextPage && data.length > 0) {
+                const lastItem = data[data.length - 1];
+                nextCursor = lastItem.id;
+            }
+
+            if (data.length > 0) {
+                const firstItem = data[0];
+                previousCursor = firstItem.id;
+            }
+
+            // Check if there's a previous page by querying backwards from the first item
+            if (data.length > 0) {
+                const previousPageCheck = await this.invitationModel
+                    .find({
+                        ...filter,
+                        _id: { $lt: data[0].id }
+                    })
+                    .sort({ _id: -1 })
+                    .limit(1)
+                    .lean();
+
+                hasPreviousPage = previousPageCheck.length > 0;
+            }
+
+            return PaginationResult.create(
+                data,
+                hasNextPage ? nextCursor : undefined,
+                hasPreviousPage ? previousCursor : undefined,
+                hasNextPage,
+                hasPreviousPage
+            );
+        } else {
+            // Backward pagination
+            hasPreviousPage = documents.length > limit;
+            const data = documents.slice(0, limit).map(document =>
+                InvitationRepository.toDomain(document)
+            );
+
+            // Reverse the data to maintain chronological order
+            const reversedData = data.reverse();
+
+            let nextCursor: string | undefined;
+            let previousCursor: string | undefined;
+
+            if (hasPreviousPage && reversedData.length > 0) {
+                const firstItem = reversedData[0];
+                previousCursor = firstItem.id;
+            }
+
+            if (reversedData.length > 0) {
+                const lastItem = reversedData[reversedData.length - 1];
+                nextCursor = lastItem.id;
+            }
+
+            // Check if there's a next page by querying forwards from the last item
+            if (reversedData.length > 0) {
+                const nextPageCheck = await this.invitationModel
+                    .find({
+                        ...filter,
+                        _id: { $gt: reversedData[reversedData.length - 1].id }
+                    })
+                    .sort({ _id: 1 })
+                    .limit(1)
+                    .lean();
+
+                hasNextPage = nextPageCheck.length > 0;
+            }
+
+            return PaginationResult.create(
+                reversedData,
+                hasNextPage ? nextCursor : undefined,
+                hasPreviousPage ? previousCursor : undefined,
+                hasNextPage,
+                hasPreviousPage
+            );
+        }
     }
 
     async findById(id: string, userId?: string): Promise<Invitation | null> {
