@@ -1,9 +1,36 @@
-import { Invitation } from '@invitation/domain/entities/invitation';
+import {
+    Invitation,
+    CreateInvitationProps,
+} from '@invitation/domain/entities/invitation';
+import { ApiProperty } from '@nestjs/swagger';
+import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 
-export interface InvitationDto {
+export class InvitationDto {
+    @ApiProperty()
     id: string;
+
+    @ApiProperty()
+    userId: string;
+
+    @ApiProperty()
     type: string;
+
+    @ApiProperty()
     title: string;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithCelebratedPerson: { type: 'string' },
+                phoneNumber: { type: 'string', nullable: true },
+                email: { type: 'string', nullable: true },
+            },
+        },
+    })
     hosts: Array<{
         name: string;
         title: string;
@@ -11,6 +38,20 @@ export interface InvitationDto {
         phoneNumber?: string | null;
         email?: string | null;
     }>;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithHost: { type: 'string' },
+                celebrationDate: { type: 'string' },
+                type: { type: 'string' },
+            },
+        },
+    })
     celebratedPersons: Array<{
         name: string;
         title: string;
@@ -18,20 +59,63 @@ export interface InvitationDto {
         celebrationDate: string;
         type: string;
     }>;
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            gregorianDate: { type: 'string' },
+            hijriDate: { type: 'string', nullable: true },
+        },
+    })
     date: {
         gregorianDate: string;
         hijriDate?: string | null;
     };
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            address: { type: 'string' },
+            wazeLink: { type: 'string', nullable: true },
+            googleMapsLink: { type: 'string', nullable: true },
+        },
+    })
     location: {
         address: string;
         wazeLink?: string | null;
         googleMapsLink?: string | null;
     };
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                activities: { type: 'array', items: { type: 'string' } },
+                startTime: { type: 'string' },
+                endTime: { type: 'string' },
+            },
+        },
+    })
     itineraries: Array<{
         activities: string[];
         startTime: string;
         endTime: string;
     }>;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithCelebratedPerson: { type: 'string' },
+                phoneNumber: { type: 'string', nullable: true },
+                whatsappNumber: { type: 'string', nullable: true },
+            },
+        },
+    })
     contactPersons: Array<{
         name: string;
         title: string;
@@ -39,15 +123,38 @@ export interface InvitationDto {
         phoneNumber?: string | null;
         whatsappNumber?: string | null;
     }>;
+
+    @ApiProperty()
     rsvpDueDate: string;
+
+    @ApiProperty()
     createdAt: string;
+
+    @ApiProperty()
     updatedAt: string;
+}
+
+export class InvitationResponseDto {
+    @ApiProperty({ example: 'Invitation created successfully' })
+    message: string;
+
+    @ApiProperty({ type: InvitationDto })
+    data: InvitationDto;
+}
+
+export class InvitationListResponseDto {
+    @ApiProperty({ example: 'Invitations retrieved successfully' })
+    message: string;
+
+    @ApiProperty({ type: [InvitationDto] })
+    data: InvitationDto[];
 }
 
 export class InvitationMapper {
     static toDto(invitation: Invitation): InvitationDto {
         return {
             id: invitation.id,
+            userId: invitation.userId,
             type: invitation.type,
             title: invitation.title,
             hosts: invitation.hosts.map(host => ({

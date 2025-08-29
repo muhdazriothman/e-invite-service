@@ -19,6 +19,7 @@ import {
 
 export interface InvitationDocumentSchema {
     _id: unknown;
+    userId: string;
     type: InvitationType;
     title: string;
     hosts: Host[];
@@ -36,6 +37,9 @@ export interface InvitationDocumentSchema {
 
 @Schema({ timestamps: true })
 export class InvitationMongoDocument extends Document {
+    @Prop({ required: true, index: true })
+    userId: string;
+
     @Prop({
         type: String,
         enum: Object.values(InvitationType),

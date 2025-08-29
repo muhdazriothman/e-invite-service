@@ -1,7 +1,14 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, ObjectId } from 'mongoose';
+import {
+    Prop,
+    Schema,
+    SchemaFactory,
+} from '@nestjs/mongoose';
+import { Document } from 'mongoose';
 
-import { UserType } from '@user/domain/entities/user';
+import {
+    UserType,
+    PlanType,
+} from '@user/domain/entities/user';
 
 export interface UserDocumentSchema {
     _id: unknown;
@@ -9,6 +16,10 @@ export interface UserDocumentSchema {
     email: string;
     passwordHash: string;
     type: UserType;
+    plan: {
+        planType: PlanType;
+        invitationLimit: number;
+    };
     isDeleted?: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -29,10 +40,27 @@ export class UserMongoDocument extends Document {
     @Prop({
         type: String,
         enum: Object.values(UserType),
-        default: UserType.USER,
-        required: true
+        required: true,
+        index: true
     })
     type: UserType;
+
+    @Prop({
+        type: {
+            planType: {
+                type: String,
+                enum: Object.values(PlanType),
+                required: true
+            },
+            invitationLimit: { type: Number, required: true },
+            _id: false
+        },
+        required: true
+    })
+    plan: {
+        planType: PlanType;
+        invitationLimit: number;
+    };
 
     @Prop({ default: false, index: true })
     isDeleted: boolean;

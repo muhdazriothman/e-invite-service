@@ -8,20 +8,20 @@ describe('@invitation/application/use-cases/delete', () => {
     let useCase: DeleteInvitationUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    const mockInvitation = InvitationFixture.getInvitationEntity({
-        id: 'invitation-id-1',
-    });
+    const mockInvitation = InvitationFixture.getInvitationEntity();
 
     beforeEach(async () => {
+        const mockInvitationRepository = {
+            findById: jest.fn(),
+            delete: jest.fn(),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 DeleteInvitationUseCase,
                 {
                     provide: 'InvitationRepository',
-                    useValue: {
-                        findById: jest.fn(),
-                        delete: jest.fn(),
-                    },
+                    useValue: mockInvitationRepository,
                 },
             ],
         }).compile();
@@ -37,39 +37,42 @@ describe('@invitation/application/use-cases/delete', () => {
     describe('execute', () => {
         it('should delete invitation successfully', async () => {
             const invitationId = 'invitation-id-1';
+            const userId = '000000000000000000000001';
 
             invitationRepository.findById.mockResolvedValue(mockInvitation);
             invitationRepository.delete.mockResolvedValue(true);
 
-            await expect(useCase.execute(invitationId)).resolves.toBeUndefined();
+            await expect(useCase.execute(invitationId, userId)).resolves.toBeUndefined();
 
-            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId);
-            expect(invitationRepository.delete).toHaveBeenCalledWith(invitationId);
+            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId, userId);
+            expect(invitationRepository.delete).toHaveBeenCalledWith(invitationId, userId);
         });
 
         it('should throw NotFoundException when invitation not found', async () => {
             const invitationId = 'non-existent-id';
+            const userId = '000000000000000000000001';
 
             invitationRepository.findById.mockResolvedValue(null);
 
-            await expect(useCase.execute(invitationId)).rejects.toThrow(
+            await expect(useCase.execute(invitationId, userId)).rejects.toThrow(
                 NotFoundException,
             );
-            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId);
+            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId, userId);
             expect(invitationRepository.delete).not.toHaveBeenCalled();
         });
 
         it('should throw NotFoundException when delete operation fails', async () => {
             const invitationId = 'invitation-id-1';
+            const userId = '000000000000000000000001';
 
             invitationRepository.findById.mockResolvedValue(mockInvitation);
             invitationRepository.delete.mockResolvedValue(false);
 
-            await expect(useCase.execute(invitationId)).rejects.toThrow(
+            await expect(useCase.execute(invitationId, userId)).rejects.toThrow(
                 NotFoundException,
             );
-            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId);
-            expect(invitationRepository.delete).toHaveBeenCalledWith(invitationId);
+            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId, userId);
+            expect(invitationRepository.delete).toHaveBeenCalledWith(invitationId, userId);
         });
     });
 });

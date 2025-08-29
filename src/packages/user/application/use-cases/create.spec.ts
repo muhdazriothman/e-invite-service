@@ -5,10 +5,13 @@ import {
 import { ConflictException } from '@nestjs/common';
 import { CreateUserUseCase } from './create';
 import { UserRepository } from '@user/infra/repository';
-import { UserType } from '@user/domain/entities/user';
-import { CreateUserDto } from '@user/interfaces/http/dtos/create';
+import {
+    UserType,
+    PlanType,
+} from '@user/domain/entities/user';
 import { HashService } from '@common/services/hash';
 import { UserFixture } from '@test/fixture/user';
+import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 
 describe('@user/application/use-cases/create', () => {
     let useCase: CreateUserUseCase;
@@ -58,6 +61,7 @@ describe('@user/application/use-cases/create', () => {
             email: 'test@example.com',
             password: 'password123',
             type: UserType.USER,
+            planType: PlanType.BASIC,
         };
 
         it('should create a new user when email does not exist', async () => {

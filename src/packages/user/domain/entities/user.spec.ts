@@ -1,5 +1,10 @@
-import { User, UserType } from '@user/domain/entities/user';
+import {
+    User,
+    UserType,
+    PlanType,
+} from '@user/domain/entities/user';
 import { UserFixture } from '@test/fixture/user';
+import { PlanConfig } from '@user/domain/value-objects/plan-config';
 
 describe('@user/domain/entities/user', () => {
     let user: User;
@@ -23,6 +28,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(userProps.email);
             expect(user.passwordHash).toBe(userProps.passwordHash);
             expect(user.type).toBe(userProps.type);
+            expect(user.plan).toBe(userProps.plan);
             expect(user.isDeleted).toBe(userProps.isDeleted);
             expect(user.createdAt).toBe(userProps.createdAt);
             expect(user.updatedAt).toBe(userProps.updatedAt);
@@ -62,6 +68,7 @@ describe('@user/domain/entities/user', () => {
                 email: 'newuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
+                planType: PlanType.BASIC,
             };
 
             const user = User.createNew(createProps);
@@ -71,6 +78,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(createProps.email);
             expect(user.passwordHash).toBe(createProps.passwordHash);
             expect(user.type).toBe(createProps.type);
+            expect(user.plan.type).toBe(createProps.planType);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -83,12 +91,14 @@ describe('@user/domain/entities/user', () => {
                 email: 'admin@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.ADMIN,
+                planType: PlanType.BASIC,
             };
 
             const user = User.createNew(createProps);
 
             expect(user.type).toBe(UserType.ADMIN);
             expect(user.name).toBe('admin');
+            expect(user.plan.type).toBe(createProps.planType);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -101,6 +111,7 @@ describe('@user/domain/entities/user', () => {
                 email: 'newuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
+                planType: PlanType.BASIC,
             };
 
             const user = User.createNew(createProps);
@@ -117,6 +128,7 @@ describe('@user/domain/entities/user', () => {
                 email: 'dbuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
+                plan: PlanConfig.create(PlanType.BASIC),
                 isDeleted: false,
                 createdAt: new Date('2023-01-01'),
                 updatedAt: new Date('2023-01-02'),
@@ -130,6 +142,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(dbProps.email);
             expect(user.passwordHash).toBe(dbProps.passwordHash);
             expect(user.type).toBe(dbProps.type);
+            expect(user.plan).toEqual(dbProps.plan);
             expect(user.isDeleted).toBe(dbProps.isDeleted);
             expect(user.createdAt).toBe(dbProps.createdAt);
             expect(user.updatedAt).toBe(dbProps.updatedAt);
@@ -144,6 +157,7 @@ describe('@user/domain/entities/user', () => {
                 email: 'deleted@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
+                plan: PlanConfig.create(PlanType.BASIC),
                 isDeleted: true,
                 createdAt: new Date('2023-01-01'),
                 updatedAt: new Date('2023-01-03'),

@@ -12,7 +12,7 @@ export class ListInvitationsUseCase {
         private readonly invitationRepository: InvitationRepository,
     ) { }
 
-    async execute(): Promise<Invitation[]> {
-        return await this.invitationRepository.findAll();
+    async execute(userId?: string): Promise<Invitation[]> {
+        return await this.invitationRepository.findAll(userId);
     }
 }

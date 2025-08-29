@@ -43,6 +43,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should convert MongoDB document to domain entity correctly', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [
@@ -99,6 +100,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             expect(result).toBeInstanceOf(Invitation);
             expect(result.id).toBe('507f1f77bcf86cd799439011');
+            expect(result.userId).toBe('000000000000000000000001');
             expect(result.type).toBe(InvitationType.WEDDING);
             expect(result.title).toBe('Wedding Celebration');
             expect(result.hosts).toEqual(mockDocument.hosts);
@@ -117,6 +119,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with null deletedAt', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -148,6 +151,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with undefined isDeleted', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -180,6 +184,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with deleted invitation', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -212,6 +217,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with string _id', () => {
             const mockDocument = {
                 _id: '507f1f77bcf86cd799439011',
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -243,6 +249,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with null _id', () => {
             const mockDocument = {
                 _id: null,
+                userId: '000000000000000000000001',
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],

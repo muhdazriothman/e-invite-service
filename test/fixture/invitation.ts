@@ -10,7 +10,8 @@ import { plainToClass } from 'class-transformer';
 export class InvitationFixture {
     static getInvitationProps(props: Partial<Invitation> = {}) {
         const {
-            id = 'test-id-123',
+            id = '000000000000000000000001',
+            userId = '000000000000000000000001',
             type = InvitationType.WEDDING,
             title = 'Wedding Celebration',
             hosts = [
@@ -65,6 +66,7 @@ export class InvitationFixture {
 
         return {
             id,
+            userId,
             type,
             title,
             hosts,
@@ -88,6 +90,7 @@ export class InvitationFixture {
 
     static getCreateInvitationProps(params: Partial<Omit<Invitation, 'id' | 'isDeleted' | 'createdAt' | 'updatedAt' | 'deletedAt'>> = {}) {
         const {
+            userId = '000000000000000000000002',
             type = InvitationType.WEDDING,
             title = 'Wedding Celebration',
             hosts = [
@@ -137,6 +140,7 @@ export class InvitationFixture {
         } = params;
 
         return {
+            userId,
             type,
             title,
             hosts,

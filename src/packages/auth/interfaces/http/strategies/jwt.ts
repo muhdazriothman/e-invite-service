@@ -12,7 +12,7 @@ export interface JwtPayload {
 }
 
 export interface JwtUser {
-    userId: string;
+    id: string;
     email: string;
     type: string;
 }
@@ -35,7 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
      */
     validate(payload: JwtPayload): JwtUser {
         return {
-            userId: payload.sub,
+            id: payload.sub,
             email: payload.email,
             type: payload.type,
         };

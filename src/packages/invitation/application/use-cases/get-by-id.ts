@@ -9,8 +9,8 @@ export class GetInvitationByIdUseCase {
         private readonly invitationRepository: InvitationRepository,
     ) { }
 
-    async execute(id: string): Promise<Invitation> {
-        const invitation = await this.invitationRepository.findById(id);
+    async execute(id: string, userId?: string): Promise<Invitation> {
+        const invitation = await this.invitationRepository.findById(id, userId);
 
         if (!invitation) {
             // TODO: throw machine readable error

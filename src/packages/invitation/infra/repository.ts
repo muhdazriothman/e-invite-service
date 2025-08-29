@@ -22,6 +22,7 @@ export class InvitationRepository {
     static toDomain(doc: InvitationDocumentSchema): Invitation {
         return Invitation.createFromDb({
             id: (doc._id as unknown)?.toString() ?? '',
+            userId: doc.userId,
             type: doc.type,
             title: doc.title,
             hosts: doc.hosts,
@@ -40,6 +41,7 @@ export class InvitationRepository {
 
     async create(invitation: Invitation): Promise<Invitation> {
         const createdInvitation = await this.invitationModel.create({
+            userId: invitation.userId,
             type: invitation.type,
             title: invitation.title,
             hosts: invitation.hosts,
@@ -57,11 +59,20 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async findAll(): Promise<Invitation[]> {
+    async findAll(userId?: string): Promise<Invitation[]> {
+        const filter: {
+            isDeleted: boolean;
+            userId?: string;
+        } = {
+            isDeleted: false,
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
         const documents = await this.invitationModel
-            .find({
-                isDeleted: false
-            })
+            .find(filter)
             .lean();
 
         return documents.map(document =>
@@ -69,12 +80,22 @@ export class InvitationRepository {
         );
     }
 
-    async findById(id: string): Promise<Invitation | null> {
+    async findById(id: string, userId?: string): Promise<Invitation | null> {
+        const filter: {
+            _id: string;
+            isDeleted: boolean;
+            userId?: string;
+        } = {
+            _id: id,
+            isDeleted: false,
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
         const document = await this.invitationModel
-            .findOne({
-                _id: id,
-                isDeleted: false
-            })
+            .findOne(filter)
             .lean();
 
         if (!document) {
@@ -84,17 +105,47 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async update(id: string, invitationData: Partial<Invitation>): Promise<Invitation | null> {
+    async findByUserId(userId: string): Promise<Invitation[]> {
+        const documents = await this.invitationModel
+            .find({
+                userId,
+                isDeleted: false
+            })
+            .lean();
+
+        return documents.map(document =>
+            InvitationRepository.toDomain(document)
+        );
+    }
+
+    async countByUserId(userId: string): Promise<number> {
+        return await this.invitationModel.countDocuments({
+            userId,
+            isDeleted: false
+        });
+    }
+
+    async update(id: string, invitationData: Partial<Invitation>, userId?: string): Promise<Invitation | null> {
+        const filter: {
+            _id: string;
+            isDeleted: boolean;
+            userId?: string;
+        } = {
+            _id: id,
+            isDeleted: false,
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
         const updateData = {
             ...invitationData,
             updatedAt: new Date(),
         };
 
         const document = await this.invitationModel.findOneAndUpdate(
-            {
-                _id: id,
-                isDeleted: false
-            },
+            filter,
             updateData,
             {
                 new: true,
@@ -109,14 +160,24 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async delete(id: string): Promise<boolean> {
+    async delete(id: string, userId?: string): Promise<boolean> {
+        const filter: {
+            _id: string;
+            isDeleted: { $ne: boolean };
+            userId?: string;
+        } = {
+            _id: id,
+            isDeleted: {
+                $ne: true
+            }
+        };
+
+        if (userId) {
+            filter.userId = userId;
+        }
+
         const result = await this.invitationModel.updateOne(
-            {
-                _id: id,
-                isDeleted: {
-                    $ne: true,
-                },
-            },
+            filter,
             {
                 isDeleted: true,
                 deletedAt: new Date(),

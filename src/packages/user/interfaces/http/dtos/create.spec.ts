@@ -1,6 +1,9 @@
 import { validate } from 'class-validator';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
-import { UserType } from '@user/domain/entities/user';
+import {
+    UserType,
+    PlanType
+} from '@user/domain/entities/user';
 
 describe('@user/interfaces/http/dtos/create', () => {
     describe('#validation', () => {
@@ -10,6 +13,7 @@ describe('@user/interfaces/http/dtos/create', () => {
             dto.email = 'test@example.com';
             dto.password = 'password123';
             dto.type = UserType.USER;
+            dto.planType = PlanType.BASIC;
 
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
@@ -21,6 +25,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -33,6 +38,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -46,6 +52,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.name = 'testuser';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -58,6 +65,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'invalid-email';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -71,6 +79,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.name = 'testuser';
                 dto.email = 'test@example.com';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -83,6 +92,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 (dto as any).password = 123;
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -95,6 +105,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 dto.password = '12345';
                 dto.type = UserType.USER;
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -108,6 +119,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.name = 'testuser';
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -120,6 +132,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
                 (dto as any).type = 'invalid';
+                dto.planType = PlanType.BASIC;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
@@ -132,6 +145,46 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'test@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.ADMIN;
+                dto.planType = PlanType.BASIC;
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
+        });
+
+        describe('planType', () => {
+            it('should fail validation when planType is not provided', async () => {
+                const dto = new CreateUserDto();
+                dto.name = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+                dto.type = UserType.USER;
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('planType');
+            });
+
+            it('should fail validation when planType is not a valid enum value', async () => {
+                const dto = new CreateUserDto();
+                dto.name = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+                dto.type = UserType.USER;
+                (dto as any).planType = 'invalid';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('planType');
+            });
+
+            it('should pass validation with valid planType values', async () => {
+                const dto = new CreateUserDto();
+                dto.name = 'testuser';
+                dto.email = 'test@example.com';
+                dto.password = 'password123';
+                dto.type = UserType.USER;
+                dto.planType = PlanType.PREMIUM;
 
                 const errors = await validate(dto);
                 expect(errors).toHaveLength(0);

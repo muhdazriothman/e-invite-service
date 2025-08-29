@@ -26,19 +26,19 @@ export class AdminAuthGuard extends JwtAuthGuard {
         const request = context.switchToHttp().getRequest();
         const jwtUser = request.user as JwtUser;
 
-        if (!jwtUser || !jwtUser.userId) {
+        if (!jwtUser || !jwtUser.id) {
             throw new ForbiddenException('Admin access required');
         }
 
-        const isAdmin = await this.userAuthService.isUserAdmin(jwtUser.userId);
+        const isAdmin = await this.userAuthService.isUserAdmin(jwtUser.id);
         if (!isAdmin) {
             throw new ForbiddenException('Admin access required');
         }
 
-        const userAuthInfo = await this.userAuthService.getUserAuthInfo(jwtUser.userId);
+        const userAuthInfo = await this.userAuthService.getUserAuthInfo(jwtUser.id);
         if (userAuthInfo) {
             request.user = {
-                userId: userAuthInfo.id,
+                id: userAuthInfo.id,
                 email: userAuthInfo.email,
                 type: userAuthInfo.type,
             };

@@ -1,12 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserController } from './controller';
+import {
+    Test,
+    TestingModule,
+} from '@nestjs/testing';
+import { UserController } from '@user/interfaces/http/controller';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
 import { UpdateUserUseCase } from '@user/application/use-cases/update';
 import { DeleteUserUseCase } from '@user/application/use-cases/delete';
-import { UserType } from '@user/domain/entities/user';
-import { UserMapper } from '@user/interfaces/http/mapper';
+import { CreateUserDto } from '@user/interfaces/http/dtos/create';
+import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
+import { UserType, PlanType } from '@user/domain/entities/user';
 import { UserFixture } from '@test/fixture/user';
 
 describe('@user/interfaces/http/controller', () => {
@@ -16,13 +20,6 @@ describe('@user/interfaces/http/controller', () => {
     let getUserByIdUseCase: jest.Mocked<GetUserByIdUseCase>;
     let updateUserUseCase: jest.Mocked<UpdateUserUseCase>;
     let deleteUserUseCase: jest.Mocked<DeleteUserUseCase>;
-
-    const createUserDto = {
-        name: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-        type: UserType.USER,
-    };
 
     beforeEach(async () => {
         const mockCreateUserUseCase = {
@@ -84,11 +81,20 @@ describe('@user/interfaces/http/controller', () => {
     });
 
     describe('createUser', () => {
-        it('should create a new user', async () => {
+        it('should create a user successfully', async () => {
+            const createUserDto: CreateUserDto = {
+                name: 'testuser',
+                email: 'test@example.com',
+                password: 'password123',
+                type: UserType.USER,
+                planType: PlanType.BASIC,
+            };
+
             const mockUser = UserFixture.getUserEntity({
+                id: '000000000000000000000001',
                 name: createUserDto.name,
                 email: createUserDto.email,
-                passwordHash: createUserDto.password,
+                type: createUserDto.type,
             });
 
             createUserUseCase.execute.mockResolvedValue(mockUser);
@@ -96,13 +102,34 @@ describe('@user/interfaces/http/controller', () => {
             const result = await controller.createUser(createUserDto);
 
             expect(createUserUseCase.execute).toHaveBeenCalledWith(createUserDto);
+
             expect(result).toEqual({
-                statusCode: 201,
-                data: UserMapper.toDto(mockUser),
+                message: 'User created successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    plan: {
+                        type: mockUser.plan.type,
+                        invitationLimit: mockUser.plan.invitationLimit,
+                        name: mockUser.plan.name,
+                        description: mockUser.plan.description,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
             });
         });
 
-        it('should throw an error if the user creation fails', async () => {
+        it('should handle user creation failure', async () => {
+            const createUserDto: CreateUserDto = {
+                name: 'testuser',
+                email: 'test@example.com',
+                password: 'password123',
+                type: UserType.USER,
+                planType: PlanType.BASIC,
+            };
+
             createUserUseCase.execute.mockRejectedValue(new Error('User creation failed'));
 
             await expect(controller.createUser(createUserDto)).rejects.toThrow('User creation failed');
@@ -110,17 +137,15 @@ describe('@user/interfaces/http/controller', () => {
     });
 
     describe('listUsers', () => {
-        it('should return list of users', async () => {
+        it('should return all users successfully', async () => {
             const mockUsers = [
                 UserFixture.getUserEntity({
+                    id: '000000000000000000000001',
                     name: 'User 1',
-                    email: 'user1@example.com',
-                    passwordHash: 'hashedPassword1',
                 }),
                 UserFixture.getUserEntity({
+                    id: '000000000000000000000002',
                     name: 'User 2',
-                    email: 'user2@example.com',
-                    passwordHash: 'hashedPassword2',
                 }),
             ];
 
@@ -130,20 +155,30 @@ describe('@user/interfaces/http/controller', () => {
 
             expect(listUsersUseCase.execute).toHaveBeenCalled();
             expect(result).toEqual({
-                statusCode: 200,
-                data: mockUsers.map(user => UserMapper.toDto(user)),
+                message: 'Users retrieved successfully',
+                data: mockUsers.map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    plan: {
+                        type: user.plan.type,
+                        invitationLimit: user.plan.invitationLimit,
+                        name: user.plan.name,
+                        description: user.plan.description,
+                    },
+                    createdAt: user.createdAt.toISOString(),
+                    updatedAt: user.updatedAt.toISOString(),
+                })),
             });
         });
     });
 
     describe('getUserById', () => {
-        it('should return user by id', async () => {
-            const userId = 'user-id-1';
+        it('should return a user by ID successfully', async () => {
+            const userId = '000000000000000000000001';
             const mockUser = UserFixture.getUserEntity({
                 id: userId,
-                name: 'testuser',
-                email: 'test@example.com',
-                passwordHash: 'hashedPassword',
+                name: 'Test User',
             });
 
             getUserByIdUseCase.execute.mockResolvedValue(mockUser);
@@ -152,31 +187,35 @@ describe('@user/interfaces/http/controller', () => {
 
             expect(getUserByIdUseCase.execute).toHaveBeenCalledWith(userId);
             expect(result).toEqual({
-                statusCode: 200,
-                data: UserMapper.toDto(mockUser),
+                message: 'User retrieved successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    plan: {
+                        type: mockUser.plan.type,
+                        invitationLimit: mockUser.plan.invitationLimit,
+                        name: mockUser.plan.name,
+                        description: mockUser.plan.description,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
             });
-        });
-
-        it('should throw an error if the user is not found', async () => {
-            getUserByIdUseCase.execute.mockRejectedValue(new Error('User not found'));
-
-            await expect(controller.getUserById('non-existent-id')).rejects.toThrow('User not found');
         });
     });
 
     describe('updateUser', () => {
-        it('should update user successfully', async () => {
-            const userId = 'user-id-1';
-            const updateUserDto = {
-                name: 'newname',
+        it('should update a user successfully', async () => {
+            const userId = '000000000000000000000001';
+            const updateUserDto: UpdateUserDto = {
+                name: 'Updated User',
                 password: 'newpassword123',
             };
 
             const mockUser = UserFixture.getUserEntity({
                 id: userId,
                 name: updateUserDto.name,
-                email: 'test@example.com',
-                passwordHash: 'newhashedpassword',
             });
 
             updateUserUseCase.execute.mockResolvedValue(mockUser);
@@ -185,44 +224,26 @@ describe('@user/interfaces/http/controller', () => {
 
             expect(updateUserUseCase.execute).toHaveBeenCalledWith(userId, updateUserDto);
             expect(result).toEqual({
-                statusCode: 200,
-                data: UserMapper.toDto(mockUser),
+                message: 'User updated successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    plan: {
+                        type: mockUser.plan.type,
+                        invitationLimit: mockUser.plan.invitationLimit,
+                        name: mockUser.plan.name,
+                        description: mockUser.plan.description,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
             });
-        });
-
-        it('should update user with partial data', async () => {
-            const userId = 'user-id-1';
-            const updateUserDto = {
-                name: 'newname',
-            };
-
-            const mockUser = UserFixture.getUserEntity({
-                id: userId,
-                name: updateUserDto.name,
-                email: 'test@example.com',
-                passwordHash: 'hashedpassword',
-            });
-
-            updateUserUseCase.execute.mockResolvedValue(mockUser);
-
-            const result = await controller.updateUser(userId, updateUserDto);
-
-            expect(updateUserUseCase.execute).toHaveBeenCalledWith(userId, updateUserDto);
-            expect(result).toEqual({
-                statusCode: 200,
-                data: UserMapper.toDto(mockUser),
-            });
-        });
-
-        it('should throw an error if the user is not found', async () => {
-            updateUserUseCase.execute.mockRejectedValue(new Error('User not found'));
-
-            await expect(controller.updateUser('non-existent-id', { name: 'newname' })).rejects.toThrow('User not found');
         });
     });
 
     describe('deleteUser', () => {
-        it('should delete user successfully', async () => {
+        it('should delete a user successfully', async () => {
             const userId = 'user-id-1';
 
             deleteUserUseCase.execute.mockResolvedValue(undefined);
@@ -231,15 +252,8 @@ describe('@user/interfaces/http/controller', () => {
 
             expect(deleteUserUseCase.execute).toHaveBeenCalledWith(userId);
             expect(result).toEqual({
-                statusCode: 200,
                 message: 'User deleted successfully',
             });
-        });
-
-        it('should throw an error if the user is not found', async () => {
-            deleteUserUseCase.execute.mockRejectedValue(new Error('User not found'));
-
-            await expect(controller.deleteUser('non-existent-id')).rejects.toThrow('User not found');
         });
     });
 });

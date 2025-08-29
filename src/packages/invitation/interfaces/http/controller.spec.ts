@@ -7,6 +7,8 @@ import { UpdateInvitationUseCase } from '@invitation/application/use-cases/updat
 import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delete';
 import { InvitationMapper } from './mapper';
 import { InvitationFixture } from '@test/fixture/invitation';
+import { RequestWithUser } from './middleware/user-context.middleware';
+import { UserFixture } from '@test/fixture/user';
 
 describe('@invitation/interfaces/http/controller', () => {
     let controller: InvitationController;
@@ -17,6 +19,13 @@ describe('@invitation/interfaces/http/controller', () => {
     let deleteInvitationUseCase: jest.Mocked<DeleteInvitationUseCase>;
 
     const createInvitationDto = InvitationFixture.getCreateInvitationDto();
+    const mockUser = UserFixture.getUserEntity({
+        id: '000000000000000000000001',
+    });
+    const mockRequest: RequestWithUser = {
+        user: { id: '000000000000000000000001' },
+        userData: mockUser,
+    } as RequestWithUser;
 
     beforeEach(async () => {
         const mockCreateInvitationUseCase = {
@@ -83,11 +92,11 @@ describe('@invitation/interfaces/http/controller', () => {
 
             createInvitationUseCase.execute.mockResolvedValue(mockInvitation);
 
-            const result = await controller.createInvitation(createInvitationDto);
+            const result = await controller.createInvitation(createInvitationDto, mockRequest);
 
-            expect(createInvitationUseCase.execute).toHaveBeenCalledWith(createInvitationDto);
+            expect(createInvitationUseCase.execute).toHaveBeenCalledWith(createInvitationDto, mockUser);
             expect(result).toEqual({
-                statusCode: 201,
+                message: 'Invitation created successfully',
                 data: InvitationMapper.toDto(mockInvitation),
             });
         });
@@ -95,7 +104,7 @@ describe('@invitation/interfaces/http/controller', () => {
         it('should throw an error if the invitation creation fails', async () => {
             createInvitationUseCase.execute.mockRejectedValue(new Error('Invitation creation failed'));
 
-            await expect(controller.createInvitation(createInvitationDto)).rejects.toThrow('Invitation creation failed');
+            await expect(controller.createInvitation(createInvitationDto, mockRequest)).rejects.toThrow('Invitation creation failed');
         });
     });
 
@@ -114,11 +123,11 @@ describe('@invitation/interfaces/http/controller', () => {
 
             listInvitationsUseCase.execute.mockResolvedValue(mockInvitations);
 
-            const result = await controller.listInvitations();
+            const result = await controller.listInvitations(mockRequest);
 
-            expect(listInvitationsUseCase.execute).toHaveBeenCalled();
+            expect(listInvitationsUseCase.execute).toHaveBeenCalledWith('000000000000000000000001');
             expect(result).toEqual({
-                statusCode: 200,
+                message: 'Invitations retrieved successfully',
                 data: mockInvitations.map(invitation => InvitationMapper.toDto(invitation)),
             });
         });
@@ -134,11 +143,11 @@ describe('@invitation/interfaces/http/controller', () => {
 
             getInvitationByIdUseCase.execute.mockResolvedValue(mockInvitation);
 
-            const result = await controller.getInvitationById(invitationId);
+            const result = await controller.getInvitationById(invitationId, mockRequest);
 
-            expect(getInvitationByIdUseCase.execute).toHaveBeenCalledWith(invitationId);
+            expect(getInvitationByIdUseCase.execute).toHaveBeenCalledWith(invitationId, '000000000000000000000001');
             expect(result).toEqual({
-                statusCode: 200,
+                message: 'Invitation retrieved successfully',
                 data: InvitationMapper.toDto(mockInvitation),
             });
         });
@@ -146,7 +155,7 @@ describe('@invitation/interfaces/http/controller', () => {
         it('should throw an error if the invitation is not found', async () => {
             getInvitationByIdUseCase.execute.mockRejectedValue(new Error('Invitation not found'));
 
-            await expect(controller.getInvitationById('non-existent-id')).rejects.toThrow('Invitation not found');
+            await expect(controller.getInvitationById('non-existent-id', mockRequest)).rejects.toThrow('Invitation not found');
         });
     });
 
@@ -164,11 +173,11 @@ describe('@invitation/interfaces/http/controller', () => {
 
             updateInvitationUseCase.execute.mockResolvedValue(mockInvitation);
 
-            const result = await controller.updateInvitation(invitationId, updateInvitationDto);
+            const result = await controller.updateInvitation(invitationId, updateInvitationDto, mockRequest);
 
-            expect(updateInvitationUseCase.execute).toHaveBeenCalledWith(invitationId, updateInvitationDto);
+            expect(updateInvitationUseCase.execute).toHaveBeenCalledWith(invitationId, updateInvitationDto, '000000000000000000000001');
             expect(result).toEqual({
-                statusCode: 200,
+                message: 'Invitation updated successfully',
                 data: InvitationMapper.toDto(mockInvitation),
             });
         });
@@ -176,7 +185,7 @@ describe('@invitation/interfaces/http/controller', () => {
         it('should throw an error if the invitation is not found', async () => {
             updateInvitationUseCase.execute.mockRejectedValue(new Error('Invitation not found'));
 
-            await expect(controller.updateInvitation('non-existent-id', createInvitationDto)).rejects.toThrow('Invitation not found');
+            await expect(controller.updateInvitation('non-existent-id', createInvitationDto, mockRequest)).rejects.toThrow('Invitation not found');
         });
     });
 
@@ -186,11 +195,10 @@ describe('@invitation/interfaces/http/controller', () => {
 
             deleteInvitationUseCase.execute.mockResolvedValue(undefined);
 
-            const result = await controller.deleteInvitation(invitationId);
+            const result = await controller.deleteInvitation(invitationId, mockRequest);
 
-            expect(deleteInvitationUseCase.execute).toHaveBeenCalledWith(invitationId);
+            expect(deleteInvitationUseCase.execute).toHaveBeenCalledWith(invitationId, '000000000000000000000001');
             expect(result).toEqual({
-                statusCode: 200,
                 message: 'Invitation deleted successfully',
             });
         });
@@ -198,7 +206,7 @@ describe('@invitation/interfaces/http/controller', () => {
         it('should throw an error if the invitation is not found', async () => {
             deleteInvitationUseCase.execute.mockRejectedValue(new Error('Invitation not found'));
 
-            await expect(controller.deleteInvitation('non-existent-id')).rejects.toThrow('Invitation not found');
+            await expect(controller.deleteInvitation('non-existent-id', mockRequest)).rejects.toThrow('Invitation not found');
         });
     });
 });

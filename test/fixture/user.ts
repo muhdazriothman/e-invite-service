@@ -1,4 +1,9 @@
-import { User, UserType } from '@user/domain/entities/user';
+import {
+    User,
+    UserType,
+    PlanType,
+} from '@user/domain/entities/user';
+import { PlanConfig } from '@user/domain/value-objects/plan-config';
 
 export class UserFixture {
     static getUserProps(props: Partial<User> = {}) {
@@ -8,6 +13,7 @@ export class UserFixture {
             email = 'testuser@example.com',
             passwordHash = 'hashed_password',
             type = UserType.USER,
+            plan: planConfig = PlanConfig.create(PlanType.BASIC),
             isDeleted = false,
             createdAt = new Date(),
             updatedAt = new Date(),
@@ -20,6 +26,7 @@ export class UserFixture {
             email,
             passwordHash,
             type,
+            plan: planConfig,
             isDeleted,
             createdAt,
             updatedAt,

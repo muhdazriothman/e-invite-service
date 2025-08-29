@@ -2,11 +2,13 @@ import {
     Injectable,
     Inject,
     BadRequestException,
+    ForbiddenException,
 } from '@nestjs/common';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { Invitation } from '@invitation/domain/entities/invitation';
 import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 import { DateValidator } from '@common/utils/date';
+import { User } from '@user/domain/entities/user';
 
 @Injectable()
 export class CreateInvitationUseCase {
@@ -17,34 +19,23 @@ export class CreateInvitationUseCase {
         private readonly dateValidator: DateValidator,
     ) { }
 
-    async execute(createInvitationDto: CreateInvitationDto): Promise<Invitation> {
+    async execute(createInvitationDto: CreateInvitationDto, user: User): Promise<Invitation> {
         try {
-            this.validateDates(createInvitationDto);
+            // Check invitation limit
+            const currentInvitationCount = await this.invitationRepository.countByUserId(user.id);
+            if (currentInvitationCount >= user.plan.invitationLimit) {
+                throw new ForbiddenException(
+                    `You have reached your invitation limit (${user.plan.invitationLimit}). Please upgrade your plan to create more invitations.`
+                );
+            }
 
-            const invitation = Invitation.createNew({
-                type: createInvitationDto.type,
-                title: createInvitationDto.title,
-                hosts: createInvitationDto.hosts,
-                celebratedPersons: createInvitationDto.celebratedPersons.map(person => ({
-                    name: person.name,
-                    title: person.title,
-                    relationshipWithHost: person.relationshipWithHost,
-                    celebrationDate: new Date(person.celebrationDate),
-                    type: person.type,
-                })),
-                date: {
-                    gregorianDate: new Date(createInvitationDto.date.gregorianDate),
-                    hijriDate: createInvitationDto.date.hijriDate,
-                },
-                location: createInvitationDto.location,
-                itineraries: createInvitationDto.itineraries,
-                contactPersons: createInvitationDto.contactPersons,
-                rsvpDueDate: new Date(createInvitationDto.rsvpDueDate),
-            });
+            const invitation = Invitation.createNew(createInvitationDto, user.id);
+
+            this.validateDates(invitation);
 
             return await this.invitationRepository.create(invitation);
         } catch (error) {
-            if (error instanceof BadRequestException) {
+            if (error instanceof BadRequestException || error instanceof ForbiddenException) {
                 throw error;
             }
 
@@ -52,9 +43,9 @@ export class CreateInvitationUseCase {
         }
     }
 
-    validateDates(createInvitationDto: CreateInvitationDto): void {
-        const eventDate = this.dateValidator.parseDate(createInvitationDto.date.gregorianDate);
-        const rsvpDueDate = this.dateValidator.parseDate(createInvitationDto.rsvpDueDate);
+    validateDates(invitation: Invitation): void {
+        const eventDate = this.dateValidator.parseDate(invitation.date.gregorianDate.toISOString());
+        const rsvpDueDate = this.dateValidator.parseDate(invitation.rsvpDueDate.toISOString());
 
         // Event date should not be in the past
         if (this.dateValidator.isPastDate(eventDate)) {

@@ -1,4 +1,8 @@
-import { Module } from '@nestjs/common';
+import {
+    Module,
+    NestModule,
+    MiddlewareConsumer,
+} from '@nestjs/common';
 import { MongooseModule, getModelToken } from '@nestjs/mongoose';
 
 import { InvitationController } from '@invitation/interfaces/http/controller';
@@ -10,6 +14,9 @@ import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delet
 import { InvitationRepository } from '@invitation/infra/repository';
 import { InvitationMongoModelName, InvitationMongoSchema } from '@invitation/infra/schema';
 import { DateValidator } from '@common/utils/date';
+import { UserRepository } from '@user/infra/repository';
+import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
+import { UserContextMiddleware } from '@invitation/interfaces/http/middleware/user-context.middleware';
 
 // Mock factory for testing
 const createMockInvitationRepository = () =>
@@ -28,6 +35,19 @@ const createMockInvitationRepository = () =>
 const createInvitationRepository = (invitationModel: any) =>
     new InvitationRepository(invitationModel);
 
+// User repository factory
+const createUserRepository = (userModel: any) =>
+    new UserRepository(userModel);
+
+// Mock user repository factory for testing
+const createMockUserRepository = () =>
+    new UserRepository({
+        findOne: () => ({ lean: async () => null }),
+        find: () => ({ lean: async () => [] }),
+        findOneAndUpdate: () => ({ lean: async () => null }),
+        updateOne: async () => ({ modifiedCount: 0 }),
+    } as any);
+
 // DateValidator factory with specific format
 const createDateValidator = () =>
     new DateValidator({
@@ -41,6 +61,7 @@ const createDateValidator = () =>
             : [
                 MongooseModule.forFeature([
                     { name: InvitationMongoModelName, schema: InvitationMongoSchema },
+                    { name: UserMongoModelName, schema: UserMongoSchema },
                 ]),
             ]),
     ],
@@ -58,6 +79,17 @@ const createDateValidator = () =>
                     : [getModelToken(InvitationMongoModelName)],
         },
         {
+            provide: UserRepository,
+            useFactory:
+                process.env.NODE_ENV === 'test'
+                    ? createMockUserRepository
+                    : createUserRepository,
+            inject:
+                process.env.NODE_ENV === 'test'
+                    ? []
+                    : [getModelToken(UserMongoModelName)],
+        },
+        {
             provide: 'DateValidator',
             useFactory: createDateValidator,
         },
@@ -66,10 +98,17 @@ const createDateValidator = () =>
         GetInvitationByIdUseCase,
         UpdateInvitationUseCase,
         DeleteInvitationUseCase,
+        UserContextMiddleware,
     ],
     exports: [
         'InvitationRepository',
         'DateValidator',
     ],
 })
-export class InvitationModule { }
+export class InvitationModule implements NestModule {
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(UserContextMiddleware)
+            .forRoutes('invitations');
+    }
+}

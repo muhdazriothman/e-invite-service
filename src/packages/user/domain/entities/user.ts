@@ -1,6 +1,20 @@
+import { PlanConfig } from '@user/domain/value-objects/plan-config';
+
 export enum UserType {
     USER = 'user',
     ADMIN = 'admin',
+}
+
+export enum PlanType {
+    BASIC = 'basic',
+    PREMIUM = 'premium',
+}
+
+export interface Plan {
+    type: PlanType;
+    invitationLimit: number;
+    name: string;
+    description?: string;
 }
 
 export interface UserProps {
@@ -9,6 +23,7 @@ export interface UserProps {
     email: string;
     passwordHash: string;
     type: UserType;
+    plan: PlanConfig;
     isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -20,6 +35,7 @@ export interface CreateUserProps {
     email: string;
     passwordHash: string;
     type: UserType;
+    planType: PlanType;
 }
 
 export class User {
@@ -28,6 +44,7 @@ export class User {
     public readonly email: string;
     public passwordHash: string;
     public readonly type: UserType;
+    public plan: PlanConfig;
     public isDeleted: boolean;
     public readonly createdAt: Date;
     public updatedAt: Date;
@@ -39,6 +56,7 @@ export class User {
         this.email = props.email;
         this.passwordHash = props.passwordHash;
         this.type = props.type;
+        this.plan = props.plan;
         this.isDeleted = props.isDeleted;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
@@ -47,6 +65,7 @@ export class User {
 
     static createNew(props: CreateUserProps): User {
         const now = new Date();
+        const planConfig = PlanConfig.create(props.planType);
 
         return new User({
             id: '', // Will be set by the database
@@ -54,6 +73,7 @@ export class User {
             email: props.email,
             passwordHash: props.passwordHash,
             type: props.type,
+            plan: planConfig,
             isDeleted: false,
             createdAt: now,
             updatedAt: now,

@@ -8,19 +8,19 @@ describe('@invitation/application/use-cases/get-by-id', () => {
     let useCase: GetInvitationByIdUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    const mockInvitation = InvitationFixture.getInvitationEntity({
-        id: 'invitation-id-1',
-    });
+    const mockInvitation = InvitationFixture.getInvitationEntity();
 
     beforeEach(async () => {
+        const mockInvitationRepository = {
+            findById: jest.fn(),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 GetInvitationByIdUseCase,
                 {
                     provide: 'InvitationRepository',
-                    useValue: {
-                        findById: jest.fn(),
-                    },
+                    useValue: mockInvitationRepository,
                 },
             ],
         }).compile();
@@ -36,22 +36,26 @@ describe('@invitation/application/use-cases/get-by-id', () => {
     describe('execute', () => {
         it('should return invitation when found', async () => {
             const invitationId = 'invitation-id-1';
+            const userId = '000000000000000000000001';
+
             invitationRepository.findById.mockResolvedValue(mockInvitation);
 
-            const result = await useCase.execute(invitationId);
+            const result = await useCase.execute(invitationId, userId);
 
-            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId);
+            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId, userId);
             expect(result).toEqual(mockInvitation);
         });
 
         it('should throw NotFoundException when invitation not found', async () => {
             const invitationId = 'non-existent-id';
+            const userId = '000000000000000000000001';
+
             invitationRepository.findById.mockResolvedValue(null);
 
-            await expect(useCase.execute(invitationId)).rejects.toThrow(
+            await expect(useCase.execute(invitationId, userId)).rejects.toThrow(
                 NotFoundException,
             );
-            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId);
+            expect(invitationRepository.findById).toHaveBeenCalledWith(invitationId, userId);
         });
     });
 });

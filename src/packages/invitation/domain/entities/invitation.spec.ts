@@ -7,19 +7,27 @@ import { InvitationFixture } from '@test/fixture/invitation';
 describe('@invitation/domain/entities/invitation', () => {
     describe('createNew', () => {
         it('should create a new invitation with correct properties', () => {
-            const createProps = InvitationFixture.getCreateInvitationProps();
-            const invitation = Invitation.createNew(createProps);
+            const createProps = InvitationFixture.getCreateInvitationDto();
+            const userId = '000000000000000000000001';
+            const invitation = Invitation.createNew(createProps, userId);
 
             expect(invitation.id).toBe('');
+            expect(invitation.userId).toBe(userId);
             expect(invitation.type).toBe(createProps.type);
             expect(invitation.title).toBe(createProps.title);
             expect(invitation.hosts).toEqual(createProps.hosts);
-            expect(invitation.celebratedPersons).toEqual(createProps.celebratedPersons);
-            expect(invitation.date).toEqual(createProps.date);
+            expect(invitation.celebratedPersons).toEqual(createProps.celebratedPersons.map(person => ({
+                ...person,
+                celebrationDate: expect.any(Date),
+            })));
+            expect(invitation.date).toEqual({
+                gregorianDate: expect.any(Date),
+                hijriDate: createProps.date.hijriDate,
+            });
             expect(invitation.location).toEqual(createProps.location);
             expect(invitation.itineraries).toEqual(createProps.itineraries);
             expect(invitation.contactPersons).toEqual(createProps.contactPersons);
-            expect(invitation.rsvpDueDate).toEqual(createProps.rsvpDueDate);
+            expect(invitation.rsvpDueDate).toEqual(expect.any(Date));
             expect(invitation.isDeleted).toBe(false);
             expect(invitation.deletedAt).toBeNull();
             expect(invitation.createdAt).toBeInstanceOf(Date);
@@ -28,8 +36,9 @@ describe('@invitation/domain/entities/invitation', () => {
 
         it('should set current timestamp for createdAt and updatedAt', () => {
             const beforeCreation = new Date();
-            const createProps = InvitationFixture.getCreateInvitationProps();
-            const invitation = Invitation.createNew(createProps);
+            const createProps = InvitationFixture.getCreateInvitationDto();
+            const userId = '000000000000000000000001';
+            const invitation = Invitation.createNew(createProps, userId);
             const afterCreation = new Date();
 
             expect(invitation.createdAt.getTime()).toBeGreaterThanOrEqual(beforeCreation.getTime());
@@ -44,6 +53,7 @@ describe('@invitation/domain/entities/invitation', () => {
             const createProps = InvitationFixture.getCreateInvitationProps();
             const dbProps = {
                 id: 'test-id-123',
+                userId: '000000000000000000000001',
                 type: InvitationType.BIRTHDAY,
                 title: 'Birthday Party',
                 hosts: createProps.hosts,
@@ -62,6 +72,7 @@ describe('@invitation/domain/entities/invitation', () => {
             const invitation = Invitation.createFromDb(dbProps);
 
             expect(invitation.id).toBe(dbProps.id);
+            expect(invitation.userId).toBe(dbProps.userId);
             expect(invitation.type).toBe(dbProps.type);
             expect(invitation.title).toBe(dbProps.title);
             expect(invitation.isDeleted).toBe(dbProps.isDeleted);
@@ -76,6 +87,7 @@ describe('@invitation/domain/entities/invitation', () => {
             const createProps = InvitationFixture.getCreateInvitationProps();
             const props = {
                 id: 'test-id',
+                userId: '000000000000000000000001',
                 type: InvitationType.CORPORATE,
                 title: 'Corporate Event',
                 hosts: createProps.hosts,
@@ -94,6 +106,7 @@ describe('@invitation/domain/entities/invitation', () => {
             const invitation = new Invitation(props);
 
             expect(invitation.id).toBe(props.id);
+            expect(invitation.userId).toBe(props.userId);
             expect(invitation.type).toBe(props.type);
             expect(invitation.title).toBe(props.title);
             expect(invitation.isDeleted).toBe(props.isDeleted);

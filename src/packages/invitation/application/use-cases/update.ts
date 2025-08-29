@@ -18,8 +18,8 @@ export class UpdateInvitationUseCase {
         private readonly dateValidator: DateValidator,
     ) { }
 
-    async execute(id: string, updateInvitationDto: UpdateInvitationDto): Promise<Invitation> {
-        const existingInvitation = await this.invitationRepository.findById(id);
+    async execute(id: string, updateInvitationDto: UpdateInvitationDto, userId?: string): Promise<Invitation> {
+        const existingInvitation = await this.invitationRepository.findById(id, userId);
 
         if (!existingInvitation) {
             throw new NotFoundException('Invitation not found');
@@ -98,7 +98,7 @@ export class UpdateInvitationUseCase {
             updateData.rsvpDueDate = new Date(updateInvitationDto.rsvpDueDate);
         }
 
-        const result = await this.invitationRepository.update(id, updateData);
+        const result = await this.invitationRepository.update(id, updateData, userId);
 
         if (!result) {
             throw new NotFoundException('Failed to update invitation');
