@@ -54,7 +54,7 @@ describe('@user/application/use-cases/update', () => {
 
     describe('execute', () => {
         const userId = '000000000000000000000001';
-        const existingUser = UserFixture.getUserEntity({
+        const existingUser = UserFixture.getEntity({
             id: userId,
             name: 'originalname',
             email: 'test@example.com',
@@ -66,7 +66,7 @@ describe('@user/application/use-cases/update', () => {
                 name: 'newname',
             };
 
-            const updatedUser = UserFixture.getUserEntity({
+            const updatedUser = UserFixture.getEntity({
                 id: userId,
                 name: 'newname',
                 email: 'test@example.com',
@@ -105,7 +105,7 @@ describe('@user/application/use-cases/update', () => {
             };
 
             const newHash = 'newHashedPassword';
-            const updatedUser = UserFixture.getUserEntity({
+            const updatedUser = UserFixture.getEntity({
                 id: userId,
                 name: 'originalname',
                 email: 'test@example.com',

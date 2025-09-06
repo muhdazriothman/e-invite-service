@@ -281,7 +281,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
     describe('#create', () => {
         it('should create a new invitation successfully', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -305,12 +305,12 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should create multiple invitations with different data', async () => {
-            const createInvitationData1 = InvitationFixture.getInvitationEntity({
+            const createInvitationData1 = InvitationFixture.getEntity({
                 title: 'Wedding Celebration 1',
                 type: InvitationType.WEDDING,
             });
 
-            const createInvitationData2 = InvitationFixture.getInvitationEntity({
+            const createInvitationData2 = InvitationFixture.getEntity({
                 title: 'Birthday Party',
                 type: InvitationType.BIRTHDAY,
             });
@@ -333,12 +333,12 @@ describe('@invitation/infra/repositories/invitation', () => {
     describe('#findAll', () => {
         it('should return all non-deleted invitations', async () => {
             // Create test invitations
-            const createInvitationData1 = InvitationFixture.getInvitationEntity({
+            const createInvitationData1 = InvitationFixture.getEntity({
                 title: 'Wedding Celebration 1',
                 type: InvitationType.WEDDING,
             });
 
-            const createInvitationData2 = InvitationFixture.getInvitationEntity({
+            const createInvitationData2 = InvitationFixture.getEntity({
                 title: 'Birthday Party',
                 type: InvitationType.BIRTHDAY,
             });
@@ -363,7 +363,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
         it('should exclude deleted invitations from results', async () => {
             // Create an invitation
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -384,7 +384,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 25; i++) {
-                const invitation = InvitationFixture.getInvitationEntity({
+                const invitation = InvitationFixture.getEntity({
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
@@ -406,7 +406,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
-                const invitation = InvitationFixture.getInvitationEntity({
+                const invitation = InvitationFixture.getEntity({
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
@@ -427,7 +427,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
-                const invitation = InvitationFixture.getInvitationEntity({
+                const invitation = InvitationFixture.getEntity({
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
@@ -453,7 +453,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
-                const invitation = InvitationFixture.getInvitationEntity({
+                const invitation = InvitationFixture.getEntity({
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
@@ -487,11 +487,11 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should filter by userId when provided', async () => {
-            const user1Invitation = InvitationFixture.getInvitationEntity({
+            const user1Invitation = InvitationFixture.getEntity({
                 userId: 'user1',
                 title: 'User 1 Wedding',
             });
-            const user2Invitation = InvitationFixture.getInvitationEntity({
+            const user2Invitation = InvitationFixture.getEntity({
                 userId: 'user2',
                 title: 'User 2 Wedding',
             });
@@ -508,7 +508,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
         it('should handle invalid next cursor gracefully', async () => {
             // Create an invitation
-            const invitation = InvitationFixture.getInvitationEntity({
+            const invitation = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
             });
             await invitationRepository.create(invitation);
@@ -521,7 +521,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
         it('should handle invalid previous cursor gracefully', async () => {
             // Create an invitation
-            const invitation = InvitationFixture.getInvitationEntity({
+            const invitation = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
             });
             await invitationRepository.create(invitation);
@@ -535,7 +535,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
     describe('#findById', () => {
         it('should return an invitation when found by id', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -559,7 +559,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
         it('should exclude deleted invitations from search', async () => {
             // Create an invitation
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -577,7 +577,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
     describe('#update', () => {
         it('should update invitation title successfully', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -614,7 +614,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should return null when invitation is deleted', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -633,7 +633,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should update only specified fields', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -652,7 +652,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should update type successfully', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -680,7 +680,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should update title and type successfully', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -713,7 +713,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
     describe('#delete', () => {
         it('should mark an invitation as deleted', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
@@ -736,7 +736,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should return false when invitation is already deleted', async () => {
-            const createInvitationData = InvitationFixture.getInvitationEntity({
+            const createInvitationData = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });

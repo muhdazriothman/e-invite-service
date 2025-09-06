@@ -73,7 +73,7 @@ describe('@auth/application/use-cases/login', () => {
         };
 
         it('should return a JWT token when credentials are valid', async () => {
-            const user = UserFixture.getUserEntity({
+            const user = UserFixture.getEntity({
                 id: '1',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',
@@ -98,7 +98,7 @@ describe('@auth/application/use-cases/login', () => {
         });
 
         it('should return a JWT token for admin user when credentials are valid', async () => {
-            const adminUser = UserFixture.getUserEntity({
+            const adminUser = UserFixture.getEntity({
                 id: '2',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',
@@ -134,7 +134,7 @@ describe('@auth/application/use-cases/login', () => {
         });
 
         it('should throw UnauthorizedException when password is invalid', async () => {
-            const user = UserFixture.getUserEntity({
+            const user = UserFixture.getEntity({
                 id: '1',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',
@@ -153,7 +153,7 @@ describe('@auth/application/use-cases/login', () => {
         });
 
         it('should throw UnauthorizedException when user is deleted', async () => {
-            const deletedUser = UserFixture.getUserEntity({
+            const deletedUser = UserFixture.getEntity({
                 id: '1',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',
@@ -172,7 +172,7 @@ describe('@auth/application/use-cases/login', () => {
         });
 
         it('should handle hash service errors gracefully', async () => {
-            const user = UserFixture.getUserEntity({
+            const user = UserFixture.getEntity({
                 id: '1',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',
@@ -190,7 +190,7 @@ describe('@auth/application/use-cases/login', () => {
         });
 
         it('should handle JWT service errors gracefully', async () => {
-            const user = UserFixture.getUserEntity({
+            const user = UserFixture.getEntity({
                 id: '1',
                 email: loginDto.email,
                 passwordHash: 'hashedPassword123',

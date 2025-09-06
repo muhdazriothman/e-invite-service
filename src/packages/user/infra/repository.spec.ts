@@ -41,7 +41,7 @@ describe('@user/infra/repository', () => {
 
     describe('#create', () => {
         it('should create a new user successfully', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'newuser',
                 email: 'newuser@example.com',
                 passwordHash: '$2b$10$hashedpassword',
@@ -67,13 +67,13 @@ describe('@user/infra/repository', () => {
         });
 
         it('should create multiple users with different data', async () => {
-            const createUserData1 = UserFixture.getUserEntity({
+            const createUserData1 = UserFixture.getEntity({
                 name: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
             });
 
-            const createUserData2 = UserFixture.getUserEntity({
+            const createUserData2 = UserFixture.getEntity({
                 name: 'user2',
                 email: 'user2@example.com',
                 passwordHash: '$2b$10$hash2',
@@ -97,13 +97,13 @@ describe('@user/infra/repository', () => {
     describe('#findAll', () => {
         it('should return all non-deleted users', async () => {
             // Create test users
-            const createUserData1 = UserFixture.getUserEntity({
+            const createUserData1 = UserFixture.getEntity({
                 name: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
             });
 
-            const createUserData2 = UserFixture.getUserEntity({
+            const createUserData2 = UserFixture.getEntity({
                 name: 'user2',
                 email: 'user2@example.com',
                 passwordHash: '$2b$10$hash2',
@@ -129,7 +129,7 @@ describe('@user/infra/repository', () => {
 
         it('should exclude deleted users from results', async () => {
             // Create a user
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'user1',
                 email: 'user1@example.com',
                 passwordHash: '$2b$10$hash1',
@@ -148,7 +148,7 @@ describe('@user/infra/repository', () => {
 
     describe('#findByName', () => {
         it('should return a user when found by name', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
@@ -173,7 +173,7 @@ describe('@user/infra/repository', () => {
 
         it('should exclude deleted users from search', async () => {
             // Create a user
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -192,7 +192,7 @@ describe('@user/infra/repository', () => {
 
     describe('#findByEmail', () => {
         it('should return a user when found by email', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
@@ -217,7 +217,7 @@ describe('@user/infra/repository', () => {
 
         it('should exclude deleted users from search', async () => {
             // Create a user
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -236,7 +236,7 @@ describe('@user/infra/repository', () => {
 
     describe('#findById', () => {
         it('should return a user when found by id', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
@@ -262,7 +262,7 @@ describe('@user/infra/repository', () => {
 
         it('should exclude deleted users from search', async () => {
             // Create a user
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -281,7 +281,7 @@ describe('@user/infra/repository', () => {
 
     describe('#update', () => {
         it('should update user password hash successfully', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$oldhash',
@@ -320,7 +320,7 @@ describe('@user/infra/repository', () => {
         });
 
         it('should return null when user is deleted', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -340,7 +340,7 @@ describe('@user/infra/repository', () => {
         });
 
         it('should update only specified fields', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$oldhash',
@@ -362,7 +362,7 @@ describe('@user/infra/repository', () => {
         });
 
         it('should update name successfully', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -394,7 +394,7 @@ describe('@user/infra/repository', () => {
 
 
         it('should update name and password successfully', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$oldhash',
@@ -430,7 +430,7 @@ describe('@user/infra/repository', () => {
 
     describe('#delete', () => {
         it('should mark a user as deleted', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',
@@ -454,7 +454,7 @@ describe('@user/infra/repository', () => {
         });
 
         it('should return false when user is already deleted', async () => {
-            const createUserData = UserFixture.getUserEntity({
+            const createUserData = UserFixture.getEntity({
                 name: 'admin',
                 email: 'admin@example.com',
                 passwordHash: '$2b$10$hash',

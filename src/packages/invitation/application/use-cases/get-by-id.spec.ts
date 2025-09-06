@@ -8,7 +8,7 @@ describe('@invitation/application/use-cases/get-by-id', () => {
     let useCase: GetInvitationByIdUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    const mockInvitation = InvitationFixture.getInvitationEntity();
+    const mockInvitation = InvitationFixture.getEntity();
 
     beforeEach(async () => {
         const mockInvitationRepository = {

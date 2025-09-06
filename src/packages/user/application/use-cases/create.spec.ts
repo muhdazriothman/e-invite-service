@@ -19,7 +19,7 @@ describe('@user/application/use-cases/create', () => {
     let paymentRepository: jest.Mocked<PaymentRepository>;
     let hashService: jest.Mocked<HashService>;
 
-    const user = UserFixture.getUserEntity({
+    const user = UserFixture.getEntity({
         id: '1',
         name: 'testuser',
         email: 'test@example.com',
@@ -173,7 +173,7 @@ describe('@user/application/use-cases/create', () => {
         });
 
         it('should throw ConflictException when email already exists', async () => {
-            const existingUser = UserFixture.getUserEntity({
+            const existingUser = UserFixture.getEntity({
                 id: '1',
                 name: 'existinguser',
                 email: createUserDto.email,

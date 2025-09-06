@@ -10,8 +10,8 @@ describe('@invitation/application/use-cases/update', () => {
     let useCase: UpdateInvitationUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    const mockInvitation = InvitationFixture.getInvitationEntity();
-    const updatedInvitation = InvitationFixture.getInvitationEntity({
+    const mockInvitation = InvitationFixture.getEntity();
+    const updatedInvitation = InvitationFixture.getEntity({
         title: 'Updated Title',
     });
 

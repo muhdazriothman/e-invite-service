@@ -20,7 +20,7 @@ describe('@invitation/interfaces/http/controller', () => {
     let deleteInvitationUseCase: jest.Mocked<DeleteInvitationUseCase>;
 
     const createInvitationDto = InvitationFixture.getCreateInvitationDto();
-    const mockUser = UserFixture.getUserEntity({
+    const mockUser = UserFixture.getEntity({
         id: '000000000000000000000001',
     });
     const mockRequest: RequestWithUser = {
@@ -89,7 +89,7 @@ describe('@invitation/interfaces/http/controller', () => {
 
     describe('createInvitation', () => {
         it('should create a new invitation', async () => {
-            const mockInvitation = InvitationFixture.getInvitationEntity();
+            const mockInvitation = InvitationFixture.getEntity();
 
             createInvitationUseCase.execute.mockResolvedValue(mockInvitation);
 
@@ -112,11 +112,11 @@ describe('@invitation/interfaces/http/controller', () => {
     describe('listInvitations', () => {
         it('should return paginated list of invitations', async () => {
             const mockInvitations = [
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: 'invitation-1',
                     title: 'Wedding Celebration 1',
                 }),
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: 'invitation-2',
                     title: 'Wedding Celebration 2',
                 }),
@@ -152,7 +152,7 @@ describe('@invitation/interfaces/http/controller', () => {
     describe('getInvitationById', () => {
         it('should return invitation by id', async () => {
             const invitationId = 'invitation-id-1';
-            const mockInvitation = InvitationFixture.getInvitationEntity({
+            const mockInvitation = InvitationFixture.getEntity({
                 id: invitationId,
                 title: 'Wedding Celebration',
             });
@@ -182,7 +182,7 @@ describe('@invitation/interfaces/http/controller', () => {
                 title: 'Updated Wedding Celebration',
             });
 
-            const mockInvitation = InvitationFixture.getInvitationEntity({
+            const mockInvitation = InvitationFixture.getEntity({
                 id: invitationId,
                 title: updateInvitationDto.title,
             });

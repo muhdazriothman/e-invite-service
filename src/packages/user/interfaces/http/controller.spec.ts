@@ -91,7 +91,7 @@ describe('@user/interfaces/http/controller', () => {
                 paymentId: 'payment-id-123',
             };
 
-            const mockUser = UserFixture.getUserEntity({
+            const mockUser = UserFixture.getEntity({
                 id: '000000000000000000000001',
                 name: createUserDto.name,
                 email: createUserDto.email,
@@ -137,11 +137,11 @@ describe('@user/interfaces/http/controller', () => {
     describe('listUsers', () => {
         it('should return all users successfully', async () => {
             const mockUsers = [
-                UserFixture.getUserEntity({
+                UserFixture.getEntity({
                     id: '000000000000000000000001',
                     name: 'User 1',
                 }),
-                UserFixture.getUserEntity({
+                UserFixture.getEntity({
                     id: '000000000000000000000002',
                     name: 'User 2',
                 }),
@@ -171,7 +171,7 @@ describe('@user/interfaces/http/controller', () => {
     describe('getUserById', () => {
         it('should return a user by ID successfully', async () => {
             const userId = '000000000000000000000001';
-            const mockUser = UserFixture.getUserEntity({
+            const mockUser = UserFixture.getEntity({
                 id: userId,
                 name: 'Test User',
             });
@@ -205,7 +205,7 @@ describe('@user/interfaces/http/controller', () => {
                 password: 'newpassword123',
             };
 
-            const mockUser = UserFixture.getUserEntity({
+            const mockUser = UserFixture.getEntity({
                 id: userId,
                 name: updateUserDto.name,
             });

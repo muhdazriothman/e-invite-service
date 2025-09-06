@@ -42,7 +42,7 @@ describe('UserContextMiddleware', () => {
 
     describe('use', () => {
         it('should attach user data to request when user exists', async () => {
-            const user = UserFixture.getUserEntity({
+            const user = UserFixture.getEntity({
                 id: '000000000000000000000001',
             });
 

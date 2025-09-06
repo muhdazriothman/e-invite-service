@@ -24,9 +24,8 @@ describe('@invitation/application/use-cases/create', () => {
     let mockRepository: jest.Mocked<InvitationRepository>;
     let mockDateValidator: jest.Mocked<DateValidator>;
 
-    const user = UserFixture.getUserEntity({
+    const user = UserFixture.getEntity({
         id: '000000000000000000000001',
-        plan: UserFixture.getUserProps().plan,
     });
 
     const createInvitationDto: CreateInvitationDto = {
@@ -118,7 +117,7 @@ describe('@invitation/application/use-cases/create', () => {
 
     describe('execute', () => {
         it('should create an invitation successfully with valid props', async () => {
-            const invitation = InvitationFixture.getInvitationEntity({
+            const invitation = InvitationFixture.getEntity({
                 id: '000000000000000000000002',
                 userId: '000000000000000000000001',
             });
@@ -211,7 +210,7 @@ describe('@invitation/application/use-cases/create', () => {
             mockDateValidator.parseDate.mockReturnValue(pastDate);
             mockDateValidator.isPastDate.mockReturnValue(true);
 
-            const invitation = InvitationFixture.getInvitationEntity({
+            const invitation = InvitationFixture.getEntity({
                 id: '000000000000000000000002',
                 userId: '000000000000000000000001',
                 date: {
@@ -235,7 +234,7 @@ describe('@invitation/application/use-cases/create', () => {
                 .mockReturnValueOnce(laterRsvpDate); // For RSVP date
             mockDateValidator.isPastDate.mockReturnValue(false);
 
-            const invitation = InvitationFixture.getInvitationEntity({
+            const invitation = InvitationFixture.getEntity({
                 id: '000000000000000000000002',
                 userId: '000000000000000000000001',
                 date: {

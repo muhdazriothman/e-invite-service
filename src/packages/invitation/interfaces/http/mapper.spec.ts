@@ -6,7 +6,7 @@ describe('@invitation/interfaces/http/mapper', () => {
 
     describe('toDto', () => {
         it('should convert Invitation domain object to InvitationDto', () => {
-            const mockInvitation = InvitationFixture.getInvitationEntity();
+            const mockInvitation = InvitationFixture.getEntity();
             const result = InvitationMapper.toDto(mockInvitation);
 
             expect(result.id).toBe(mockInvitation.id);
@@ -41,7 +41,7 @@ describe('@invitation/interfaces/http/mapper', () => {
         });
 
         it('should convert Date objects to ISO strings', () => {
-            const mockInvitation = InvitationFixture.getInvitationEntity();
+            const mockInvitation = InvitationFixture.getEntity();
             const result = InvitationMapper.toDto(mockInvitation);
 
             expect(result.celebratedPersons[0].celebrationDate).toBe('2024-06-15T00:00:00.000Z');
@@ -52,7 +52,7 @@ describe('@invitation/interfaces/http/mapper', () => {
         });
 
         it('should preserve optional fields', () => {
-            const invitationWithOptionals = InvitationFixture.getInvitationEntity({
+            const invitationWithOptionals = InvitationFixture.getEntity({
                 hosts: [
                     {
                         name: 'John Doe',

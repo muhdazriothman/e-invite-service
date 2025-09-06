@@ -83,7 +83,7 @@ export class InvitationFixture {
         };
     }
 
-    static getInvitationEntity(params: Partial<Invitation> = {}) {
+    static getEntity(params: Partial<Invitation> = {}) {
         const props = InvitationFixture.getInvitationProps(params);
         return new Invitation(props);
     }

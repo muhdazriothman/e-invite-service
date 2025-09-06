@@ -4,7 +4,7 @@ import { UserFixture } from '@test/fixture/user';
 describe('@user/interfaces/http/mapper', () => {
     describe('#toDto', () => {
         it('should map User entity to UserDto', () => {
-            const user = UserFixture.getUserEntity();
+            const user = UserFixture.getEntity();
 
             const result = UserMapper.toDto(user);
 

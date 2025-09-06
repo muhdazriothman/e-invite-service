@@ -35,13 +35,13 @@ describe('@user/application/use-cases/list', () => {
     describe('execute', () => {
         it('should return all users from repository', async () => {
             const mockUsers = [
-                UserFixture.getUserEntity({
+                UserFixture.getEntity({
                     id: '1',
                     name: 'user1',
                     email: 'user1@example.com',
                     passwordHash: 'hash1',
                 }),
-                UserFixture.getUserEntity({
+                UserFixture.getEntity({
                     id: '2',
                     name: 'user2',
                     email: 'user2@example.com',

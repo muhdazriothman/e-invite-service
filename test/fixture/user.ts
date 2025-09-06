@@ -35,13 +35,13 @@ export class UserFixture {
         };
     }
 
-    static getUserEntity(params: Partial<User> = {}) {
+    static getEntity(params: Partial<User> = {}) {
         const props = UserFixture.getUserProps(params);
         return new User(props);
     }
 
     static getAdminUser() {
-        return UserFixture.getUserEntity({
+        return UserFixture.getEntity({
             id: '1',
             name: 'admin',
             email: 'admin@example.com',
@@ -51,7 +51,7 @@ export class UserFixture {
     }
 
     static getNewUser() {
-        return UserFixture.getUserEntity({
+        return UserFixture.getEntity({
             id: '123',
             name: 'newuser',
             email: 'newuser@example.com',

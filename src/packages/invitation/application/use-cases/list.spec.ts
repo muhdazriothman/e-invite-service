@@ -38,11 +38,11 @@ describe('@invitation/application/use-cases/list', () => {
     describe('execute', () => {
         it('should return paginated invitations from repository', async () => {
             const mockInvitations = [
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: '000000000000000000000001',
                     title: 'Wedding Celebration 1',
                 }),
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: '000000000000000000000002',
                 }),
             ];
@@ -65,7 +65,7 @@ describe('@invitation/application/use-cases/list', () => {
 
         it('should return paginated invitations with next cursor and limit', async () => {
             const mockInvitations = [
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: '3',
                     title: 'Wedding Celebration 3',
                 }),
@@ -89,7 +89,7 @@ describe('@invitation/application/use-cases/list', () => {
 
         it('should return paginated invitations with previous cursor and limit', async () => {
             const mockInvitations = [
-                InvitationFixture.getInvitationEntity({
+                InvitationFixture.getEntity({
                     id: '1',
                     title: 'Wedding Celebration 1',
                 }),

@@ -9,7 +9,7 @@ describe('@user/application/use-cases/delete', () => {
     let useCase: DeleteUserUseCase;
     let mockRepository: jest.Mocked<UserRepository>;
 
-    const mockUser = UserFixture.getUserEntity({
+    const mockUser = UserFixture.getEntity({
         id: 'user-id-1',
         name: 'testuser',
         email: 'test@example.com',

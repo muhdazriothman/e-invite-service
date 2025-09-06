@@ -4,13 +4,14 @@ import {
     PaymentMethod,
     PlanType,
 } from '@payment/domain/entities/payment';
+import { PaymentFixture } from '@test/fixture/payment';
 
 describe('@payment/domain/entities/payment', () => {
     let payment: Payment;
-    let paymentProps: any;
+    let paymentProps: ReturnType<typeof PaymentFixture.getPaymentProps>;
 
     beforeEach(() => {
-        paymentProps = {
+        paymentProps = PaymentFixture.getPaymentProps({
             id: '1',
             amount: 100.00,
             currency: 'USD',
@@ -19,14 +20,8 @@ describe('@payment/domain/entities/payment', () => {
             reference: 'PAY-001',
             description: 'Test payment',
             planType: PlanType.BASIC,
-            verifiedAt: null,
-            usedAt: null,
             createdBy: 'admin-123',
-            isDeleted: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            deletedAt: null,
-        };
+        });
     });
 
     describe('#constructor', () => {
@@ -62,14 +57,14 @@ describe('@payment/domain/entities/payment', () => {
         });
 
         it('should create a new Payment with default values', () => {
-            const createProps = {
+            const createProps = PaymentFixture.getPaymentProps({
                 currency: 'EUR',
                 paymentMethod: PaymentMethod.CREDIT_CARD,
                 reference: 'PAY-002',
                 description: 'New payment',
                 planType: PlanType.BASIC,
                 createdBy: 'admin-456',
-            };
+            });
 
             payment = Payment.createNew(createProps);
 
@@ -95,10 +90,10 @@ describe('@payment/domain/entities/payment', () => {
 
     describe('#createFromDb', () => {
         it('should create a Payment from database props', () => {
-            const dbProps = {
+            const dbProps = PaymentFixture.getPaymentProps({
                 ...paymentProps,
                 planType: PlanType.PREMIUM,
-            };
+            });
 
             payment = Payment.createFromDb(dbProps);
 

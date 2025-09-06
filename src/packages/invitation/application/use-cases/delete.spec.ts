@@ -8,7 +8,7 @@ describe('@invitation/application/use-cases/delete', () => {
     let useCase: DeleteInvitationUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    const mockInvitation = InvitationFixture.getInvitationEntity();
+    const mockInvitation = InvitationFixture.getEntity();
 
     beforeEach(async () => {
         const mockInvitationRepository = {
