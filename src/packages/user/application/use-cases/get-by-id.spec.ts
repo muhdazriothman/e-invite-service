@@ -2,24 +2,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { GetUserByIdUseCase } from './get-by-id';
 import { UserRepository } from '@user/infra/repository';
-import { User, UserType, PlanType } from '@user/domain/entities/user';
-import { PlanConfig } from '@user/domain/value-objects/plan-config';
+import { UserType } from '@user/domain/entities/user';
+import { UserFixture } from '@test/fixture/user';
 
 describe('@user/application/use-cases/get-by-id', () => {
     let useCase: GetUserByIdUseCase;
     let mockRepository: jest.Mocked<UserRepository>;
 
-    const mockUser = User.createFromDb({
+    const mockUser = UserFixture.getUserEntity({
         id: 'user-id-1',
         name: 'testuser',
         email: 'test@example.com',
         passwordHash: 'hashedpassword123',
         type: UserType.USER,
-        plan: PlanConfig.create(PlanType.BASIC),
-        isDeleted: false,
-        createdAt: new Date('2023-01-01'),
-        updatedAt: new Date('2023-01-02'),
-        deletedAt: null,
+        paymentId: 'payment-id-123',
     });
 
     beforeEach(async () => {

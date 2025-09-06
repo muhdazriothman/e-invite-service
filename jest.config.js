@@ -7,6 +7,7 @@ module.exports = {
         '^@test/(.*)$': '<rootDir>/test/$1',
         '^@user/(.*)$': '<rootDir>/src/packages/user/$1',
         '^@invitation/(.*)$': '<rootDir>/src/packages/invitation/$1',
+        '^@payment/(.*)$': '<rootDir>/src/packages/payment/$1',
         '^test/(.*)$': '<rootDir>/test/$1'
     },
     transform: {

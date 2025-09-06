@@ -14,7 +14,7 @@ import {
 } from '@test/utils/mongo-test-setup';
 import { UserFixture } from '@test/fixture/user';
 
-describe('@user/infra/repositories/user', () => {
+describe('@user/infra/repository', () => {
     let userRepository: UserRepository;
     let userModel: Model<UserMongoDocument>;
     let module: TestingModule;

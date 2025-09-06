@@ -1,10 +1,9 @@
 import {
     User,
     UserType,
-    PlanType,
 } from '@user/domain/entities/user';
+import { PlanType } from '@payment/domain/entities/payment';
 import { UserFixture } from '@test/fixture/user';
-import { PlanConfig } from '@user/domain/value-objects/plan-config';
 
 describe('@user/domain/entities/user', () => {
     let user: User;
@@ -28,7 +27,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(userProps.email);
             expect(user.passwordHash).toBe(userProps.passwordHash);
             expect(user.type).toBe(userProps.type);
-            expect(user.plan).toBe(userProps.plan);
+            expect(user.capabilities).toEqual(userProps.capabilities);
             expect(user.isDeleted).toBe(userProps.isDeleted);
             expect(user.createdAt).toBe(userProps.createdAt);
             expect(user.updatedAt).toBe(userProps.updatedAt);
@@ -62,23 +61,36 @@ describe('@user/domain/entities/user', () => {
     });
 
     describe('#createNew', () => {
+        let getInvitationLimitSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            getInvitationLimitSpy = jest.spyOn(User, 'getInvitationLimitFromPlanType');
+        });
+
+        afterEach(() => {
+            getInvitationLimitSpy.mockRestore();
+        });
+
         it('should create a new User instance with default values', () => {
             const createProps = {
                 name: 'newuser',
                 email: 'newuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
-                planType: PlanType.BASIC,
+                paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps);
+            const user = User.createNew(createProps, PlanType.BASIC);
+
+            expect(getInvitationLimitSpy).toHaveBeenCalledWith(PlanType.BASIC);
+            const expectedInvitationLimit = getInvitationLimitSpy.mock.results[0].value;
 
             expect(user.id).toBe('');
             expect(user.name).toBe(createProps.name);
             expect(user.email).toBe(createProps.email);
             expect(user.passwordHash).toBe(createProps.passwordHash);
             expect(user.type).toBe(createProps.type);
-            expect(user.plan.type).toBe(createProps.planType);
+            expect(user.capabilities.invitationLimit).toBe(expectedInvitationLimit);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -91,14 +103,17 @@ describe('@user/domain/entities/user', () => {
                 email: 'admin@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.ADMIN,
-                planType: PlanType.BASIC,
+                paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps);
+            const user = User.createNew(createProps, PlanType.BASIC);
+
+            expect(getInvitationLimitSpy).toHaveBeenCalledWith(PlanType.BASIC);
+            const expectedInvitationLimit = getInvitationLimitSpy.mock.results[0].value;
 
             expect(user.type).toBe(UserType.ADMIN);
             expect(user.name).toBe('admin');
-            expect(user.plan.type).toBe(createProps.planType);
+            expect(user.capabilities.invitationLimit).toBe(expectedInvitationLimit);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -111,10 +126,10 @@ describe('@user/domain/entities/user', () => {
                 email: 'newuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
-                planType: PlanType.BASIC,
+                paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps);
+            const user = User.createNew(createProps, PlanType.BASIC);
 
             expect(user.createdAt.getTime()).toBe(user.updatedAt.getTime());
         });
@@ -128,7 +143,10 @@ describe('@user/domain/entities/user', () => {
                 email: 'dbuser@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
-                plan: PlanConfig.create(PlanType.BASIC),
+                capabilities: {
+                    invitationLimit: User.getInvitationLimitFromPlanType(PlanType.BASIC),
+                },
+                paymentId: 'payment-id-123',
                 isDeleted: false,
                 createdAt: new Date('2023-01-01'),
                 updatedAt: new Date('2023-01-02'),
@@ -142,7 +160,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(dbProps.email);
             expect(user.passwordHash).toBe(dbProps.passwordHash);
             expect(user.type).toBe(dbProps.type);
-            expect(user.plan).toEqual(dbProps.plan);
+            expect(user.capabilities).toEqual(dbProps.capabilities);
             expect(user.isDeleted).toBe(dbProps.isDeleted);
             expect(user.createdAt).toBe(dbProps.createdAt);
             expect(user.updatedAt).toBe(dbProps.updatedAt);
@@ -157,7 +175,10 @@ describe('@user/domain/entities/user', () => {
                 email: 'deleted@example.com',
                 passwordHash: 'hashedpassword123',
                 type: UserType.USER,
-                plan: PlanConfig.create(PlanType.BASIC),
+                capabilities: {
+                    invitationLimit: User.getInvitationLimitFromPlanType(PlanType.BASIC),
+                },
+                paymentId: 'payment-id-123',
                 isDeleted: true,
                 createdAt: new Date('2023-01-01'),
                 updatedAt: new Date('2023-01-03'),
@@ -168,6 +189,24 @@ describe('@user/domain/entities/user', () => {
 
             expect(user.isDeleted).toBe(true);
             expect(user.deletedAt).toBe(deletedDate);
+        });
+    });
+
+    describe('#getInvitationLimitFromPlanType', () => {
+        it('should return correct invitation limit for basic plan', () => {
+            const limit = User.getInvitationLimitFromPlanType(PlanType.BASIC);
+            expect(limit).toBe(1);
+        });
+
+        it('should return correct invitation limit for premium plan', () => {
+            const limit = User.getInvitationLimitFromPlanType(PlanType.PREMIUM);
+            expect(limit).toBe(3);
+        });
+
+        it('should throw error for invalid plan type', () => {
+            expect(() => {
+                User.getInvitationLimitFromPlanType('invalid' as PlanType);
+            }).toThrow('Invalid plan type: invalid');
         });
     });
 });

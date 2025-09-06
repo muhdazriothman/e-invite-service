@@ -1,7 +1,4 @@
-import {
-    User,
-    PlanType,
-} from '@user/domain/entities/user';
+import { User } from '@user/domain/entities/user';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserDto {
@@ -17,17 +14,11 @@ export class UserDto {
     @ApiProperty({
         type: 'object',
         properties: {
-            type: { type: 'string', enum: Object.values(PlanType) },
             invitationLimit: { type: 'number' },
-            name: { type: 'string' },
-            description: { type: 'string', nullable: true },
         },
     })
-    plan: {
-        type: PlanType;
+    capabilities: {
         invitationLimit: number;
-        name: string;
-        description?: string;
     };
 
     @ApiProperty()
@@ -59,11 +50,8 @@ export class UserMapper {
             id: user.id,
             name: user.name,
             email: user.email,
-            plan: {
-                type: user.plan.type,
-                invitationLimit: user.plan.invitationLimit,
-                name: user.plan.name,
-                description: user.plan.description,
+            capabilities: {
+                invitationLimit: user.capabilities.invitationLimit,
             },
             createdAt: user.createdAt.toISOString(),
             updatedAt: user.updatedAt.toISOString(),

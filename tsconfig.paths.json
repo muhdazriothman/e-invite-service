@@ -20,6 +20,9 @@
             "@invitation/*": [
                 "src/packages/invitation/*"
             ],
+            "@payment/*": [
+                "src/packages/payment/*"
+            ],
             "@test/*": [
                 "test/*"
             ]

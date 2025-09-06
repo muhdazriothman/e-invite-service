@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '@auth/auth.module';
+import { PaymentModule } from '@payment/payment.module';
 
 import { UserController } from '@user/interfaces/http/controller';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
@@ -14,6 +15,7 @@ import { SharedModule } from '@shared/shared.module';
 @Module({
     imports: [
         AuthModule,
+        PaymentModule,
         SharedModule,
     ],
     controllers: [UserController],

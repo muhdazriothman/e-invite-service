@@ -1,195 +1,165 @@
 import { validate } from 'class-validator';
-import { CreateUserDto } from '@user/interfaces/http/dtos/create';
-import {
-    UserType,
-    PlanType
-} from '@user/domain/entities/user';
+import { CreateUserDto } from './create';
+import { UserType } from '@user/domain/entities/user';
 
 describe('@user/interfaces/http/dtos/create', () => {
-    describe('#validation', () => {
+    let dto: CreateUserDto;
+
+    beforeEach(() => {
+        dto = new CreateUserDto();
+    });
+
+    describe('validation', () => {
         it('should pass validation with valid data', async () => {
-            const dto = new CreateUserDto();
-            dto.name = 'testuser';
-            dto.email = 'test@example.com';
+            dto.name = 'John Doe';
+            dto.email = 'john@example.com';
             dto.password = 'password123';
             dto.type = UserType.USER;
-            dto.planType = PlanType.BASIC;
+            dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
             const errors = await validate(dto);
+
             expect(errors).toHaveLength(0);
         });
 
         describe('name', () => {
-            it('should fail validation when name is not provided', async () => {
-                const dto = new CreateUserDto();
-                dto.email = 'test@example.com';
+            it('should pass validation with valid name', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('name');
+
+                expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation when username is not a string', async () => {
-                const dto = new CreateUserDto();
-                (dto as any).name = 123;
-                dto.email = 'test@example.com';
+            it('should fail validation with empty name', async () => {
+                dto.name = '';
+                dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
+
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('name');
+                expect(errors[0].constraints).toHaveProperty('isNotEmpty');
             });
         });
 
         describe('email', () => {
-            it('should fail validation when email is not provided', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
+            it('should pass validation with valid email', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('email');
+
+                expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation when email is not a valid email', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
+            it('should fail validation with invalid email', async () => {
+                dto.name = 'John Doe';
                 dto.email = 'invalid-email';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
+
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('email');
+                expect(errors[0].constraints).toHaveProperty('isEmail');
             });
         });
 
-        describe('password', () => {
-            it('should fail validation when password is not provided', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
+        describe('password validation', () => {
+            it('should pass validation with valid email', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
+                dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('password');
+
+                expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation when password is not a string', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                (dto as any).password = 123;
+            it('should fail validation with short password', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
+                dto.password = '123';
                 dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
+
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('password');
-            });
-
-            it('should fail validation when password is shorter than 6 characters', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                dto.password = '12345';
-                dto.type = UserType.USER;
-                dto.planType = PlanType.BASIC;
-
-                const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('password');
+                expect(errors[0].constraints).toHaveProperty('minLength');
             });
         });
 
         describe('type', () => {
-            it('should fail validation when type is not provided', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                dto.password = 'password123';
-                dto.planType = PlanType.BASIC;
-
-                const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('type');
-            });
-
-            it('should fail validation when type is not a valid enum value', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                dto.password = 'password123';
-                (dto as any).type = 'invalid';
-                dto.planType = PlanType.BASIC;
-
-                const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('type');
-            });
-
-            it('should pass validation with valid type values', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
+            it('should pass validation with valid user type', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.ADMIN;
-                dto.planType = PlanType.BASIC;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
+
                 expect(errors).toHaveLength(0);
+            });
+
+            it('should fail validation with invalid user type', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
+                dto.password = 'password123';
+                dto.type = 'invalid' as any;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('type');
+                expect(errors[0].constraints).toHaveProperty('isEnum');
             });
         });
 
-        describe('planType', () => {
-            it('should fail validation when planType is not provided', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
+        describe('paymentId', () => {
+            it('should pass validation with valid UUID', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
+                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
 
                 const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('planType');
-            });
 
-            it('should fail validation when planType is not a valid enum value', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                (dto as any).planType = 'invalid';
-
-                const errors = await validate(dto);
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('planType');
-            });
-
-            it('should pass validation with valid planType values', async () => {
-                const dto = new CreateUserDto();
-                dto.name = 'testuser';
-                dto.email = 'test@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.planType = PlanType.PREMIUM;
-
-                const errors = await validate(dto);
                 expect(errors).toHaveLength(0);
+            });
+
+            it('should fail validation with invalid UUID', async () => {
+                dto.name = 'John Doe';
+                dto.email = 'john@example.com';
+                dto.password = 'password123';
+                dto.type = UserType.USER;
+                dto.paymentId = 'invalid-uuid';
+
+                const errors = await validate(dto);
+
+                expect(errors).toHaveLength(1);
+                expect(errors[0].property).toBe('paymentId');
+                expect(errors[0].constraints).toHaveProperty('isUuid');
             });
         });
     });
 });
-

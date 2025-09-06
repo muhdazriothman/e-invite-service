@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuthModule } from '@auth/auth.module';
 import { UserModule } from '@user/user.module';
 import { InvitationModule } from '@invitation/invitation.module';
+import { PaymentModule } from '@payment/payment.module';
 import {
     ConfigModule,
     ConfigService,
@@ -36,6 +37,7 @@ import * as Joi from 'joi';
         AuthModule,
         UserModule,
         InvitationModule,
+        PaymentModule,
     ],
     controllers: [],
     providers: [],

@@ -1,9 +1,8 @@
 import {
     User,
-    UserType,
-    PlanType,
+    UserType
 } from '@user/domain/entities/user';
-import { PlanConfig } from '@user/domain/value-objects/plan-config';
+import { PlanType } from '@payment/domain/entities/payment';
 
 export class UserFixture {
     static getUserProps(props: Partial<User> = {}) {
@@ -13,7 +12,8 @@ export class UserFixture {
             email = 'testuser@example.com',
             passwordHash = 'hashed_password',
             type = UserType.USER,
-            plan: planConfig = PlanConfig.create(PlanType.BASIC),
+            capabilities = { invitationLimit: User.getInvitationLimitFromPlanType(PlanType.BASIC) },
+            paymentId = 'payment-123',
             isDeleted = false,
             createdAt = new Date(),
             updatedAt = new Date(),
@@ -26,7 +26,8 @@ export class UserFixture {
             email,
             passwordHash,
             type,
-            plan: planConfig,
+            capabilities,
+            paymentId,
             isDeleted,
             createdAt,
             updatedAt,

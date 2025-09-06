@@ -1,20 +1,15 @@
-import { PlanConfig } from '@user/domain/value-objects/plan-config';
+import {
+    PlanType,
+    PlanInvitationLimits,
+} from '@payment/domain/entities/payment';
 
 export enum UserType {
     USER = 'user',
     ADMIN = 'admin',
 }
 
-export enum PlanType {
-    BASIC = 'basic',
-    PREMIUM = 'premium',
-}
-
-export interface Plan {
-    type: PlanType;
+export interface UserCapabilities {
     invitationLimit: number;
-    name: string;
-    description?: string;
 }
 
 export interface UserProps {
@@ -23,7 +18,8 @@ export interface UserProps {
     email: string;
     passwordHash: string;
     type: UserType;
-    plan: PlanConfig;
+    capabilities: UserCapabilities;
+    paymentId: string;
     isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
@@ -35,7 +31,7 @@ export interface CreateUserProps {
     email: string;
     passwordHash: string;
     type: UserType;
-    planType: PlanType;
+    paymentId: string;
 }
 
 export class User {
@@ -44,7 +40,8 @@ export class User {
     public readonly email: string;
     public passwordHash: string;
     public readonly type: UserType;
-    public plan: PlanConfig;
+    public capabilities: UserCapabilities;
+    public readonly paymentId: string;
     public isDeleted: boolean;
     public readonly createdAt: Date;
     public updatedAt: Date;
@@ -56,16 +53,17 @@ export class User {
         this.email = props.email;
         this.passwordHash = props.passwordHash;
         this.type = props.type;
-        this.plan = props.plan;
+        this.capabilities = props.capabilities;
+        this.paymentId = props.paymentId;
         this.isDeleted = props.isDeleted;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
         this.deletedAt = props.deletedAt;
     }
 
-    static createNew(props: CreateUserProps): User {
+    static createNew(props: CreateUserProps, planType: PlanType): User {
         const now = new Date();
-        const planConfig = PlanConfig.create(props.planType);
+        const invitationLimit = User.getInvitationLimitFromPlanType(planType);
 
         return new User({
             id: '', // Will be set by the database
@@ -73,7 +71,10 @@ export class User {
             email: props.email,
             passwordHash: props.passwordHash,
             type: props.type,
-            plan: planConfig,
+            capabilities: {
+                invitationLimit: invitationLimit,
+            },
+            paymentId: props.paymentId,
             isDeleted: false,
             createdAt: now,
             updatedAt: now,
@@ -83,5 +84,14 @@ export class User {
 
     static createFromDb(props: UserProps): User {
         return new User(props);
+    }
+
+    static getInvitationLimitFromPlanType(planType: PlanType): number {
+        const invitationLimit = PlanInvitationLimits[planType];
+        if (invitationLimit === undefined) {
+            throw new Error(`Invalid plan type: ${planType}`);
+        }
+
+        return invitationLimit;
     }
 }

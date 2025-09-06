@@ -2,16 +2,16 @@ import {
     IsEmail,
     IsString,
     MinLength,
-    IsEnum
+    IsEnum,
+    IsUUID,
+    IsNotEmpty
 } from 'class-validator';
 
-import {
-    UserType,
-    PlanType
-} from '@user/domain/entities/user';
+import { UserType } from '@user/domain/entities/user';
 
 export class CreateUserDto {
     @IsString()
+    @IsNotEmpty()
     name: string;
 
     @IsEmail()
@@ -24,7 +24,7 @@ export class CreateUserDto {
     @IsEnum(UserType)
     type: UserType;
 
-    @IsEnum(PlanType)
-    planType: PlanType;
+    @IsUUID()
+    paymentId: string;
 }
 

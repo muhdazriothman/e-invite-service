@@ -10,7 +10,8 @@ import { UpdateUserUseCase } from '@user/application/use-cases/update';
 import { DeleteUserUseCase } from '@user/application/use-cases/delete';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
-import { UserType, PlanType } from '@user/domain/entities/user';
+import { UserType } from '@user/domain/entities/user';
+import { PlanType } from '@payment/domain/entities/payment';
 import { UserFixture } from '@test/fixture/user';
 
 describe('@user/interfaces/http/controller', () => {
@@ -87,7 +88,7 @@ describe('@user/interfaces/http/controller', () => {
                 email: 'test@example.com',
                 password: 'password123',
                 type: UserType.USER,
-                planType: PlanType.BASIC,
+                paymentId: 'payment-id-123',
             };
 
             const mockUser = UserFixture.getUserEntity({
@@ -109,11 +110,8 @@ describe('@user/interfaces/http/controller', () => {
                     id: mockUser.id,
                     name: mockUser.name,
                     email: mockUser.email,
-                    plan: {
-                        type: mockUser.plan.type,
-                        invitationLimit: mockUser.plan.invitationLimit,
-                        name: mockUser.plan.name,
-                        description: mockUser.plan.description,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),
@@ -127,7 +125,7 @@ describe('@user/interfaces/http/controller', () => {
                 email: 'test@example.com',
                 password: 'password123',
                 type: UserType.USER,
-                planType: PlanType.BASIC,
+                paymentId: 'payment-id-123',
             };
 
             createUserUseCase.execute.mockRejectedValue(new Error('User creation failed'));
@@ -160,11 +158,8 @@ describe('@user/interfaces/http/controller', () => {
                     id: user.id,
                     name: user.name,
                     email: user.email,
-                    plan: {
-                        type: user.plan.type,
-                        invitationLimit: user.plan.invitationLimit,
-                        name: user.plan.name,
-                        description: user.plan.description,
+                    capabilities: {
+                        invitationLimit: user.capabilities.invitationLimit,
                     },
                     createdAt: user.createdAt.toISOString(),
                     updatedAt: user.updatedAt.toISOString(),
@@ -192,11 +187,8 @@ describe('@user/interfaces/http/controller', () => {
                     id: mockUser.id,
                     name: mockUser.name,
                     email: mockUser.email,
-                    plan: {
-                        type: mockUser.plan.type,
-                        invitationLimit: mockUser.plan.invitationLimit,
-                        name: mockUser.plan.name,
-                        description: mockUser.plan.description,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),
@@ -229,11 +221,8 @@ describe('@user/interfaces/http/controller', () => {
                     id: mockUser.id,
                     name: mockUser.name,
                     email: mockUser.email,
-                    plan: {
-                        type: mockUser.plan.type,
-                        invitationLimit: mockUser.plan.invitationLimit,
-                        name: mockUser.plan.name,
-                        description: mockUser.plan.description,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),

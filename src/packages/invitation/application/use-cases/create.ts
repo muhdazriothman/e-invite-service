@@ -21,11 +21,10 @@ export class CreateInvitationUseCase {
 
     async execute(createInvitationDto: CreateInvitationDto, user: User): Promise<Invitation> {
         try {
-            // Check invitation limit
             const currentInvitationCount = await this.invitationRepository.countByUserId(user.id);
-            if (currentInvitationCount >= user.plan.invitationLimit) {
+            if (currentInvitationCount >= user.capabilities.invitationLimit) {
                 throw new ForbiddenException(
-                    `You have reached your invitation limit (${user.plan.invitationLimit}). Please upgrade your plan to create more invitations.`
+                    `You have reached your invitation limit (${user.capabilities.invitationLimit}). Please upgrade your plan to create more invitations.`
                 );
             }
 

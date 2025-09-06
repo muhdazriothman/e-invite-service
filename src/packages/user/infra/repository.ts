@@ -8,7 +8,6 @@ import {
     UserDocumentSchema
 } from '@user/infra/schema';
 import { UserProps } from '@user/domain/entities/user';
-import { PlanConfig } from '@user/domain/value-objects/plan-config';
 
 @Injectable()
 export class UserRepository {
@@ -28,7 +27,10 @@ export class UserRepository {
             email: doc.email,
             passwordHash: doc.passwordHash,
             type: doc.type,
-            plan: PlanConfig.create(doc.plan.planType),
+            capabilities: {
+                invitationLimit: doc.capabilities.invitationLimit
+            },
+            paymentId: doc.paymentId,
             isDeleted: doc.isDeleted ?? false,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
@@ -42,10 +44,10 @@ export class UserRepository {
             email: user.email,
             passwordHash: user.passwordHash,
             type: user.type,
-            plan: {
-                planType: user.plan.type,
-                invitationLimit: user.plan.invitationLimit,
+            capabilities: {
+                invitationLimit: user.capabilities.invitationLimit,
             },
+            paymentId: user.paymentId,
             isDeleted: user.isDeleted,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
