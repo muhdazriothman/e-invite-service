@@ -7,7 +7,7 @@ import {
 import { InvitationRepository } from '@invitation/infra/repository';
 import { Invitation } from '@invitation/domain/entities/invitation';
 import { UpdateInvitationDto } from '@invitation/interfaces/http/dtos/update';
-import { DateValidator } from '@common/utils/date';
+import { DateValidator } from '@shared/utils/date';
 
 @Injectable()
 export class UpdateInvitationUseCase {

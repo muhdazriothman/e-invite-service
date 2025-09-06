@@ -7,7 +7,7 @@ import {
     InvitationDocumentSchema,
 } from '@invitation/infra/schema';
 import { Invitation } from '@invitation/domain/entities/invitation';
-import { PaginationResult } from '@common/domain/value-objects/pagination-result';
+import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 
 @Injectable()
 export class InvitationRepository {

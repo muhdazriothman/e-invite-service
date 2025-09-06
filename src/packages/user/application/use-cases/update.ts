@@ -1,7 +1,7 @@
 import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '@user/infra/repository';
 import { User } from '@user/domain/entities/user';
-import { HashService } from '@common/services/hash';
+import { HashService } from '@shared/services/hash';
 
 export interface UpdateUserRequest {
     name?: string;

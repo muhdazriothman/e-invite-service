@@ -9,7 +9,7 @@ import { InvitationMapper } from './mapper';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { RequestWithUser } from './middleware/user-context.middleware';
 import { UserFixture } from '@test/fixture/user';
-import { PaginationResult } from '@common/domain/value-objects/pagination-result';
+import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 
 describe('@invitation/interfaces/http/controller', () => {
     let controller: InvitationController;

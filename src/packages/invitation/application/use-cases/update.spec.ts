@@ -4,7 +4,7 @@ import { UpdateInvitationUseCase } from './update';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { UpdateInvitationDto } from '@invitation/interfaces/http/dtos/update';
-import { DateValidator } from '@common/utils/date';
+import { DateValidator } from '@shared/utils/date';
 
 describe('@invitation/application/use-cases/update', () => {
     let useCase: UpdateInvitationUseCase;

@@ -5,8 +5,8 @@
             "@auth/*": [
                 "src/packages/auth/*"
             ],
-            "@common/*": [
-                "src/packages/common/*"
+            "@shared/*": [
+                "src/packages/shared/*"
             ],
             "@flight/*": [
                 "src/packages/flight/*"

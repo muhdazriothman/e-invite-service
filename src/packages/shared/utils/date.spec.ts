@@ -1,7 +1,7 @@
-import { DateValidator } from '@common/utils/date';
+import { DateValidator } from '@shared/utils/date';
 import { DateTime } from 'luxon';
 
-describe('@common/utils/date', () => {
+describe('@shared/utils/date', () => {
     const format = 'yyyy-MM-dd';
 
     beforeEach(() => {

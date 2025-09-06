@@ -6,7 +6,7 @@ import {
 import { UserRepository } from '@user/infra/repository';
 import { User } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
-import { HashService } from '@common/services/hash';
+import { HashService } from '@shared/services/hash';
 
 @Injectable()
 export class CreateUserUseCase {

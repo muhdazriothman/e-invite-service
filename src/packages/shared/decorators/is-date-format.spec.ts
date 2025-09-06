@@ -1,13 +1,13 @@
 import { validate } from 'class-validator';
 
-import { IsDateFormat } from '@common/decorators/is-date-format';
+import { IsDateFormat } from '@shared/decorators/is-date-format';
 
 class TestClass {
     @IsDateFormat('yyyy-MM-dd')
     date: string;
 }
 
-describe('@common/decorators/is-date-format', () => {
+describe('@shared/decorators/is-date-format', () => {
     let testClass: TestClass;
 
     beforeEach(() => {

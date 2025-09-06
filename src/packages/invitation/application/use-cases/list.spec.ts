@@ -3,7 +3,7 @@ import { ListInvitationsUseCase } from './list';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { Invitation } from '@invitation/domain/entities/invitation';
-import { PaginationResult } from '@common/domain/value-objects/pagination-result';
+import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 
 describe('@invitation/application/use-cases/list', () => {
     let useCase: ListInvitationsUseCase;

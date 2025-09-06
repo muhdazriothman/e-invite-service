@@ -2,7 +2,7 @@ import {
     Invitation,
 } from '@invitation/domain/entities/invitation';
 import { ApiProperty } from '@nestjs/swagger';
-import { PaginationMetaDto } from '@common/dtos/pagination-result';
+import { PaginationMetaDto } from '@shared/dtos/pagination-result';
 
 export class InvitationDto {
     @ApiProperty()

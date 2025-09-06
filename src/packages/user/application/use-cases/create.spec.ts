@@ -9,7 +9,7 @@ import {
     UserType,
     PlanType,
 } from '@user/domain/entities/user';
-import { HashService } from '@common/services/hash';
+import { HashService } from '@shared/services/hash';
 import { UserFixture } from '@test/fixture/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 

@@ -13,7 +13,7 @@ import { UpdateInvitationUseCase } from '@invitation/application/use-cases/updat
 import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delete';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { InvitationMongoModelName, InvitationMongoSchema } from '@invitation/infra/schema';
-import { DateValidator } from '@common/utils/date';
+import { DateValidator } from '@shared/utils/date';
 import { UserRepository } from '@user/infra/repository';
 import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
 import { UserContextMiddleware } from '@invitation/interfaces/http/middleware/user-context.middleware';

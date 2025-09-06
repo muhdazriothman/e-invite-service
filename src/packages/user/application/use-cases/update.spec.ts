@@ -5,7 +5,7 @@ import {
 import { NotFoundException } from '@nestjs/common';
 import { UpdateUserUseCase, UpdateUserRequest } from './update';
 import { UserRepository } from '@user/infra/repository';
-import { HashService } from '@common/services/hash';
+import { HashService } from '@shared/services/hash';
 import { UserFixture } from '@test/fixture/user';
 
 describe('@user/application/use-cases/update', () => {

@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { Invitation } from '@invitation/domain/entities/invitation';
-import { PaginationResult } from '@common/domain/value-objects/pagination-result';
+import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 
 @Injectable()
 export class ListInvitationsUseCase {

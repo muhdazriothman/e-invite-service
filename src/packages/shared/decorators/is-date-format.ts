@@ -4,7 +4,7 @@ import {
     ValidationArguments,
 } from 'class-validator';
 
-import { DateValidator } from '@common/utils/date';
+import { DateValidator } from '@shared/utils/date';
 
 export function IsDateFormat(
     format: string,

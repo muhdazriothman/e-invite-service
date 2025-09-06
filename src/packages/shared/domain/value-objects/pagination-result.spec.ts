@@ -1,6 +1,6 @@
 import { PaginationResult } from './pagination-result';
 
-describe('@common/domain/value-objects/pagination-result', () => {
+describe('@shared/domain/value-objects/pagination-result', () => {
     const mockData = [
         { id: '1', name: 'Test 1' },
         { id: '2', name: 'Test 2' },

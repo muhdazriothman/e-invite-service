@@ -1,6 +1,6 @@
 import { PaginationMetaDto } from './pagination-result';
 
-describe('@common/dtos/pagination-result', () => {
+describe('@shared/dtos/pagination-result', () => {
     describe('PaginationMetaDto', () => {
         it('should have the correct structure', () => {
             const paginationMeta: PaginationMetaDto = {

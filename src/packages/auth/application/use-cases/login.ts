@@ -3,8 +3,8 @@ import {
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@common/services/jwt';
-import { HashService } from '@common/services/hash';
+import { JwtService } from '@shared/services/jwt';
+import { HashService } from '@shared/services/hash';
 import { UserRepository } from '@user/infra/repository';
 import { LoginDto } from '@auth/interfaces/http/dtos/login';
 import { JwtPayload } from '@auth/interfaces/http/strategies/jwt';
@@ -27,6 +27,10 @@ export class LoginUseCase {
 
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
+        }
+
+        if (user.isDeleted) {
+            throw new UnauthorizedException('Account has been deactivated');
         }
 
         const isPasswordValid = await this.hashService.compare(
