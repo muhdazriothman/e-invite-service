@@ -611,9 +611,9 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         it('should fail validation when activities array contains non-string values', async() => {
-          // @ts-expect-error - we want to test the validation
           createInvitationDto.itineraries[0].activities = [
             'valid',
+            // @ts-expect-error - we want to test the validation with invalid type
             123,
             'also-valid',
           ];
