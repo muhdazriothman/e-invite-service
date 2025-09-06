@@ -36,7 +36,7 @@ export class DateValidator {
         return date;
     }
 
-    isValidFormat(value: any): boolean {
+    isValidFormat(value: string): boolean {
         try {
             this.parseDate(value);
             return true;

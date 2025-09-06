@@ -17,7 +17,7 @@ export function IsDateFormat(
             propertyName: propertyName,
             options: validationOptions,
             validator: {
-                validate(value: any) {
+                validate(value: string) {
                     if (typeof value !== 'string') {
                         return false;
                     }

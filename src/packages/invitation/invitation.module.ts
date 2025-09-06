@@ -17,26 +17,27 @@ import { DateValidator } from '@shared/utils/date';
 import { UserRepository } from '@user/infra/repository';
 import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
 import { UserContextMiddleware } from '@invitation/interfaces/http/middleware/user-context.middleware';
+import { Invitation } from '@invitation/domain/entities/invitation';
 
 // Mock factory for testing
 const createMockInvitationRepository = () =>
     new InvitationRepository({
-        create: async (invitation: any) => ({
-            id: 'test',
+        create: async (invitation: Invitation) => ({
             ...invitation,
+            id: 'test',
         }),
         findOne: () => ({ lean: async () => null }),
         find: () => ({ lean: async () => [] }),
         findOneAndUpdate: () => ({ lean: async () => null }),
         updateOne: async () => ({ modifiedCount: 0 }),
-    } as any);
+    } as unknown as typeof InvitationRepository.prototype['invitationModel']);
 
 // Production repository factory
-const createInvitationRepository = (invitationModel: any) =>
+const createInvitationRepository = (invitationModel: typeof InvitationRepository.prototype['invitationModel']) =>
     new InvitationRepository(invitationModel);
 
 // User repository factory
-const createUserRepository = (userModel: any) =>
+const createUserRepository = (userModel: typeof UserRepository.prototype['userModel']) =>
     new UserRepository(userModel);
 
 // Mock user repository factory for testing
@@ -46,7 +47,7 @@ const createMockUserRepository = () =>
         find: () => ({ lean: async () => [] }),
         findOneAndUpdate: () => ({ lean: async () => null }),
         updateOne: async () => ({ modifiedCount: 0 }),
-    } as any);
+    } as unknown as typeof UserRepository.prototype['userModel']);
 
 // DateValidator factory with specific format
 const createDateValidator = () =>

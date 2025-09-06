@@ -5,19 +5,20 @@ import { UserRepository } from '@user/infra/repository';
 import { UserMongoModelName, UserMongoSchema } from '@user/infra/schema';
 import { HashService } from '@shared/services/hash';
 import { JwtService } from '@shared/services/jwt';
+import { User } from '@user/domain/entities/user';
 
 // Mock factory for testing
 const createMockUserRepository = () =>
     new UserRepository({
         findOne: () => ({ lean: async () => null }),
-        create: async (user: any) => ({
+        create: async (user: User) => ({
             toObject: () => ({ _id: 'test', ...user }),
         }),
         find: () => ({ lean: async () => [] }),
-    } as any);
+    } as unknown as typeof UserRepository.prototype['userModel']);
 
 // Production repository factory
-const createUserRepository = (userModel: any) =>
+const createUserRepository = (userModel: typeof UserRepository.prototype['userModel']) =>
     new UserRepository(userModel);
 
 @Module({

@@ -8,7 +8,7 @@ import { PlanConfig } from '@user/domain/value-objects/plan-config';
 
 describe('@user/domain/entities/user', () => {
     let user: User;
-    let userProps: any;
+    let userProps: ReturnType<typeof UserFixture.getUserProps>;
 
     beforeEach(() => {
         userProps = UserFixture.getUserProps({

@@ -4,13 +4,14 @@ import {
     connect,
     disconnect,
     Connection as MongoConnection,
+    Schema,
 } from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 export interface MongoTestSetupOptions {
     schemas: Array<{
         name: string;
-        schema: any;
+        schema: Schema;
     }>;
     providers?: any[];
 }
@@ -85,7 +86,7 @@ export class MongoTestSetup {
 
 // Helper function for repository tests
 export async function setupRepositoryTest(
-    schemas: Array<{ name: string; schema: any }>,
+    schemas: Array<{ name: string; schema: Schema }>,
     providers: any[] = []
 ): Promise<MongoTestContext> {
     return MongoTestSetup.setup({ schemas, providers });
