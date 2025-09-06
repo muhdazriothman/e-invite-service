@@ -1,3 +1,3 @@
-import { validationMatchers } from '../matchers/validation.matchers';
+import { validationMatchers } from '@test/matchers/validation.matchers';
 
 expect.extend(validationMatchers);

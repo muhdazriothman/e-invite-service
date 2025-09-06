@@ -1,43 +1,43 @@
 import {
-  Payment,
-  PaymentMethod,
-  PaymentProps,
-  PlanType,
+    Payment,
+    PaymentMethod,
+    PaymentProps,
+    PlanType,
 } from '@payment/domain/entities/payment';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { PaymentMapper } from './mapper';
+import { PaymentMapper } from '@payment/interfaces/http/mapper';
 
 describe('@payment/interfaces/http/mapper', () => {
-  let payment: Payment;
+    let payment: Payment;
 
-  beforeEach(() => {
-    payment = PaymentFixture.getEntity({
-      currency: 'USD',
-      paymentMethod: PaymentMethod.CREDIT_CARD,
-      reference: 'PAY-001',
-      description: 'Test payment',
-      planType: PlanType.PREMIUM,
-      createdBy: 'admin-123',
+    beforeEach(() => {
+        payment = PaymentFixture.getEntity({
+            currency: 'USD',
+            paymentMethod: PaymentMethod.CREDIT_CARD,
+            reference: 'PAY-001',
+            description: 'Test payment',
+            planType: PlanType.PREMIUM,
+            createdBy: 'admin-123',
+        });
     });
-  });
 
-  describe('#toDto', () => {
-    it('should map payment to response DTO correctly', () => {
-      const dto = PaymentMapper.toDto(payment);
+    describe('#toDto', () => {
+        it('should map payment to response DTO correctly', () => {
+            const dto = PaymentMapper.toDto(payment);
 
-      expect(dto.id).toBe(payment.id); // Will be empty string in tests
-      expect(dto.amount).toBe(payment.amount);
-      expect(dto.currency).toBe(payment.currency);
-      expect(dto.paymentMethod).toBe(payment.paymentMethod);
-      expect(dto.status).toBe(payment.status);
-      expect(dto.reference).toBe(payment.reference);
-      expect(dto.description).toBe(payment.description);
-      expect(dto.planType).toBe(payment.planType);
-      expect(dto.usedAt).toBe(payment.usedAt);
-      expect(dto.createdBy).toBe(payment.createdBy);
-      expect(dto.createdAt).toBe(payment.createdAt);
-      expect(dto.updatedAt).toBe(payment.updatedAt);
+            expect(dto.id).toBe(payment.id); // Will be empty string in tests
+            expect(dto.amount).toBe(payment.amount);
+            expect(dto.currency).toBe(payment.currency);
+            expect(dto.paymentMethod).toBe(payment.paymentMethod);
+            expect(dto.status).toBe(payment.status);
+            expect(dto.reference).toBe(payment.reference);
+            expect(dto.description).toBe(payment.description);
+            expect(dto.planType).toBe(payment.planType);
+            expect(dto.usedAt).toBe(payment.usedAt);
+            expect(dto.createdBy).toBe(payment.createdBy);
+            expect(dto.createdAt).toBe(payment.createdAt);
+            expect(dto.updatedAt).toBe(payment.updatedAt);
+        });
     });
-  });
 });

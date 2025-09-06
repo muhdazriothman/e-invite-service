@@ -21,6 +21,7 @@
         "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
         "^@test/(.*)$": "<rootDir>/$1",
         "^@user/(.*)$": "<rootDir>/../src/packages/user/$1",
+        "^@/(.*)$": "<rootDir>/../src/$1",
         "^test/(.*)$": "<rootDir>/$1"
     }
 }
