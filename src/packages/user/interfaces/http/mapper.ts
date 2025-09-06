@@ -1,60 +1,60 @@
-import { User } from '@user/domain/entities/user';
 import { ApiProperty } from '@nestjs/swagger';
+import { User } from '@user/domain/entities/user';
 
 export class UserDto {
-    @ApiProperty()
+  @ApiProperty()
     id: string;
 
-    @ApiProperty()
+  @ApiProperty()
     name: string;
 
-    @ApiProperty()
+  @ApiProperty()
     email: string;
 
-    @ApiProperty({
-        type: 'object',
-        properties: {
-            invitationLimit: { type: 'number' },
-        },
-    })
+  @ApiProperty({
+    type: 'object',
+    properties: {
+      invitationLimit: { type: 'number' },
+    },
+  })
     capabilities: {
-        invitationLimit: number;
-    };
+    invitationLimit: number;
+  };
 
-    @ApiProperty()
+  @ApiProperty()
     createdAt: string;
 
-    @ApiProperty()
+  @ApiProperty()
     updatedAt: string;
 }
 
 export class UserResponseDto {
-    @ApiProperty({ example: 'User created successfully' })
+  @ApiProperty({ example: 'User created successfully' })
     message: string;
 
-    @ApiProperty({ type: UserDto })
+  @ApiProperty({ type: UserDto })
     data: UserDto;
 }
 
 export class UserListResponseDto {
-    @ApiProperty({ example: 'Users retrieved successfully' })
+  @ApiProperty({ example: 'Users retrieved successfully' })
     message: string;
 
-    @ApiProperty({ type: [UserDto] })
+  @ApiProperty({ type: [UserDto] })
     data: UserDto[];
 }
 
 export class UserMapper {
-    static toDto(user: User): UserDto {
-        return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            capabilities: {
-                invitationLimit: user.capabilities.invitationLimit,
-            },
-            createdAt: user.createdAt.toISOString(),
-            updatedAt: user.updatedAt.toISOString(),
-        };
-    }
+  static toDto(user: User): UserDto {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      capabilities: {
+        invitationLimit: user.capabilities.invitationLimit,
+      },
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    };
+  }
 }

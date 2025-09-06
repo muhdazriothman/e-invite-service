@@ -1,30 +1,28 @@
+import { UserType } from '@user/domain/entities/user';
 import {
-    IsEmail,
-    IsString,
-    MinLength,
-    IsEnum,
-    IsUUID,
-    IsNotEmpty
+  IsEmail,
+  IsString,
+  MinLength,
+  IsEnum,
+  IsUUID,
+  IsNotEmpty,
 } from 'class-validator';
 
-import { UserType } from '@user/domain/entities/user';
-
 export class CreateUserDto {
-    @IsString()
-    @IsNotEmpty()
+  @IsString()
+  @IsNotEmpty()
     name: string;
 
-    @IsEmail()
+  @IsEmail()
     email: string;
 
-    @IsString()
-    @MinLength(6)
+  @IsString()
+  @MinLength(6)
     password: string;
 
-    @IsEnum(UserType)
+  @IsEnum(UserType)
     type: UserType;
 
-    @IsUUID()
+  @IsUUID()
     paymentId: string;
 }
-

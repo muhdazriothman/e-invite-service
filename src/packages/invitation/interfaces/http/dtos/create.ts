@@ -1,159 +1,158 @@
 import {
-    IsString,
-    IsEnum,
-    IsArray,
-    ValidateNested,
-    IsDateString,
-    IsOptional,
-    IsUrl,
-    ArrayMinSize,
-    IsNotEmpty,
-    Matches,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-
-import {
-    InvitationType,
-    CelebratedPersonType,
-    RelationshipType,
+  InvitationType,
+  CelebratedPersonType,
+  RelationshipType,
 } from '@invitation/domain/entities/invitation';
+import { Type } from 'class-transformer';
+import {
+  IsString,
+  IsEnum,
+  IsArray,
+  ValidateNested,
+  IsDateString,
+  IsOptional,
+  IsUrl,
+  ArrayMinSize,
+  IsNotEmpty,
+  Matches,
+} from 'class-validator';
 
 export class HostDto {
-    @IsString()
+  @IsString()
     name: string;
 
-    @IsString()
+  @IsString()
     title: string;
 
-    @IsEnum(RelationshipType)
+  @IsEnum(RelationshipType)
     relationshipWithCelebratedPerson: RelationshipType;
 
-    @IsOptional()
-    @IsString()
+  @IsOptional()
+  @IsString()
     phoneNumber?: string | null;
 
-    @IsOptional()
-    @IsString()
+  @IsOptional()
+  @IsString()
     email?: string | null;
 }
 
 export class CelebratedPersonDto {
-    @IsString()
+  @IsString()
     name: string;
 
-    @IsString()
+  @IsString()
     title: string;
 
-    @IsEnum(RelationshipType)
+  @IsEnum(RelationshipType)
     relationshipWithHost: RelationshipType;
 
-    @IsDateString()
+  @IsDateString()
     celebrationDate: string;
 
-    @IsEnum(CelebratedPersonType)
+  @IsEnum(CelebratedPersonType)
     type: CelebratedPersonType;
 }
 
 export class EventDateDto {
-    @IsDateString()
+  @IsDateString()
     gregorianDate: string;
 
-    @IsOptional()
-    @IsString()
+  @IsOptional()
+  @IsString()
     hijriDate?: string | null;
 }
 
 export class LocationDto {
-    @IsString()
+  @IsString()
     address: string;
 
-    @IsOptional()
-    @IsUrl()
+  @IsOptional()
+  @IsUrl()
     wazeLink?: string | null;
 
-    @IsOptional()
-    @IsUrl()
+  @IsOptional()
+  @IsUrl()
     googleMapsLink?: string | null;
 }
 
 export class ItineraryDto {
-    @IsArray()
-    @IsString({ each: true })
+  @IsArray()
+  @IsString({ each: true })
     activities: string[];
 
-    @IsString()
-    @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-        message: 'startTime must be a valid time in HH:MM format (24-hour)',
-    })
+  @IsString()
+  @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'startTime must be a valid time in HH:MM format (24-hour)',
+  })
     startTime: string;
 
-    @IsString()
-    @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-        message: 'endTime must be a valid time in HH:MM format (24-hour)',
-    })
+  @IsString()
+  @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
+    message: 'endTime must be a valid time in HH:MM format (24-hour)',
+  })
     endTime: string;
 }
 
 export class ContactPersonDto {
-    @IsString()
+  @IsString()
     name: string;
 
-    @IsString()
+  @IsString()
     title: string;
 
-    @IsEnum(RelationshipType)
+  @IsEnum(RelationshipType)
     relationshipWithCelebratedPerson: RelationshipType;
 
-    @IsOptional()
-    @IsString()
+  @IsOptional()
+  @IsString()
     phoneNumber?: string | null;
 
-    @IsOptional()
-    @IsString()
+  @IsOptional()
+  @IsString()
     whatsappNumber?: string | null;
 }
 
 export class CreateInvitationDto {
-    @IsEnum(InvitationType)
+  @IsEnum(InvitationType)
     type: InvitationType;
 
-    @IsString()
+  @IsString()
     title: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => HostDto)
-    @ArrayMinSize(1)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => HostDto)
+  @ArrayMinSize(1)
     hosts: HostDto[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => CelebratedPersonDto)
-    @ArrayMinSize(1)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CelebratedPersonDto)
+  @ArrayMinSize(1)
     celebratedPersons: CelebratedPersonDto[];
 
-    @IsNotEmpty()
-    @ValidateNested()
-    @Type(() => EventDateDto)
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => EventDateDto)
     date: EventDateDto;
 
-    @IsNotEmpty()
-    @ValidateNested()
-    @Type(() => LocationDto)
+  @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => LocationDto)
     location: LocationDto;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ItineraryDto)
-    @ArrayMinSize(1)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ItineraryDto)
+  @ArrayMinSize(1)
     itineraries: ItineraryDto[];
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ContactPersonDto)
-    @ArrayMinSize(1)
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ContactPersonDto)
+  @ArrayMinSize(1)
     contactPersons: ContactPersonDto[];
 
-    @IsDateString()
+  @IsDateString()
     rsvpDueDate: string;
 }
