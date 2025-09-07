@@ -1,6 +1,7 @@
 import { LoginUseCase } from '@auth/application/use-cases/login';
 import { AuthController } from '@auth/interfaces/http/controller';
 import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
+import { BasicAuthGuard } from '@auth/interfaces/http/guards/basic-auth';
 import { JwtAuthGuard } from '@auth/interfaces/http/guards/jwt-auth';
 import { JwtStrategy } from '@auth/interfaces/http/strategies/jwt';
 import { Module } from '@nestjs/common';
@@ -25,7 +26,7 @@ import { SharedModule } from '@shared/shared.module';
         }),
     ],
     controllers: [AuthController],
-    providers: [JwtStrategy, JwtAuthGuard, AdminAuthGuard, LoginUseCase],
-    exports: [JwtAuthGuard, AdminAuthGuard],
+    providers: [JwtStrategy, JwtAuthGuard, AdminAuthGuard, BasicAuthGuard, LoginUseCase],
+    exports: [JwtAuthGuard, AdminAuthGuard, BasicAuthGuard],
 })
 export class AuthModule {}

@@ -24,8 +24,13 @@ export class CreateInvitationUseCase {
         user: User,
     ): Promise<Invitation> {
         try {
-            const currentInvitationCount =
-        await this.invitationRepository.countByUserId(user.id);
+            if (!user.capabilities) {
+                throw new ForbiddenException(
+                    'Users without capabilities cannot create invitations. Please contact support.',
+                );
+            }
+
+            const currentInvitationCount = await this.invitationRepository.countByUserId(user.id);
             if (currentInvitationCount >= user.capabilities.invitationLimit) {
                 throw new ForbiddenException(
                     `You have reached your invitation limit (${user.capabilities.invitationLimit}). ` +

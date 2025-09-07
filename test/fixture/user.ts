@@ -49,6 +49,8 @@ export class UserFixture {
             email: 'admin@example.com',
             passwordHash: 'hashed_password',
             type: UserType.ADMIN,
+            capabilities: null,
+            paymentId: null,
         });
     }
 

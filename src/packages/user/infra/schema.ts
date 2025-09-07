@@ -14,8 +14,8 @@ export interface UserDocumentSchema {
   type: UserType;
   capabilities: {
     invitationLimit: number;
-  };
-  paymentId: string;
+  } | null;
+  paymentId: string | null;
   isDeleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -46,14 +46,15 @@ export class UserMongoDocument extends Document {
           invitationLimit: { type: Number, required: true },
           _id: false,
       },
-      required: true,
+      required: false,
+      default: null,
   })
       capabilities: {
     invitationLimit: number;
-  };
+  } | null;
 
-  @Prop({ required: true, index: true })
-      paymentId: string;
+  @Prop({ type: String, required: false, index: true, default: null })
+      paymentId: string | null;
 
   @Prop({ default: false, index: true })
       isDeleted: boolean;

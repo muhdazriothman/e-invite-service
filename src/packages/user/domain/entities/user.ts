@@ -18,8 +18,8 @@ export interface UserProps {
   email: string;
   passwordHash: string;
   type: UserType;
-  capabilities: UserCapabilities;
-  paymentId: string;
+  capabilities: UserCapabilities | null;
+  paymentId: string | null;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -31,7 +31,7 @@ export interface CreateUserProps {
   email: string;
   passwordHash: string;
   type: UserType;
-  paymentId: string;
+  paymentId: string | null;
 }
 
 export class User {
@@ -40,8 +40,8 @@ export class User {
     public readonly email: string;
     public passwordHash: string;
     public readonly type: UserType;
-    public capabilities: UserCapabilities;
-    public readonly paymentId: string;
+    public capabilities: UserCapabilities | null;
+    public readonly paymentId: string | null;
     public isDeleted: boolean;
     public readonly createdAt: Date;
     public updatedAt: Date;
@@ -61,7 +61,7 @@ export class User {
         this.deletedAt = props.deletedAt;
     }
 
-    static createNew(props: CreateUserProps, planType: PlanType): User {
+    static createNewUser(props: CreateUserProps, planType: PlanType): User {
         const now = new Date();
         const invitationLimit = User.getInvitationLimitFromPlanType(planType);
 
@@ -75,6 +75,24 @@ export class User {
                 invitationLimit: invitationLimit,
             },
             paymentId: props.paymentId,
+            isDeleted: false,
+            createdAt: now,
+            updatedAt: now,
+            deletedAt: null,
+        });
+    }
+
+    static createNewAdmin(props: CreateUserProps): User {
+        const now = new Date();
+
+        return new User({
+            id: '', // Will be set by the database
+            name: props.name,
+            email: props.email,
+            passwordHash: props.passwordHash,
+            type: UserType.ADMIN,
+            capabilities: null,
+            paymentId: null,
             isDeleted: false,
             createdAt: now,
             updatedAt: now,

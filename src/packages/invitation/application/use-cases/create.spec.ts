@@ -176,6 +176,22 @@ describe('@invitation/application/use-cases/create', () => {
             expect(mockRepository.create).not.toHaveBeenCalled();
         });
 
+        it('should throw ForbiddenException when user has no capabilities', async() => {
+            const userWithoutCapabilities = UserFixture.getEntity({
+                id: '000000000000000000000001',
+                capabilities: null, // User without capabilities (like admin users)
+            });
+
+            await expect(useCase.execute(createInvitationDto, userWithoutCapabilities)).rejects.toThrow(
+                ForbiddenException,
+            );
+            await expect(useCase.execute(createInvitationDto, userWithoutCapabilities)).rejects.toThrow(
+                'Users without capabilities cannot create invitations. Please contact support.',
+            );
+            expect(mockRepository.create).not.toHaveBeenCalled();
+            expect(mockRepository.countByUserId).not.toHaveBeenCalled();
+        });
+
         it('should throw BadRequestException when RSVP due date is after event date', async() => {
             mockRepository.countByUserId.mockResolvedValue(0);
 

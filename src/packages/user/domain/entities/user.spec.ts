@@ -60,7 +60,7 @@ describe('@user/domain/entities/user', () => {
         });
     });
 
-    describe('#createNew', () => {
+    describe('#createNewUser', () => {
         let getInvitationLimitSpy: jest.SpyInstance;
 
         beforeEach(() => {
@@ -83,7 +83,7 @@ describe('@user/domain/entities/user', () => {
                 paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps, PlanType.BASIC);
+            const user = User.createNewUser(createProps, PlanType.BASIC);
 
             expect(getInvitationLimitSpy).toHaveBeenCalledWith(PlanType.BASIC);
             const expectedInvitationLimit =
@@ -94,7 +94,7 @@ describe('@user/domain/entities/user', () => {
             expect(user.email).toBe(createProps.email);
             expect(user.passwordHash).toBe(createProps.passwordHash);
             expect(user.type).toBe(createProps.type);
-            expect(user.capabilities.invitationLimit).toBe(expectedInvitationLimit);
+            expect(user.capabilities?.invitationLimit).toBe(expectedInvitationLimit);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -110,7 +110,7 @@ describe('@user/domain/entities/user', () => {
                 paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps, PlanType.BASIC);
+            const user = User.createNewUser(createProps, PlanType.BASIC);
 
             expect(getInvitationLimitSpy).toHaveBeenCalledWith(PlanType.BASIC);
             const expectedInvitationLimit =
@@ -118,7 +118,7 @@ describe('@user/domain/entities/user', () => {
 
             expect(user.type).toBe(UserType.ADMIN);
             expect(user.name).toBe('admin');
-            expect(user.capabilities.invitationLimit).toBe(expectedInvitationLimit);
+            expect(user.capabilities?.invitationLimit).toBe(expectedInvitationLimit);
             expect(user.isDeleted).toBe(false);
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
@@ -134,7 +134,61 @@ describe('@user/domain/entities/user', () => {
                 paymentId: 'payment-id-123',
             };
 
-            const user = User.createNew(createProps, PlanType.BASIC);
+            const user = User.createNewUser(createProps, PlanType.BASIC);
+
+            expect(user.createdAt.getTime()).toBe(user.updatedAt.getTime());
+        });
+    });
+
+    describe('#createNewAdmin', () => {
+        it('should create a new admin user with unlimited access', () => {
+            const createProps = {
+                name: 'admin',
+                email: 'admin@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.ADMIN,
+                paymentId: 'payment-id-123', // This will be overridden to null
+            };
+
+            const user = User.createNewAdmin(createProps);
+
+            expect(user.id).toBe('');
+            expect(user.name).toBe(createProps.name);
+            expect(user.email).toBe(createProps.email);
+            expect(user.passwordHash).toBe(createProps.passwordHash);
+            expect(user.type).toBe(UserType.ADMIN);
+            expect(user.capabilities).toBeNull(); // Admin users have unlimited access
+            expect(user.paymentId).toBeNull(); // No payment required for admin users
+            expect(user.isDeleted).toBe(false);
+            expect(user.createdAt).toBeInstanceOf(Date);
+            expect(user.updatedAt).toBeInstanceOf(Date);
+            expect(user.deletedAt).toBeNull();
+        });
+
+        it('should override type to ADMIN regardless of input', () => {
+            const createProps = {
+                name: 'admin',
+                email: 'admin@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.USER, // This should be overridden
+                paymentId: 'payment-id-123',
+            };
+
+            const user = User.createNewAdmin(createProps);
+
+            expect(user.type).toBe(UserType.ADMIN);
+        });
+
+        it('should set createdAt and updatedAt to the same timestamp', () => {
+            const createProps = {
+                name: 'admin',
+                email: 'admin@example.com',
+                passwordHash: 'hashedpassword123',
+                type: UserType.ADMIN,
+                paymentId: 'payment-id-123',
+            };
+
+            const user = User.createNewAdmin(createProps);
 
             expect(user.createdAt.getTime()).toBe(user.updatedAt.getTime());
         });

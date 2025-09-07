@@ -16,10 +16,11 @@ export class UserDto {
       properties: {
           invitationLimit: { type: 'number' },
       },
+      nullable: true,
   })
       capabilities: {
     invitationLimit: number;
-  };
+  } | null;
 
   @ApiProperty()
       createdAt: string;
@@ -50,9 +51,7 @@ export class UserMapper {
             id: user.id,
             name: user.name,
             email: user.email,
-            capabilities: {
-                invitationLimit: user.capabilities.invitationLimit,
-            },
+            capabilities: user.capabilities,
             createdAt: user.createdAt.toISOString(),
             updatedAt: user.updatedAt.toISOString(),
         };

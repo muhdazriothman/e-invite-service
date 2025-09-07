@@ -29,9 +29,7 @@ export class UserRepository {
             email: doc.email,
             passwordHash: doc.passwordHash,
             type: doc.type,
-            capabilities: {
-                invitationLimit: doc.capabilities.invitationLimit,
-            },
+            capabilities: doc.capabilities,
             paymentId: doc.paymentId,
             isDeleted: doc.isDeleted ?? false,
             createdAt: doc.createdAt,
@@ -46,9 +44,7 @@ export class UserRepository {
             email: user.email,
             passwordHash: user.passwordHash,
             type: user.type,
-            capabilities: {
-                invitationLimit: user.capabilities.invitationLimit,
-            },
+            capabilities: user.capabilities,
             paymentId: user.paymentId,
             isDeleted: user.isDeleted,
             createdAt: user.createdAt,

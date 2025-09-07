@@ -12,9 +12,7 @@ describe('@user/interfaces/http/mapper', () => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                capabilities: {
-                    invitationLimit: user.capabilities.invitationLimit,
-                },
+                capabilities: user.capabilities,
                 createdAt: user.createdAt.toISOString(),
                 updatedAt: user.updatedAt.toISOString(),
             });

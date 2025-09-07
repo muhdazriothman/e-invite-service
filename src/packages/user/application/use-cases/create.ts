@@ -50,7 +50,7 @@ export class CreateUserUseCase {
 
         const hashedPassword = await this.hashService.hash(createUserDto.password);
 
-        const user = User.createNew(
+        const user = User.createNewUser(
             {
                 name: createUserDto.name,
                 email: createUserDto.email,

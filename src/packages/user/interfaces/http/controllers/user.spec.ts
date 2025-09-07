@@ -9,11 +9,11 @@ import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
 import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { UpdateUserUseCase } from '@user/application/use-cases/update';
 import { UserType } from '@user/domain/entities/user';
-import { UserController } from '@user/interfaces/http/controller';
+import { UserController } from '@user/interfaces/http/controllers/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
 
-describe('@user/interfaces/http/controller', () => {
+describe('@user/interfaces/http/controllers/user', () => {
     let controller: UserController;
     let createUserUseCase: jest.Mocked<CreateUserUseCase>;
     let listUsersUseCase: jest.Mocked<ListUsersUseCase>;
@@ -110,7 +110,7 @@ describe('@user/interfaces/http/controller', () => {
                     name: mockUser.name,
                     email: mockUser.email,
                     capabilities: {
-                        invitationLimit: mockUser.capabilities.invitationLimit,
+                        invitationLimit: mockUser.capabilities?.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),
@@ -162,7 +162,7 @@ describe('@user/interfaces/http/controller', () => {
                     name: user.name,
                     email: user.email,
                     capabilities: {
-                        invitationLimit: user.capabilities.invitationLimit,
+                        invitationLimit: user.capabilities?.invitationLimit,
                     },
                     createdAt: user.createdAt.toISOString(),
                     updatedAt: user.updatedAt.toISOString(),
@@ -191,7 +191,7 @@ describe('@user/interfaces/http/controller', () => {
                     name: mockUser.name,
                     email: mockUser.email,
                     capabilities: {
-                        invitationLimit: mockUser.capabilities.invitationLimit,
+                        invitationLimit: mockUser.capabilities?.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),
@@ -228,7 +228,7 @@ describe('@user/interfaces/http/controller', () => {
                     name: mockUser.name,
                     email: mockUser.email,
                     capabilities: {
-                        invitationLimit: mockUser.capabilities.invitationLimit,
+                        invitationLimit: mockUser.capabilities?.invitationLimit,
                     },
                     createdAt: mockUser.createdAt.toISOString(),
                     updatedAt: mockUser.updatedAt.toISOString(),
