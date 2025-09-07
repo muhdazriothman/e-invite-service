@@ -40,10 +40,10 @@ export class PaymentMongoDocument extends Document {
   @Prop({ required: true, type: String })
       currency: string;
 
-  @Prop({ required: true, enum: PaymentMethod })
+  @Prop({ required: true, type: String, enum: PaymentMethod })
       paymentMethod: PaymentMethod;
 
-  @Prop({ required: true, enum: PaymentStatus, default: PaymentStatus.PENDING })
+  @Prop({ required: true, type: String, enum: PaymentStatus, default: PaymentStatus.PENDING })
       status: PaymentStatus;
 
   @Prop({ required: true, type: String, unique: true })
@@ -52,7 +52,7 @@ export class PaymentMongoDocument extends Document {
   @Prop({ type: String })
       description?: string;
 
-  @Prop({ required: true, enum: PlanType })
+  @Prop({ required: true, type: String, enum: PlanType })
       planType: PlanType;
 
   @Prop({ type: Date, default: null })
