@@ -1,7 +1,7 @@
 export function createMock<T extends object>(
   overrides: Partial<jest.Mocked<T>> = {},
 ): jest.Mocked<T> {
-  const cache = new Map<PropertyKey, any>();
+  const cache = new Map<PropertyKey, unknown>();
 
   const proxy = new Proxy(
     {},
@@ -18,7 +18,7 @@ export function createMock<T extends object>(
         cache.set(prop, fn);
         return fn;
       },
-      set(_target, prop: PropertyKey, value: any) {
+      set(_target, prop: PropertyKey, value: unknown) {
         cache.set(prop, value);
         return true;
       },

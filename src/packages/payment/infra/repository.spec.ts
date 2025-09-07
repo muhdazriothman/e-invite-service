@@ -1,6 +1,9 @@
 import { getModelToken } from '@nestjs/mongoose';
 import { TestingModule } from '@nestjs/testing';
-import { Payment } from '@payment/domain/entities/payment';
+import {
+  Payment,
+  PaymentStatus,
+} from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import {
   PaymentMongoDocument,
@@ -261,7 +264,7 @@ describe('@payment/infra/repository', () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const result = await paymentRepository.update(payment.id, {
-        status: 'VERIFIED' as any,
+        status: PaymentStatus.VERIFIED,
       });
 
       expect(result).toBeInstanceOf(Payment);
@@ -274,13 +277,13 @@ describe('@payment/infra/repository', () => {
 
       // Verify the update was persisted
       const updatedPayment = await paymentRepository.findById(payment.id);
-      expect(updatedPayment?.status).toBe('VERIFIED');
+      expect(updatedPayment?.status).toBe(PaymentStatus.VERIFIED);
     });
 
     it('should return null when payment does not exist', async() => {
       const result = await paymentRepository.update(
         new Types.ObjectId().toString(),
-        { status: 'VERIFIED' as any },
+        { status: PaymentStatus.VERIFIED },
       );
 
       expect(result).toBeNull();
@@ -300,7 +303,7 @@ describe('@payment/infra/repository', () => {
 
       // Try to update deleted payment
       const result = await paymentRepository.update(payment.id, {
-        status: 'VERIFIED' as any,
+        status: PaymentStatus.VERIFIED,
       });
 
       expect(result).toBeNull();
@@ -318,11 +321,11 @@ describe('@payment/infra/repository', () => {
       const originalReference = payment.reference;
 
       const result = await paymentRepository.update(payment.id, {
-        status: 'VERIFIED' as any,
+        status: PaymentStatus.VERIFIED,
       });
 
       expect(result).toBeInstanceOf(Payment);
-      expect(result?.status).toBe('VERIFIED');
+      expect(result?.status).toBe(PaymentStatus.VERIFIED);
       expect(result?.amount).toBe(originalAmount);
       expect(result?.reference).toBe(originalReference);
     });

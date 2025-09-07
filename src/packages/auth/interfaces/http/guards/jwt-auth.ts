@@ -1,3 +1,4 @@
+import { JwtUser } from '@auth/interfaces/http/strategies/jwt';
 import {
   Injectable,
   ExecutionContext,
@@ -11,10 +12,19 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest<TUser = JwtUser>(
+    err: any,
+    user: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    info: any,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    context: ExecutionContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    status?: any,
+  ): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException();
     }
-    return user;
+    return user as TUser;
   }
 }

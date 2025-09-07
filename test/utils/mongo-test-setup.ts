@@ -57,7 +57,9 @@ export class MongoTestSetup {
       connection: this.connection,
       module: this.module,
       mongoMemoryServer: this.mongoMemoryServer,
-      cleanup: this.cleanup.bind(this),
+      cleanup: async() => {
+        await this.cleanup();
+      },
     };
   }
 
@@ -74,9 +76,9 @@ export class MongoTestSetup {
     await this.cleanup();
     if (this.mongoMemoryServer) {
       await this.mongoMemoryServer.stop();
-      this.mongoMemoryServer = null as any;
-      this.connection = null as any;
-      this.module = null as any;
+      this.mongoMemoryServer = null as unknown as MongoMemoryServer;
+      this.connection = null as unknown as MongoConnection;
+      this.module = null as unknown as TestingModule;
     }
   }
 

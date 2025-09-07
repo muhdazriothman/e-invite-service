@@ -11,12 +11,14 @@ import { ListPaymentsUseCase } from '@payment/application/use-cases/list';
 import { UpdatePaymentUseCase } from '@payment/application/use-cases/update';
 import { PaymentRepository } from '@payment/infra/repository';
 import {
+  PaymentMongoDocument,
   PaymentMongoModelName,
   PaymentMongoSchema,
 } from '@payment/infra/schema';
 import { PaymentController } from '@payment/interfaces/http/controller';
+import { Model } from 'mongoose';
 
-const createPaymentRepository = (paymentModel: any) =>
+const createPaymentRepository = (paymentModel: Model<PaymentMongoDocument>) =>
   new PaymentRepository(paymentModel);
 
 const createMockPaymentRepository = () => ({

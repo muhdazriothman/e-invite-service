@@ -35,7 +35,8 @@ describe('@auth/interfaces/http/dtos/login', () => {
 
       it('should fail validation when email is not a string', async() => {
         const dto = new LoginDto();
-        (dto as any).email = 123;
+        // @ts-expect-error Testing invalid type assignment
+        dto.email = 123;
         dto.password = 'password123';
 
         const errors = await validate(dto);
@@ -96,7 +97,8 @@ describe('@auth/interfaces/http/dtos/login', () => {
       it('should fail validation when password is not a string', async() => {
         const dto = new LoginDto();
         dto.email = 'test@example.com';
-        (dto as any).password = 123;
+        // @ts-expect-error Testing invalid type assignment
+        dto.password = 123;
 
         const errors = await validate(dto);
         expect(errors).toHaveLength(1);
