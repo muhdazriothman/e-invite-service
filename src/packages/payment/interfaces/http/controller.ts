@@ -1,4 +1,5 @@
 import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
+import { JwtUser } from '@auth/interfaces/http/strategies/jwt';
 import {
     Controller,
     Get,
@@ -10,6 +11,7 @@ import {
     HttpCode,
     HttpStatus,
     UseGuards,
+    Request,
 } from '@nestjs/common';
 import {
     ApiTags,
@@ -60,9 +62,11 @@ export class PaymentController {
         status: 409,
         description: 'Conflict - payment with this reference already exists',
     })
-    async createPayment(@Body() createPaymentDto: CreatePaymentDto) {
-        // TODO: Get current admin user ID from JWT token
-        const createdBy = 'admin-user-id'; // This should come from the authenticated user
+    async createPayment(
+        @Body() createPaymentDto: CreatePaymentDto,
+        @Request() req: { user: JwtUser },
+    ) {
+        const createdBy = req.user.id;
 
         const payment = await this.createPaymentUseCase.execute(
             createPaymentDto,
