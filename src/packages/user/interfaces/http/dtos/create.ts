@@ -4,7 +4,6 @@ import {
     IsString,
     MinLength,
     IsEnum,
-    IsUUID,
     IsNotEmpty,
 } from 'class-validator';
 
@@ -23,6 +22,7 @@ export class CreateUserDto {
   @IsEnum(UserType)
       type: UserType;
 
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
       paymentId: string;
 }

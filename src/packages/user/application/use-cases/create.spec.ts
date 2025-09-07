@@ -95,7 +95,7 @@ describe('@user/application/use-cases/create', () => {
             email: 'test@example.com',
             password: 'password123',
             type: UserType.USER,
-            paymentId: 'payment-id-123',
+            paymentId: payment.id,
         };
 
         it('should create a new user when email does not exist', async() => {

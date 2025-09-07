@@ -96,7 +96,7 @@ export class Payment {
             amount: amount,
             currency: props.currency,
             paymentMethod: props.paymentMethod,
-            status: PaymentStatus.PENDING,
+            status: PaymentStatus.VERIFIED,
             reference: props.reference,
             description: props.description,
             planType: props.planType,

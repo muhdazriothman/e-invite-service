@@ -75,7 +75,7 @@ describe('@payment/domain/entities/payment', () => {
             expect(payment.amount).toBe(expectedAmount);
             expect(payment.currency).toBe(createProps.currency);
             expect(payment.paymentMethod).toBe(createProps.paymentMethod);
-            expect(payment.status).toBe(PaymentStatus.PENDING);
+            expect(payment.status).toBe(PaymentStatus.VERIFIED);
             expect(payment.reference).toBe(createProps.reference);
             expect(payment.description).toBe(createProps.description);
             expect(payment.planType).toBe(createProps.planType);

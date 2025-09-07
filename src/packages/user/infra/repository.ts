@@ -30,7 +30,7 @@ export class UserRepository {
             passwordHash: doc.passwordHash,
             type: doc.type,
             capabilities: doc.capabilities,
-            paymentId: doc.paymentId,
+            paymentId: doc.paymentId?.toString() ?? null,
             isDeleted: doc.isDeleted ?? false,
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,

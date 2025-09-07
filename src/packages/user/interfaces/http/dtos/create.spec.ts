@@ -15,7 +15,7 @@ describe('@user/interfaces/http/dtos/create', () => {
             dto.email = 'john@example.com';
             dto.password = 'password123';
             dto.type = UserType.USER;
-            dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+            dto.paymentId = '507f1f77bcf86cd799439011';
 
             const errors = await validate(dto);
 
@@ -28,7 +28,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -40,7 +40,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -56,7 +56,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -68,7 +68,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'invalid-email';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -84,7 +84,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -96,7 +96,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = '123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -112,7 +112,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.ADMIN;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -125,7 +125,7 @@ describe('@user/interfaces/http/dtos/create', () => {
                 dto.password = 'password123';
                 // @ts-expect-error Testing invalid enum value
                 dto.type = 'invalid';
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
@@ -136,30 +136,30 @@ describe('@user/interfaces/http/dtos/create', () => {
         });
 
         describe('paymentId', () => {
-            it('should pass validation with valid UUID', async() => {
+            it('should pass validation with valid string', async() => {
                 dto.name = 'John Doe';
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = '550e8400-e29b-41d4-a716-446655440000';
+                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
 
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with invalid UUID', async() => {
+            it('should fail validation with empty string', async() => {
                 dto.name = 'John Doe';
                 dto.email = 'john@example.com';
                 dto.password = 'password123';
                 dto.type = UserType.USER;
-                dto.paymentId = 'invalid-uuid';
+                dto.paymentId = '';
 
                 const errors = await validate(dto);
 
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('paymentId');
-                expect(errors[0].constraints).toHaveProperty('isUuid');
+                expect(errors[0].constraints).toHaveProperty('isNotEmpty');
             });
         });
     });

@@ -4,7 +4,10 @@ import {
     SchemaFactory,
 } from '@nestjs/mongoose';
 import { UserType } from '@user/domain/entities/user';
-import { Document } from 'mongoose';
+import {
+    Document,
+    Types,
+} from 'mongoose';
 
 export interface UserDocumentSchema {
   _id: unknown;
@@ -15,7 +18,7 @@ export interface UserDocumentSchema {
   capabilities: {
     invitationLimit: number;
   } | null;
-  paymentId: string | null;
+  paymentId: Types.ObjectId | null;
   isDeleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -53,8 +56,8 @@ export class UserMongoDocument extends Document {
     invitationLimit: number;
   } | null;
 
-  @Prop({ type: String, required: false, index: true, default: null })
-      paymentId: string | null;
+  @Prop({ type: Types.ObjectId, required: false, index: true, default: null })
+      paymentId: Types.ObjectId | null;
 
   @Prop({ default: false, index: true })
       isDeleted: boolean;
