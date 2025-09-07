@@ -1,3 +1,4 @@
+import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delete';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { NotFoundException } from '@nestjs/common';
 import {
@@ -6,7 +7,6 @@ import {
 } from '@nestjs/testing';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delete';
 
 describe('@invitation/application/use-cases/delete', () => {
     let useCase: DeleteInvitationUseCase;
@@ -14,7 +14,7 @@ describe('@invitation/application/use-cases/delete', () => {
 
     const mockInvitation = InvitationFixture.getEntity();
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockInvitationRepository = {
             findById: jest.fn(),
             delete: jest.fn(),
@@ -39,7 +39,7 @@ describe('@invitation/application/use-cases/delete', () => {
     });
 
     describe('execute', () => {
-        it('should delete invitation successfully', async () => {
+        it('should delete invitation successfully', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
 
@@ -60,7 +60,7 @@ describe('@invitation/application/use-cases/delete', () => {
             );
         });
 
-        it('should throw NotFoundException when invitation not found', async () => {
+        it('should throw NotFoundException when invitation not found', async() => {
             const invitationId = 'non-existent-id';
             const userId = '000000000000000000000001';
 
@@ -76,7 +76,7 @@ describe('@invitation/application/use-cases/delete', () => {
             expect(invitationRepository.delete).not.toHaveBeenCalled();
         });
 
-        it('should throw NotFoundException when delete operation fails', async () => {
+        it('should throw NotFoundException when delete operation fails', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
 

@@ -1,3 +1,4 @@
+import { UpdateInvitationUseCase } from '@invitation/application/use-cases/update';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { UpdateInvitationDto } from '@invitation/interfaces/http/dtos/update';
 import { NotFoundException } from '@nestjs/common';
@@ -5,10 +6,8 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
-import { DateValidator } from '@shared/utils/date';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-import { UpdateInvitationUseCase } from '@invitation/application/use-cases/update';
 
 describe('@invitation/application/use-cases/update', () => {
     let useCase: UpdateInvitationUseCase;
@@ -19,7 +18,7 @@ describe('@invitation/application/use-cases/update', () => {
         title: 'Updated Title',
     });
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockInvitationRepository = {
             findById: jest.fn(),
             update: jest.fn(),
@@ -53,7 +52,7 @@ describe('@invitation/application/use-cases/update', () => {
     });
 
     describe('execute', () => {
-        it('should update invitation successfully', async () => {
+        it('should update invitation successfully', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
             const updateData: UpdateInvitationDto = {
@@ -92,24 +91,24 @@ describe('@invitation/application/use-cases/update', () => {
                     celebratedPersons: expect.arrayContaining([
                         expect.objectContaining({
                             name: expect.any(String),
-                            celebrationDate: expect.any(Date),
+                            celebrationDate: expect.any(Date) as Date,
                         }),
                     ]),
                     date: expect.objectContaining({
-                        gregorianDate: expect.any(Date),
+                        gregorianDate: expect.any(Date) as Date,
                         hijriDate: updateData.date!.hijriDate,
                     }),
                     location: updateData.location,
                     itineraries: updateData.itineraries,
                     contactPersons: updateData.contactPersons,
-                    rsvpDueDate: expect.any(Date),
+                    rsvpDueDate: expect.any(Date) as Date,
                 },
                 userId,
             );
             expect(result).toEqual(updatedInvitation);
         });
 
-        it('should not validate existing data when no date fields are updated', async () => {
+        it('should not validate existing data when no date fields are updated', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
             const updateData: UpdateInvitationDto = {
@@ -131,7 +130,7 @@ describe('@invitation/application/use-cases/update', () => {
             );
         });
 
-        it('should throw NotFoundException when invitation not found', async () => {
+        it('should throw NotFoundException when invitation not found', async() => {
             const invitationId = 'non-existent-id';
             const userId = '000000000000000000000001';
             const updateData: UpdateInvitationDto = {
@@ -150,7 +149,7 @@ describe('@invitation/application/use-cases/update', () => {
             expect(invitationRepository.update).not.toHaveBeenCalled();
         });
 
-        it('should throw NotFoundException when update operation fails to return the updated invitation', async () => {
+        it('should throw NotFoundException when update operation fails to return the updated invitation', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
             const updateData: UpdateInvitationDto = {

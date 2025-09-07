@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '@auth/interfaces/http/guards/jwt-auth';
 import { JwtUser } from '@auth/interfaces/http/strategies/jwt';
 import {
     Injectable,
@@ -7,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { UserAuthService } from '@user/application/services/user-auth.service';
 
-import { JwtAuthGuard } from '@auth/interfaces/http/guards/jwt-auth';
 
 @Injectable()
 export class AdminAuthGuard extends JwtAuthGuard {
@@ -24,8 +24,8 @@ export class AdminAuthGuard extends JwtAuthGuard {
             return false;
         }
 
-        const request = context.switchToHttp().getRequest();
-        const jwtUser = request.user as JwtUser;
+        const request = context.switchToHttp().getRequest<{ user: JwtUser }>();
+        const jwtUser = request.user;
 
         if (!jwtUser || !jwtUser.id) {
             throw new ForbiddenException('Admin access required');
@@ -38,7 +38,7 @@ export class AdminAuthGuard extends JwtAuthGuard {
 
         const userAuthInfo = await this.userAuthService.getUserAuthInfo(jwtUser.id);
         if (userAuthInfo) {
-            request.user = {
+            (request as { user: any }).user = {
                 id: userAuthInfo.id,
                 email: userAuthInfo.email,
                 type: userAuthInfo.type,

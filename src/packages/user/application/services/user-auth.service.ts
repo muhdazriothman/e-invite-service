@@ -1,7 +1,8 @@
 import {
-  Injectable,
-  Inject,
+    Injectable,
+    Inject,
 } from '@nestjs/common';
+import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
 export interface UserAuthInfo {
@@ -12,32 +13,32 @@ export interface UserAuthInfo {
 
 @Injectable()
 export class UserAuthService {
-  constructor(
+    constructor(
         @Inject('UserRepository')
         private readonly userRepository: UserRepository,
-  ) { }
+    ) { }
 
-  async getUserAuthInfo(userId: string): Promise<UserAuthInfo | null> {
-    const user = await this.userRepository.findById(userId);
+    async getUserAuthInfo(userId: string): Promise<UserAuthInfo | null> {
+        const user = await this.userRepository.findById(userId);
 
-    if (!user) {
-      return null;
+        if (!user) {
+            return null;
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            type: user.type,
+        };
     }
 
-    return {
-      id: user.id,
-      email: user.email,
-      type: user.type,
-    };
-  }
+    async isUserAdmin(userId: string): Promise<boolean> {
+        const user = await this.userRepository.findById(userId);
 
-  async isUserAdmin(userId: string): Promise<boolean> {
-    const user = await this.userRepository.findById(userId);
+        if (!user) {
+            return false;
+        }
 
-    if (!user) {
-      return false;
+        return user.type === UserType.ADMIN;
     }
-
-    return user.type === 'admin';
-  }
 }

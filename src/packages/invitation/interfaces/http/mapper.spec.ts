@@ -2,9 +2,9 @@ import {
     CelebratedPersonType,
     RelationshipType,
 } from '@invitation/domain/entities/invitation';
+import { InvitationMapper } from '@invitation/interfaces/http/mapper';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-import { InvitationMapper } from '@invitation/interfaces/http/mapper';
 
 describe('@invitation/interfaces/http/mapper', () => {
     describe('toDto', () => {

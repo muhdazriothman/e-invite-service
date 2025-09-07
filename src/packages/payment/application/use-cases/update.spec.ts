@@ -6,6 +6,7 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { UpdatePaymentUseCase } from '@payment/application/use-cases/update';
 import {
     PaymentMethod,
     PaymentStatus,
@@ -15,13 +16,12 @@ import { PaymentRepository } from '@payment/infra/repository';
 import { UpdatePaymentDto } from '@payment/interfaces/http/dtos/update';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { UpdatePaymentUseCase } from '@payment/application/use-cases/update';
 
 describe('@payment/application/use-cases/update', () => {
     let useCase: UpdatePaymentUseCase;
     let paymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockPaymentRepository = {
             create: jest.fn(),
             findById: jest.fn(),
@@ -46,7 +46,7 @@ describe('@payment/application/use-cases/update', () => {
     });
 
     describe('#execute', () => {
-        it('should update payment status successfully', async () => {
+        it('should update payment status successfully', async() => {
             const paymentId = 'payment-123';
             const existingPayment = PaymentFixture.getEntity({
                 id: paymentId,
@@ -80,7 +80,7 @@ describe('@payment/application/use-cases/update', () => {
             expect(result).toEqual(updatedPayment);
         });
 
-        it('should throw NotFoundException when payment not found', async () => {
+        it('should throw NotFoundException when payment not found', async() => {
             const paymentId = 'non-existent';
             const updateDto: UpdatePaymentDto = {
                 status: PaymentStatus.VERIFIED,
@@ -96,7 +96,7 @@ describe('@payment/application/use-cases/update', () => {
             expect(paymentRepository.update).not.toHaveBeenCalled();
         });
 
-        it('should mark payment as used when status is set to USED', async () => {
+        it('should mark payment as used when status is set to USED', async() => {
             const paymentId = 'payment-123';
             const existingPayment = PaymentFixture.getEntity({
                 id: paymentId,
@@ -126,12 +126,12 @@ describe('@payment/application/use-cases/update', () => {
 
             expect(paymentRepository.update).toHaveBeenCalledWith(paymentId, {
                 status: PaymentStatus.USED,
-                usedAt: expect.any(Date),
+                usedAt: expect.any(Date) as Date,
             });
             expect(result).toEqual(updatedPayment);
         });
 
-        it('should throw BadRequestException when trying to verify non-pending payment', async () => {
+        it('should throw BadRequestException when trying to verify non-pending payment', async() => {
             const paymentId = 'payment-123';
             const existingPayment = PaymentFixture.getEntity({
                 id: paymentId,

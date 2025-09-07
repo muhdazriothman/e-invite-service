@@ -1,12 +1,12 @@
 import {
-  Prop,
-  Schema,
-  SchemaFactory,
+    Prop,
+    Schema,
+    SchemaFactory,
 } from '@nestjs/mongoose';
 import {
-  PaymentStatus,
-  PaymentMethod,
-  PlanType,
+    PaymentStatus,
+    PaymentMethod,
+    PlanType,
 } from '@payment/domain/entities/payment';
 import { Document } from 'mongoose';
 
@@ -30,48 +30,48 @@ export interface PaymentDocumentSchema {
 }
 
 @Schema({
-  timestamps: true,
-  collection: 'payments',
+    timestamps: true,
+    collection: 'payments',
 })
 export class PaymentMongoDocument extends Document {
   @Prop({ required: true, type: Number })
-    amount: number;
+      amount: number;
 
   @Prop({ required: true, type: String })
-    currency: string;
+      currency: string;
 
   @Prop({ required: true, enum: PaymentMethod })
-    paymentMethod: PaymentMethod;
+      paymentMethod: PaymentMethod;
 
   @Prop({ required: true, enum: PaymentStatus, default: PaymentStatus.PENDING })
-    status: PaymentStatus;
+      status: PaymentStatus;
 
   @Prop({ required: true, type: String, unique: true })
-    reference: string;
+      reference: string;
 
   @Prop({ type: String })
-    description?: string;
+      description?: string;
 
   @Prop({ required: true, enum: PlanType })
-    planType: PlanType;
+      planType: PlanType;
 
   @Prop({ type: Date, default: null })
-    usedAt?: Date | null;
+      usedAt?: Date | null;
 
   @Prop({ required: true, type: String })
-    createdBy: string;
+      createdBy: string;
 
   @Prop({ required: true, type: Boolean, default: false })
-    isDeleted: boolean;
+      isDeleted: boolean;
 
   @Prop({ required: true, type: Date })
-    createdAt: Date;
+      createdAt: Date;
 
   @Prop({ required: true, type: Date })
-    updatedAt: Date;
+      updatedAt: Date;
 
   @Prop({ type: Date, default: null })
-    deletedAt?: Date | null;
+      deletedAt?: Date | null;
 }
 
 export const PaymentMongoSchema =

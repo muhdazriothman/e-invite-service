@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
     {
-        ignores: ['eslint.config.mjs'],
+        ignores: ['eslint.config.mjs', 'dist/**', 'jest.config.js'],
     },
     eslint.configs.recommended,
     ...tseslint.configs.recommendedTypeChecked,
@@ -69,7 +69,7 @@ export default tseslint.config(
             'quotes': ['error', 'single'],
             'comma-dangle': ['error', 'always-multiline'],
             'semi': ['error', 'always'],
-            'indent': ['error', 2],
+            'indent': ['error', 4],
             'no-trailing-spaces': 'error',
             'eol-last': 'error',
             'object-curly-spacing': ['error', 'always'],
@@ -83,7 +83,16 @@ export default tseslint.config(
             'space-unary-ops': 'error',
             'spaced-comment': ['error', 'always'],
             'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
-            'max-len': ['error', { code: 100, ignoreUrls: true, ignoreStrings: true }],
+            'max-len': ['error', { code: 150, ignoreUrls: true, ignoreStrings: true }],
+        },
+    },
+    {
+        files: ['**/*.spec.ts', '**/*.test.ts', '**/test/**/*.ts'],
+        rules: {
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
         },
     },
 );

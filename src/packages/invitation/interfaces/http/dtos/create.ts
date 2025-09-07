@@ -1,158 +1,158 @@
 import {
-  InvitationType,
-  CelebratedPersonType,
-  RelationshipType,
+    InvitationType,
+    CelebratedPersonType,
+    RelationshipType,
 } from '@invitation/domain/entities/invitation';
 import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsEnum,
-  IsArray,
-  ValidateNested,
-  IsDateString,
-  IsOptional,
-  IsUrl,
-  ArrayMinSize,
-  IsNotEmpty,
-  Matches,
+    IsString,
+    IsEnum,
+    IsArray,
+    ValidateNested,
+    IsDateString,
+    IsOptional,
+    IsUrl,
+    ArrayMinSize,
+    IsNotEmpty,
+    Matches,
 } from 'class-validator';
 
 export class HostDto {
   @IsString()
-    name: string;
+      name: string;
 
   @IsString()
-    title: string;
+      title: string;
 
   @IsEnum(RelationshipType)
-    relationshipWithCelebratedPerson: RelationshipType;
+      relationshipWithCelebratedPerson: RelationshipType;
 
   @IsOptional()
   @IsString()
-    phoneNumber?: string | null;
+      phoneNumber?: string | null;
 
   @IsOptional()
   @IsString()
-    email?: string | null;
+      email?: string | null;
 }
 
 export class CelebratedPersonDto {
   @IsString()
-    name: string;
+      name: string;
 
   @IsString()
-    title: string;
+      title: string;
 
   @IsEnum(RelationshipType)
-    relationshipWithHost: RelationshipType;
+      relationshipWithHost: RelationshipType;
 
   @IsDateString()
-    celebrationDate: string;
+      celebrationDate: string;
 
   @IsEnum(CelebratedPersonType)
-    type: CelebratedPersonType;
+      type: CelebratedPersonType;
 }
 
 export class EventDateDto {
   @IsDateString()
-    gregorianDate: string;
+      gregorianDate: string;
 
   @IsOptional()
   @IsString()
-    hijriDate?: string | null;
+      hijriDate?: string | null;
 }
 
 export class LocationDto {
   @IsString()
-    address: string;
+      address: string;
 
   @IsOptional()
   @IsUrl()
-    wazeLink?: string | null;
+      wazeLink?: string | null;
 
   @IsOptional()
   @IsUrl()
-    googleMapsLink?: string | null;
+      googleMapsLink?: string | null;
 }
 
 export class ItineraryDto {
   @IsArray()
   @IsString({ each: true })
-    activities: string[];
+      activities: string[];
 
   @IsString()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-    message: 'startTime must be a valid time in HH:MM format (24-hour)',
+      message: 'startTime must be a valid time in HH:MM format (24-hour)',
   })
-    startTime: string;
+      startTime: string;
 
   @IsString()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-    message: 'endTime must be a valid time in HH:MM format (24-hour)',
+      message: 'endTime must be a valid time in HH:MM format (24-hour)',
   })
-    endTime: string;
+      endTime: string;
 }
 
 export class ContactPersonDto {
   @IsString()
-    name: string;
+      name: string;
 
   @IsString()
-    title: string;
+      title: string;
 
   @IsEnum(RelationshipType)
-    relationshipWithCelebratedPerson: RelationshipType;
+      relationshipWithCelebratedPerson: RelationshipType;
 
   @IsOptional()
   @IsString()
-    phoneNumber?: string | null;
+      phoneNumber?: string | null;
 
   @IsOptional()
   @IsString()
-    whatsappNumber?: string | null;
+      whatsappNumber?: string | null;
 }
 
 export class CreateInvitationDto {
   @IsEnum(InvitationType)
-    type: InvitationType;
+      type: InvitationType;
 
   @IsString()
-    title: string;
+      title: string;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => HostDto)
   @ArrayMinSize(1)
-    hosts: HostDto[];
+      hosts: HostDto[];
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CelebratedPersonDto)
   @ArrayMinSize(1)
-    celebratedPersons: CelebratedPersonDto[];
+      celebratedPersons: CelebratedPersonDto[];
 
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => EventDateDto)
-    date: EventDateDto;
+      date: EventDateDto;
 
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => LocationDto)
-    location: LocationDto;
+      location: LocationDto;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ItineraryDto)
   @ArrayMinSize(1)
-    itineraries: ItineraryDto[];
+      itineraries: ItineraryDto[];
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ContactPersonDto)
   @ArrayMinSize(1)
-    contactPersons: ContactPersonDto[];
+      contactPersons: ContactPersonDto[];
 
   @IsDateString()
-    rsvpDueDate: string;
+      rsvpDueDate: string;
 }

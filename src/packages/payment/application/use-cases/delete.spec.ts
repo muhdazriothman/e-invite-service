@@ -3,22 +3,20 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { DeletePaymentUseCase } from '@payment/application/use-cases/delete';
 import {
-    Payment,
     PaymentMethod,
-    PaymentStatus,
     PlanType,
 } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { DeletePaymentUseCase } from '@payment/application/use-cases/delete';
 
 describe('@payment/application/use-cases/delete', () => {
     let useCase: DeletePaymentUseCase;
     let paymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockPaymentRepository = {
             create: jest.fn(),
             findById: jest.fn(),
@@ -44,7 +42,7 @@ describe('@payment/application/use-cases/delete', () => {
     });
 
     describe('#execute', () => {
-        it('should delete payment when found', async () => {
+        it('should delete payment when found', async() => {
             const paymentId = 'payment-123';
             const mockPayment = PaymentFixture.getEntity({
                 id: paymentId,
@@ -65,7 +63,7 @@ describe('@payment/application/use-cases/delete', () => {
             expect(paymentRepository.delete).toHaveBeenCalledWith(paymentId);
         });
 
-        it('should throw NotFoundException when payment not found', async () => {
+        it('should throw NotFoundException when payment not found', async() => {
             const paymentId = 'non-existent';
 
             paymentRepository.findById.mockResolvedValue(null);

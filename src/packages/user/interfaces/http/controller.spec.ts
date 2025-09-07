@@ -1,8 +1,7 @@
 import {
-  Test,
-  TestingModule,
+    Test,
+    TestingModule,
 } from '@nestjs/testing';
-import { PlanType } from '@payment/domain/entities/payment';
 import { UserFixture } from '@test/fixture/user';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
 import { DeleteUserUseCase } from '@user/application/use-cases/delete';
@@ -15,241 +14,241 @@ import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
 
 describe('@user/interfaces/http/controller', () => {
-  let controller: UserController;
-  let createUserUseCase: jest.Mocked<CreateUserUseCase>;
-  let listUsersUseCase: jest.Mocked<ListUsersUseCase>;
-  let getUserByIdUseCase: jest.Mocked<GetUserByIdUseCase>;
-  let updateUserUseCase: jest.Mocked<UpdateUserUseCase>;
-  let deleteUserUseCase: jest.Mocked<DeleteUserUseCase>;
+    let controller: UserController;
+    let createUserUseCase: jest.Mocked<CreateUserUseCase>;
+    let listUsersUseCase: jest.Mocked<ListUsersUseCase>;
+    let getUserByIdUseCase: jest.Mocked<GetUserByIdUseCase>;
+    let updateUserUseCase: jest.Mocked<UpdateUserUseCase>;
+    let deleteUserUseCase: jest.Mocked<DeleteUserUseCase>;
 
-  beforeEach(async() => {
-    const mockCreateUserUseCase = {
-      execute: jest.fn(),
-    };
+    beforeEach(async() => {
+        const mockCreateUserUseCase = {
+            execute: jest.fn(),
+        };
 
-    const mockListUsersUseCase = {
-      execute: jest.fn(),
-    };
+        const mockListUsersUseCase = {
+            execute: jest.fn(),
+        };
 
-    const mockGetUserByIdUseCase = {
-      execute: jest.fn(),
-    };
+        const mockGetUserByIdUseCase = {
+            execute: jest.fn(),
+        };
 
-    const mockUpdateUserUseCase = {
-      execute: jest.fn(),
-    };
+        const mockUpdateUserUseCase = {
+            execute: jest.fn(),
+        };
 
-    const mockDeleteUserUseCase = {
-      execute: jest.fn(),
-    };
+        const mockDeleteUserUseCase = {
+            execute: jest.fn(),
+        };
 
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UserController],
-      providers: [
-        {
-          provide: CreateUserUseCase,
-          useValue: mockCreateUserUseCase,
-        },
-        {
-          provide: ListUsersUseCase,
-          useValue: mockListUsersUseCase,
-        },
-        {
-          provide: GetUserByIdUseCase,
-          useValue: mockGetUserByIdUseCase,
-        },
-        {
-          provide: UpdateUserUseCase,
-          useValue: mockUpdateUserUseCase,
-        },
-        {
-          provide: DeleteUserUseCase,
-          useValue: mockDeleteUserUseCase,
-        },
-      ],
-    }).compile();
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [UserController],
+            providers: [
+                {
+                    provide: CreateUserUseCase,
+                    useValue: mockCreateUserUseCase,
+                },
+                {
+                    provide: ListUsersUseCase,
+                    useValue: mockListUsersUseCase,
+                },
+                {
+                    provide: GetUserByIdUseCase,
+                    useValue: mockGetUserByIdUseCase,
+                },
+                {
+                    provide: UpdateUserUseCase,
+                    useValue: mockUpdateUserUseCase,
+                },
+                {
+                    provide: DeleteUserUseCase,
+                    useValue: mockDeleteUserUseCase,
+                },
+            ],
+        }).compile();
 
-    controller = module.get<UserController>(UserController);
-    createUserUseCase = module.get(CreateUserUseCase);
-    listUsersUseCase = module.get(ListUsersUseCase);
-    getUserByIdUseCase = module.get(GetUserByIdUseCase);
-    updateUserUseCase = module.get(UpdateUserUseCase);
-    deleteUserUseCase = module.get(DeleteUserUseCase);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-
-  describe('createUser', () => {
-    it('should create a user successfully', async() => {
-      const createUserDto: CreateUserDto = {
-        name: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-        type: UserType.USER,
-        paymentId: 'payment-id-123',
-      };
-
-      const mockUser = UserFixture.getEntity({
-        id: '000000000000000000000001',
-        name: createUserDto.name,
-        email: createUserDto.email,
-        type: createUserDto.type,
-      });
-
-      createUserUseCase.execute.mockResolvedValue(mockUser);
-
-      const result = await controller.createUser(createUserDto);
-
-      expect(createUserUseCase.execute).toHaveBeenCalledWith(createUserDto);
-
-      expect(result).toEqual({
-        message: 'User created successfully',
-        data: {
-          id: mockUser.id,
-          name: mockUser.name,
-          email: mockUser.email,
-          capabilities: {
-            invitationLimit: mockUser.capabilities.invitationLimit,
-          },
-          createdAt: mockUser.createdAt.toISOString(),
-          updatedAt: mockUser.updatedAt.toISOString(),
-        },
-      });
+        controller = module.get<UserController>(UserController);
+        createUserUseCase = module.get(CreateUserUseCase);
+        listUsersUseCase = module.get(ListUsersUseCase);
+        getUserByIdUseCase = module.get(GetUserByIdUseCase);
+        updateUserUseCase = module.get(UpdateUserUseCase);
+        deleteUserUseCase = module.get(DeleteUserUseCase);
     });
 
-    it('should handle user creation failure', async() => {
-      const createUserDto: CreateUserDto = {
-        name: 'testuser',
-        email: 'test@example.com',
-        password: 'password123',
-        type: UserType.USER,
-        paymentId: 'payment-id-123',
-      };
-
-      createUserUseCase.execute.mockRejectedValue(
-        new Error('User creation failed'),
-      );
-
-      await expect(controller.createUser(createUserDto)).rejects.toThrow(
-        'User creation failed',
-      );
+    it('should be defined', () => {
+        expect(controller).toBeDefined();
     });
-  });
 
-  describe('listUsers', () => {
-    it('should return all users successfully', async() => {
-      const mockUsers = [
-        UserFixture.getEntity({
-          id: '000000000000000000000001',
-          name: 'User 1',
-        }),
-        UserFixture.getEntity({
-          id: '000000000000000000000002',
-          name: 'User 2',
-        }),
-      ];
+    describe('createUser', () => {
+        it('should create a user successfully', async() => {
+            const createUserDto: CreateUserDto = {
+                name: 'testuser',
+                email: 'test@example.com',
+                password: 'password123',
+                type: UserType.USER,
+                paymentId: 'payment-id-123',
+            };
 
-      listUsersUseCase.execute.mockResolvedValue(mockUsers);
+            const mockUser = UserFixture.getEntity({
+                id: '000000000000000000000001',
+                name: createUserDto.name,
+                email: createUserDto.email,
+                type: createUserDto.type,
+            });
 
-      const result = await controller.listUsers();
+            createUserUseCase.execute.mockResolvedValue(mockUser);
 
-      expect(listUsersUseCase.execute).toHaveBeenCalled();
-      expect(result).toEqual({
-        message: 'Users retrieved successfully',
-        data: mockUsers.map((user) => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          capabilities: {
-            invitationLimit: user.capabilities.invitationLimit,
-          },
-          createdAt: user.createdAt.toISOString(),
-          updatedAt: user.updatedAt.toISOString(),
-        })),
-      });
+            const result = await controller.createUser(createUserDto);
+
+            expect(createUserUseCase.execute).toHaveBeenCalledWith(createUserDto);
+
+            expect(result).toEqual({
+                message: 'User created successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
+            });
+        });
+
+        it('should handle user creation failure', async() => {
+            const createUserDto: CreateUserDto = {
+                name: 'testuser',
+                email: 'test@example.com',
+                password: 'password123',
+                type: UserType.USER,
+                paymentId: 'payment-id-123',
+            };
+
+            createUserUseCase.execute.mockRejectedValue(
+                new Error('User creation failed'),
+            );
+
+            await expect(controller.createUser(createUserDto)).rejects.toThrow(
+                'User creation failed',
+            );
+        });
     });
-  });
 
-  describe('getUserById', () => {
-    it('should return a user by ID successfully', async() => {
-      const userId = '000000000000000000000001';
-      const mockUser = UserFixture.getEntity({
-        id: userId,
-        name: 'Test User',
-      });
+    describe('listUsers', () => {
+        it('should return all users successfully', async() => {
+            const mockUsers = [
+                UserFixture.getEntity({
+                    id: '000000000000000000000001',
+                    name: 'User 1',
+                }),
+                UserFixture.getEntity({
+                    id: '000000000000000000000002',
+                    name: 'User 2',
+                }),
+            ];
 
-      getUserByIdUseCase.execute.mockResolvedValue(mockUser);
+            listUsersUseCase.execute.mockResolvedValue(mockUsers);
 
-      const result = await controller.getUserById(userId);
+            const result = await controller.listUsers();
 
-      expect(getUserByIdUseCase.execute).toHaveBeenCalledWith(userId);
-      expect(result).toEqual({
-        message: 'User retrieved successfully',
-        data: {
-          id: mockUser.id,
-          name: mockUser.name,
-          email: mockUser.email,
-          capabilities: {
-            invitationLimit: mockUser.capabilities.invitationLimit,
-          },
-          createdAt: mockUser.createdAt.toISOString(),
-          updatedAt: mockUser.updatedAt.toISOString(),
-        },
-      });
+            expect(listUsersUseCase.execute).toHaveBeenCalled();
+            expect(result).toEqual({
+                message: 'Users retrieved successfully',
+                data: mockUsers.map((user) => ({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    capabilities: {
+                        invitationLimit: user.capabilities.invitationLimit,
+                    },
+                    createdAt: user.createdAt.toISOString(),
+                    updatedAt: user.updatedAt.toISOString(),
+                })),
+            });
+        });
     });
-  });
 
-  describe('updateUser', () => {
-    it('should update a user successfully', async() => {
-      const userId = '000000000000000000000001';
-      const updateUserDto: UpdateUserDto = {
-        name: 'Updated User',
-        password: 'newpassword123',
-      };
+    describe('getUserById', () => {
+        it('should return a user by ID successfully', async() => {
+            const userId = '000000000000000000000001';
+            const mockUser = UserFixture.getEntity({
+                id: userId,
+                name: 'Test User',
+            });
 
-      const mockUser = UserFixture.getEntity({
-        id: userId,
-        name: updateUserDto.name,
-      });
+            getUserByIdUseCase.execute.mockResolvedValue(mockUser);
 
-      updateUserUseCase.execute.mockResolvedValue(mockUser);
+            const result = await controller.getUserById(userId);
 
-      const result = await controller.updateUser(userId, updateUserDto);
-
-      expect(updateUserUseCase.execute).toHaveBeenCalledWith(
-        userId,
-        updateUserDto,
-      );
-      expect(result).toEqual({
-        message: 'User updated successfully',
-        data: {
-          id: mockUser.id,
-          name: mockUser.name,
-          email: mockUser.email,
-          capabilities: {
-            invitationLimit: mockUser.capabilities.invitationLimit,
-          },
-          createdAt: mockUser.createdAt.toISOString(),
-          updatedAt: mockUser.updatedAt.toISOString(),
-        },
-      });
+            expect(getUserByIdUseCase.execute).toHaveBeenCalledWith(userId);
+            expect(result).toEqual({
+                message: 'User retrieved successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
+            });
+        });
     });
-  });
 
-  describe('deleteUser', () => {
-    it('should delete a user successfully', async() => {
-      const userId = 'user-id-1';
+    describe('updateUser', () => {
+        it('should update a user successfully', async() => {
+            const userId = '000000000000000000000001';
+            const updateUserDto: UpdateUserDto = {
+                name: 'Updated User',
+                password: 'newpassword123',
+            };
 
-      deleteUserUseCase.execute.mockResolvedValue(undefined);
+            const mockUser = UserFixture.getEntity({
+                id: userId,
+                name: updateUserDto.name,
+            });
 
-      const result = await controller.deleteUser(userId);
+            updateUserUseCase.execute.mockResolvedValue(mockUser);
 
-      expect(deleteUserUseCase.execute).toHaveBeenCalledWith(userId);
-      expect(result).toEqual({
-        message: 'User deleted successfully',
-      });
+            const result = await controller.updateUser(userId, updateUserDto);
+
+            expect(updateUserUseCase.execute).toHaveBeenCalledWith(
+                userId,
+                updateUserDto,
+            );
+            expect(result).toEqual({
+                message: 'User updated successfully',
+                data: {
+                    id: mockUser.id,
+                    name: mockUser.name,
+                    email: mockUser.email,
+                    capabilities: {
+                        invitationLimit: mockUser.capabilities.invitationLimit,
+                    },
+                    createdAt: mockUser.createdAt.toISOString(),
+                    updatedAt: mockUser.updatedAt.toISOString(),
+                },
+            });
+        });
     });
-  });
+
+    describe('deleteUser', () => {
+        it('should delete a user successfully', async() => {
+            const userId = 'user-id-1';
+
+            deleteUserUseCase.execute.mockResolvedValue(undefined);
+
+            const result = await controller.deleteUser(userId);
+
+            expect(deleteUserUseCase.execute).toHaveBeenCalledWith(userId);
+            expect(result).toEqual({
+                message: 'User deleted successfully',
+            });
+        });
+    });
 });

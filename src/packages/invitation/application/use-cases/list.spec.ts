@@ -1,4 +1,4 @@
-import { Invitation } from '@invitation/domain/entities/invitation';
+import { ListInvitationsUseCase } from '@invitation/application/use-cases/list';
 import { InvitationRepository } from '@invitation/infra/repository';
 import {
     Test,
@@ -7,13 +7,12 @@ import {
 import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-import { ListInvitationsUseCase } from '@invitation/application/use-cases/list';
 
 describe('@invitation/application/use-cases/list', () => {
     let useCase: ListInvitationsUseCase;
     let invitationRepository: jest.Mocked<InvitationRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockInvitationRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
@@ -40,7 +39,7 @@ describe('@invitation/application/use-cases/list', () => {
     });
 
     describe('execute', () => {
-        it('should return paginated invitations from repository', async () => {
+        it('should return paginated invitations from repository', async() => {
             const mockInvitations = [
                 InvitationFixture.getEntity({
                     id: '000000000000000000000001',
@@ -74,7 +73,7 @@ describe('@invitation/application/use-cases/list', () => {
             expect(result).toEqual(mockPaginationResult);
         });
 
-        it('should return paginated invitations with next cursor and limit', async () => {
+        it('should return paginated invitations with next cursor and limit', async() => {
             const mockInvitations = [
                 InvitationFixture.getEntity({
                     id: '3',
@@ -110,7 +109,7 @@ describe('@invitation/application/use-cases/list', () => {
             expect(result).toEqual(mockPaginationResult);
         });
 
-        it('should return paginated invitations with previous cursor and limit', async () => {
+        it('should return paginated invitations with previous cursor and limit', async() => {
             const mockInvitations = [
                 InvitationFixture.getEntity({
                     id: '1',

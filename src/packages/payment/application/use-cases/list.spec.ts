@@ -2,22 +2,20 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { ListPaymentsUseCase } from '@payment/application/use-cases/list';
 import {
-    Payment,
     PaymentMethod,
-    PaymentStatus,
     PlanType,
 } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { ListPaymentsUseCase } from '@payment/application/use-cases/list';
 
 describe('ListPaymentsUseCase', () => {
     let useCase: ListPaymentsUseCase;
     let paymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockPaymentRepository = {
             create: jest.fn(),
             findById: jest.fn(),
@@ -43,7 +41,7 @@ describe('ListPaymentsUseCase', () => {
     });
 
     describe('#execute', () => {
-        it('should return all payments', async () => {
+        it('should return all payments', async() => {
             const mockPayments = [
                 PaymentFixture.getEntity({
                     id: 'payment-1',
@@ -74,7 +72,7 @@ describe('ListPaymentsUseCase', () => {
             expect(result).toHaveLength(2);
         });
 
-        it('should return empty array when no payments exist', async () => {
+        it('should return empty array when no payments exist', async() => {
             paymentRepository.findAll.mockResolvedValue([]);
 
             const result = await useCase.execute();

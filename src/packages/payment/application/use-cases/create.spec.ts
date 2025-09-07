@@ -3,6 +3,7 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { CreatePaymentUseCase } from '@payment/application/use-cases/create';
 import {
     Payment,
     PaymentMethod,
@@ -13,13 +14,12 @@ import { PaymentRepository } from '@payment/infra/repository';
 import { CreatePaymentDto } from '@payment/interfaces/http/dtos/create';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { CreatePaymentUseCase } from '@payment/application/use-cases/create';
 
 describe('@payment/application/use-cases/create', () => {
     let useCase: CreatePaymentUseCase;
     let paymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockPaymentRepository = {
             create: jest.fn(),
             findById: jest.fn(),
@@ -45,7 +45,7 @@ describe('@payment/application/use-cases/create', () => {
     });
 
     describe('#execute', () => {
-        it('should create a new payment successfully', async () => {
+        it('should create a new payment successfully', async() => {
             const createPaymentDto: CreatePaymentDto = {
                 currency: 'USD',
                 paymentMethod: PaymentMethod.BANK_TRANSFER,
@@ -80,7 +80,7 @@ describe('@payment/application/use-cases/create', () => {
             expect(result.status).toBe(PaymentStatus.PENDING);
         });
 
-        it('should throw ConflictException when payment reference already exists', async () => {
+        it('should throw ConflictException when payment reference already exists', async() => {
             const createPaymentDto: CreatePaymentDto = {
                 currency: 'USD',
                 paymentMethod: PaymentMethod.BANK_TRANSFER,

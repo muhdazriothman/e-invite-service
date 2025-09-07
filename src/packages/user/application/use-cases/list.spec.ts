@@ -3,15 +3,15 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { UserFixture } from '@test/fixture/user';
+import { ListUsersUseCase } from '@user/application/use-cases/list';
 import { UserRepository } from '@user/infra/repository';
 
-import { ListUsersUseCase } from '@user/application/use-cases/list';
 
 describe('@user/application/use-cases/list', () => {
     let useCase: ListUsersUseCase;
     let userRepository: jest.Mocked<UserRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockUserRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
@@ -37,7 +37,7 @@ describe('@user/application/use-cases/list', () => {
     });
 
     describe('execute', () => {
-        it('should return all users from repository', async () => {
+        it('should return all users from repository', async() => {
             const mockUsers = [
                 UserFixture.getEntity({
                     id: '1',
@@ -61,7 +61,7 @@ describe('@user/application/use-cases/list', () => {
             expect(result).toEqual(mockUsers);
         });
 
-        it('should return empty array when no users exist', async () => {
+        it('should return empty array when no users exist', async() => {
             userRepository.findAll.mockResolvedValue([]);
 
             const result = await useCase.execute();

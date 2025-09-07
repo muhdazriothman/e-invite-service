@@ -1,12 +1,11 @@
 import {
     Payment,
     PaymentMethod,
-    PaymentProps,
     PlanType,
 } from '@payment/domain/entities/payment';
+import { PaymentMapper } from '@payment/interfaces/http/mapper';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { PaymentMapper } from '@payment/interfaces/http/mapper';
 
 describe('@payment/interfaces/http/mapper', () => {
     let payment: Payment;

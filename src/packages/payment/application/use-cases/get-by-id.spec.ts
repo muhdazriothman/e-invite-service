@@ -3,6 +3,7 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { GetPaymentByIdUseCase } from '@payment/application/use-cases/get-by-id';
 import {
     PaymentMethod,
     PlanType,
@@ -10,13 +11,12 @@ import {
 import { PaymentRepository } from '@payment/infra/repository';
 import { PaymentFixture } from '@test/fixture/payment';
 
-import { GetPaymentByIdUseCase } from '@payment/application/use-cases/get-by-id';
 
 describe('@payment/application/use-cases/get-by-id', () => {
     let useCase: GetPaymentByIdUseCase;
     let paymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockPaymentRepository = {
             create: jest.fn(),
             findById: jest.fn(),
@@ -42,7 +42,7 @@ describe('@payment/application/use-cases/get-by-id', () => {
     });
 
     describe('#execute', () => {
-        it('should return payment when found', async () => {
+        it('should return payment when found', async() => {
             const paymentId = 'payment-123';
             const mockPayment = PaymentFixture.getEntity({
                 id: paymentId,
@@ -62,7 +62,7 @@ describe('@payment/application/use-cases/get-by-id', () => {
             expect(result).toEqual(mockPayment);
         });
 
-        it('should throw NotFoundException when payment not found', async () => {
+        it('should throw NotFoundException when payment not found', async() => {
             const paymentId = 'non-existent';
 
             paymentRepository.findById.mockResolvedValue(null);

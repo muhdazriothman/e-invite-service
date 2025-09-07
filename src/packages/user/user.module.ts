@@ -11,19 +11,19 @@ import { UpdateUserUseCase } from '@user/application/use-cases/update';
 import { UserController } from '@user/interfaces/http/controller';
 
 @Module({
-  imports: [AuthModule, PaymentModule, SharedModule],
-  controllers: [UserController],
-  providers: [
-    CreateUserUseCase,
-    ListUsersUseCase,
-    GetUserByIdUseCase,
-    UpdateUserUseCase,
-    DeleteUserUseCase,
-    {
-      provide: 'UserAuthService',
-      useClass: UserAuthService,
-    },
-  ],
-  exports: ['UserAuthService'],
+    imports: [AuthModule, PaymentModule, SharedModule],
+    controllers: [UserController],
+    providers: [
+        CreateUserUseCase,
+        ListUsersUseCase,
+        GetUserByIdUseCase,
+        UpdateUserUseCase,
+        DeleteUserUseCase,
+        {
+            provide: 'UserAuthService',
+            useClass: UserAuthService,
+        },
+    ],
+    exports: ['UserAuthService'],
 })
 export class UserModule {}

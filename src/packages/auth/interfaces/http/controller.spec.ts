@@ -9,7 +9,7 @@ describe('@auth/interfaces/http/controller', () => {
     let controller: AuthController;
     let loginUseCase: jest.Mocked<LoginUseCase>;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockLoginUseCase = {
             execute: jest.fn(),
         };
@@ -33,7 +33,7 @@ describe('@auth/interfaces/http/controller', () => {
     });
 
     describe('login', () => {
-        it('should login a user and return token', async () => {
+        it('should login a user and return token', async() => {
             const loginDto = {
                 email: 'test@example.com',
                 password: 'password123',

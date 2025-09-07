@@ -4,10 +4,10 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { UserFixture } from '@test/fixture/user';
+import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
 import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
-import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
 
 describe('@user/application/use-cases/get-by-id', () => {
     let useCase: GetUserByIdUseCase;
@@ -22,7 +22,7 @@ describe('@user/application/use-cases/get-by-id', () => {
         paymentId: 'payment-id-123',
     });
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockUserRepository = {
             findById: jest.fn(),
         };
@@ -46,7 +46,7 @@ describe('@user/application/use-cases/get-by-id', () => {
     });
 
     describe('execute', () => {
-        it('should return user when found', async () => {
+        it('should return user when found', async() => {
             mockRepository.findById.mockResolvedValue(mockUser);
 
             const result = await useCase.execute('user-id-1');
@@ -55,7 +55,7 @@ describe('@user/application/use-cases/get-by-id', () => {
             expect(result).toEqual(mockUser);
         });
 
-        it('should throw NotFoundException when user not found', async () => {
+        it('should throw NotFoundException when user not found', async() => {
             mockRepository.findById.mockResolvedValue(null);
 
             await expect(useCase.execute('non-existent-id')).rejects.toThrow(

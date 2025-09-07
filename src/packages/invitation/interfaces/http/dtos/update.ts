@@ -1,183 +1,183 @@
 import {
-  InvitationType,
-  CelebratedPersonType,
-  RelationshipType,
+    InvitationType,
+    CelebratedPersonType,
+    RelationshipType,
 } from '@invitation/domain/entities/invitation';
 import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsEnum,
-  IsArray,
-  ValidateNested,
-  IsDateString,
-  IsOptional,
-  IsUrl,
-  ArrayMinSize,
-  IsNotEmpty,
-  Matches,
+    IsString,
+    IsEnum,
+    IsArray,
+    ValidateNested,
+    IsDateString,
+    IsOptional,
+    IsUrl,
+    ArrayMinSize,
+    IsNotEmpty,
+    Matches,
 } from 'class-validator';
 
 export class UpdateHostDto {
   @IsOptional()
   @IsString()
-    name?: string;
+      name?: string;
 
   @IsOptional()
   @IsString()
-    title?: string;
+      title?: string;
 
   @IsOptional()
   @IsEnum(RelationshipType)
-    relationshipWithCelebratedPerson?: RelationshipType;
+      relationshipWithCelebratedPerson?: RelationshipType;
 
   @IsOptional()
   @IsString()
-    phoneNumber?: string | null;
+      phoneNumber?: string | null;
 
   @IsOptional()
   @IsString()
-    email?: string | null;
+      email?: string | null;
 }
 
 export class UpdateCelebratedPersonDto {
   @IsOptional()
   @IsString()
-    name?: string;
+      name?: string;
 
   @IsOptional()
   @IsString()
-    title?: string;
+      title?: string;
 
   @IsOptional()
   @IsEnum(RelationshipType)
-    relationshipWithHost?: RelationshipType;
+      relationshipWithHost?: RelationshipType;
 
   @IsOptional()
   @IsDateString()
-    celebrationDate?: string;
+      celebrationDate?: string;
 
   @IsOptional()
   @IsEnum(CelebratedPersonType)
-    type?: CelebratedPersonType;
+      type?: CelebratedPersonType;
 }
 
 export class UpdateEventDateDto {
   @IsOptional()
   @IsDateString()
-    gregorianDate?: string;
+      gregorianDate?: string;
 
   @IsOptional()
   @IsString()
-    hijriDate?: string | null;
+      hijriDate?: string | null;
 }
 
 export class UpdateLocationDto {
   @IsOptional()
   @IsString()
-    address?: string;
+      address?: string;
 
   @IsOptional()
   @IsUrl()
-    wazeLink?: string | null;
+      wazeLink?: string | null;
 
   @IsOptional()
   @IsUrl()
-    googleMapsLink?: string | null;
+      googleMapsLink?: string | null;
 }
 
 export class UpdateItineraryDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-    activities?: string[];
+      activities?: string[];
 
   @IsOptional()
   @IsString()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-    message: 'startTime must be in HH:MM format',
+      message: 'startTime must be in HH:MM format',
   })
-    startTime?: string;
+      startTime?: string;
 
   @IsOptional()
   @IsString()
   @Matches(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-    message: 'endTime must be in HH:MM format',
+      message: 'endTime must be in HH:MM format',
   })
-    endTime?: string;
+      endTime?: string;
 }
 
 export class UpdateContactPersonDto {
   @IsOptional()
   @IsString()
-    name?: string;
+      name?: string;
 
   @IsOptional()
   @IsString()
-    title?: string;
+      title?: string;
 
   @IsOptional()
   @IsEnum(RelationshipType)
-    relationshipWithCelebratedPerson?: RelationshipType;
+      relationshipWithCelebratedPerson?: RelationshipType;
 
   @IsOptional()
   @IsString()
-    phoneNumber?: string | null;
+      phoneNumber?: string | null;
 
   @IsOptional()
   @IsString()
-    whatsappNumber?: string | null;
+      whatsappNumber?: string | null;
 }
 
 export class UpdateInvitationDto {
   @IsOptional()
   @IsEnum(InvitationType)
-    type?: InvitationType;
+      type?: InvitationType;
 
   @IsOptional()
   @IsString()
-    title?: string;
+      title?: string;
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateHostDto)
   @ArrayMinSize(1)
-    hosts?: UpdateHostDto[];
+      hosts?: UpdateHostDto[];
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateCelebratedPersonDto)
   @ArrayMinSize(1)
-    celebratedPersons?: UpdateCelebratedPersonDto[];
+      celebratedPersons?: UpdateCelebratedPersonDto[];
 
   @IsOptional()
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => UpdateEventDateDto)
-    date?: UpdateEventDateDto;
+      date?: UpdateEventDateDto;
 
   @IsOptional()
   @IsNotEmpty()
   @ValidateNested()
   @Type(() => UpdateLocationDto)
-    location?: UpdateLocationDto;
+      location?: UpdateLocationDto;
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateItineraryDto)
   @ArrayMinSize(1)
-    itineraries?: UpdateItineraryDto[];
+      itineraries?: UpdateItineraryDto[];
 
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => UpdateContactPersonDto)
   @ArrayMinSize(1)
-    contactPersons?: UpdateContactPersonDto[];
+      contactPersons?: UpdateContactPersonDto[];
 
   @IsOptional()
   @IsDateString()
-    rsvpDueDate?: string;
+      rsvpDueDate?: string;
 }

@@ -4,13 +4,13 @@ import { JwtService as NestJwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class JwtService {
-  constructor(private readonly jwtService: NestJwtService) {}
+    constructor(private readonly jwtService: NestJwtService) {}
 
-  sign(payload: JwtPayload): string {
-    return this.jwtService.sign(payload);
-  }
+    sign(payload: JwtPayload): string {
+        return this.jwtService.sign(payload);
+    }
 
-  verify(token: string): JwtPayload {
-    return this.jwtService.verify(token);
-  }
+    verify(token: string): JwtPayload {
+        return this.jwtService.verify(token);
+    }
 }

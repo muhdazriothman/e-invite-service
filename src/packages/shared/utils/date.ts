@@ -20,76 +20,76 @@ export interface DateValidatorOptions {
 }
 
 export class DateValidator {
-  private format: string;
+    private format: string;
 
-  constructor(options: DateValidatorOptions = {}) {
-    this.format = options.format || 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
-  }
-
-  parseDate(value: string): DateTime {
-    const date = DateTime.fromFormat(value, this.format);
-
-    if (!date.isValid) {
-      throw new Error('Invalid date');
+    constructor(options: DateValidatorOptions = {}) {
+        this.format = options.format || 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     }
 
-    return date;
-  }
+    parseDate(value: string): DateTime {
+        const date = DateTime.fromFormat(value, this.format);
 
-  isValidFormat(value: string): boolean {
-    try {
-      this.parseDate(value);
-      return true;
-    } catch (error) {
-      return false;
-    }
-  }
+        if (!date.isValid) {
+            throw new Error('Invalid date');
+        }
 
-  isPastDate(date: DateTime): boolean {
-    if (!this._isValidDate(date)) {
-      throw new Error('Invalid date');
+        return date;
     }
 
-    return date < DateTime.utc();
-  }
-
-  isBeforeDate(params: DateComparisonParams): boolean {
-    const { targetDate, referenceDate } = params;
-
-    if (!this._isValidDate(targetDate)) {
-      throw new Error('Invalid targetDate');
+    isValidFormat(value: string): boolean {
+        try {
+            this.parseDate(value);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
-    if (!this._isValidDate(referenceDate)) {
-      throw new Error('Invalid referenceDate');
+    isPastDate(date: DateTime): boolean {
+        if (!this._isValidDate(date)) {
+            throw new Error('Invalid date');
+        }
+
+        return date < DateTime.utc();
     }
 
-    return targetDate <= referenceDate;
-  }
+    isBeforeDate(params: DateComparisonParams): boolean {
+        const { targetDate, referenceDate } = params;
 
-  getDaysBetweenDates(params: DaysBetweenDatesParams): number {
-    const { firstDate, secondDate } = params;
+        if (!this._isValidDate(targetDate)) {
+            throw new Error('Invalid targetDate');
+        }
 
-    if (!this._isValidDate(firstDate)) {
-      throw new Error('Invalid firstDate');
+        if (!this._isValidDate(referenceDate)) {
+            throw new Error('Invalid referenceDate');
+        }
+
+        return targetDate <= referenceDate;
     }
 
-    if (!this._isValidDate(secondDate)) {
-      throw new Error('Invalid secondDate');
+    getDaysBetweenDates(params: DaysBetweenDatesParams): number {
+        const { firstDate, secondDate } = params;
+
+        if (!this._isValidDate(firstDate)) {
+            throw new Error('Invalid firstDate');
+        }
+
+        if (!this._isValidDate(secondDate)) {
+            throw new Error('Invalid secondDate');
+        }
+
+        let startDate = firstDate;
+        let endDate = secondDate;
+
+        if (firstDate > secondDate) {
+            startDate = secondDate;
+            endDate = firstDate;
+        }
+
+        return endDate.diff(startDate, 'days').days;
     }
 
-    let startDate = firstDate;
-    let endDate = secondDate;
-
-    if (firstDate > secondDate) {
-      startDate = secondDate;
-      endDate = firstDate;
+    private _isValidDate(date: DateTime): boolean {
+        return date instanceof DateTime && date.isValid;
     }
-
-    return endDate.diff(startDate, 'days').days;
-  }
-
-  private _isValidDate(date: DateTime): boolean {
-    return date instanceof DateTime && date.isValid;
-  }
 }

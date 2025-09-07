@@ -27,7 +27,6 @@ import { CreatePaymentDto } from '@payment/interfaces/http/dtos/create';
 import { UpdatePaymentDto } from '@payment/interfaces/http/dtos/update';
 import {
     PaymentMapper,
-    PaymentDto,
     PaymentResponseDto,
     PaymentListResponseDto,
 } from '@payment/interfaces/http/mapper';

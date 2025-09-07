@@ -3,6 +3,9 @@ import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delet
 import { GetInvitationByIdUseCase } from '@invitation/application/use-cases/get-by-id';
 import { ListInvitationsUseCase } from '@invitation/application/use-cases/list';
 import { UpdateInvitationUseCase } from '@invitation/application/use-cases/update';
+import { InvitationController } from '@invitation/interfaces/http/controller';
+import { InvitationMapper } from '@invitation/interfaces/http/mapper';
+import { RequestWithUser } from '@invitation/interfaces/http/middleware/user-context.middleware';
 import {
     Test,
     TestingModule,
@@ -11,9 +14,6 @@ import { PaginationResult } from '@shared/domain/value-objects/pagination-result
 import { InvitationFixture } from '@test/fixture/invitation';
 import { UserFixture } from '@test/fixture/user';
 
-import { InvitationController } from '@invitation/interfaces/http/controller';
-import { InvitationMapper } from '@invitation/interfaces/http/mapper';
-import { RequestWithUser } from '@invitation/interfaces/http/middleware/user-context.middleware';
 
 describe('@invitation/interfaces/http/controller', () => {
     let controller: InvitationController;
@@ -32,7 +32,7 @@ describe('@invitation/interfaces/http/controller', () => {
         userData: mockUser,
     } as RequestWithUser;
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockCreateInvitationUseCase = {
             execute: jest.fn(),
         };
@@ -92,7 +92,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('createInvitation', () => {
-        it('should create a new invitation', async () => {
+        it('should create a new invitation', async() => {
             const mockInvitation = InvitationFixture.getEntity();
 
             createInvitationUseCase.execute.mockResolvedValue(mockInvitation);
@@ -112,7 +112,7 @@ describe('@invitation/interfaces/http/controller', () => {
             });
         });
 
-        it('should throw an error if the invitation creation fails', async () => {
+        it('should throw an error if the invitation creation fails', async() => {
             createInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation creation failed'),
             );
@@ -124,7 +124,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('listInvitations', () => {
-        it('should return paginated list of invitations', async () => {
+        it('should return paginated list of invitations', async() => {
             const mockInvitations = [
                 InvitationFixture.getEntity({
                     id: 'invitation-1',
@@ -171,7 +171,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('getInvitationById', () => {
-        it('should return invitation by id', async () => {
+        it('should return invitation by id', async() => {
             const invitationId = 'invitation-id-1';
             const mockInvitation = InvitationFixture.getEntity({
                 id: invitationId,
@@ -195,7 +195,7 @@ describe('@invitation/interfaces/http/controller', () => {
             });
         });
 
-        it('should throw an error if the invitation is not found', async () => {
+        it('should throw an error if the invitation is not found', async() => {
             getInvitationByIdUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );
@@ -207,7 +207,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('updateInvitation', () => {
-        it('should update invitation successfully', async () => {
+        it('should update invitation successfully', async() => {
             const invitationId = 'invitation-id-1';
             const updateInvitationDto = InvitationFixture.getCreateInvitationDto({
                 title: 'Updated Wedding Celebration',
@@ -237,7 +237,7 @@ describe('@invitation/interfaces/http/controller', () => {
             });
         });
 
-        it('should throw an error if the invitation is not found', async () => {
+        it('should throw an error if the invitation is not found', async() => {
             updateInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );
@@ -253,7 +253,7 @@ describe('@invitation/interfaces/http/controller', () => {
     });
 
     describe('deleteInvitation', () => {
-        it('should delete invitation successfully', async () => {
+        it('should delete invitation successfully', async() => {
             const invitationId = 'invitation-id-1';
 
             deleteInvitationUseCase.execute.mockResolvedValue(undefined);
@@ -272,7 +272,7 @@ describe('@invitation/interfaces/http/controller', () => {
             });
         });
 
-        it('should throw an error if the invitation is not found', async () => {
+        it('should throw an error if the invitation is not found', async() => {
             deleteInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );

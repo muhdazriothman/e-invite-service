@@ -4,10 +4,10 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { UserFixture } from '@test/fixture/user';
+import { DeleteUserUseCase } from '@user/application/use-cases/delete';
 import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
-import { DeleteUserUseCase } from '@user/application/use-cases/delete';
 
 describe('@user/application/use-cases/delete', () => {
     let useCase: DeleteUserUseCase;
@@ -22,7 +22,7 @@ describe('@user/application/use-cases/delete', () => {
         paymentId: 'payment-id-123',
     });
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockUserRepository = {
             findById: jest.fn(),
             delete: jest.fn(),
@@ -47,7 +47,7 @@ describe('@user/application/use-cases/delete', () => {
     });
 
     describe('execute', () => {
-        it('should delete user successfully', async () => {
+        it('should delete user successfully', async() => {
             const userId = 'user-id-1';
 
             mockRepository.findById.mockResolvedValue(mockUser);
@@ -59,7 +59,7 @@ describe('@user/application/use-cases/delete', () => {
             expect(mockRepository.delete).toHaveBeenCalledWith(userId);
         });
 
-        it('should throw NotFoundException when user not found', async () => {
+        it('should throw NotFoundException when user not found', async() => {
             const userId = 'non-existent-id';
 
             mockRepository.findById.mockResolvedValue(null);
@@ -69,7 +69,7 @@ describe('@user/application/use-cases/delete', () => {
             expect(mockRepository.delete).not.toHaveBeenCalled();
         });
 
-        it('should throw NotFoundException when delete operation fails', async () => {
+        it('should throw NotFoundException when delete operation fails', async() => {
             const userId = 'user-id-1';
 
             mockRepository.findById.mockResolvedValue(mockUser);

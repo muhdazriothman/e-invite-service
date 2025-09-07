@@ -11,11 +11,11 @@ import { PaymentRepository } from '@payment/infra/repository';
 import { HashService } from '@shared/services/hash';
 import { PaymentFixture } from '@test/fixture/payment';
 import { UserFixture } from '@test/fixture/user';
+import { CreateUserUseCase } from '@user/application/use-cases/create';
 import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 
-import { CreateUserUseCase } from '@user/application/use-cases/create';
 
 describe('@user/application/use-cases/create', () => {
     let useCase: CreateUserUseCase;
@@ -38,7 +38,7 @@ describe('@user/application/use-cases/create', () => {
         isDeleted: false,
     });
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockUserRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
@@ -98,7 +98,7 @@ describe('@user/application/use-cases/create', () => {
             paymentId: 'payment-id-123',
         };
 
-        it('should create a new user when email does not exist', async () => {
+        it('should create a new user when email does not exist', async() => {
             const hashedPassword = 'hashedPassword123';
 
             userRepository.findByEmail.mockResolvedValue(null);
@@ -127,7 +127,7 @@ describe('@user/application/use-cases/create', () => {
             expect(result).toEqual(user);
         });
 
-        it('should create user with correct capabilities based on plan type', async () => {
+        it('should create user with correct capabilities based on plan type', async() => {
             const premiumPayment = PaymentFixture.getEntity({
                 id: 'payment-id-123',
                 planType: PlanType.PREMIUM,
@@ -154,7 +154,7 @@ describe('@user/application/use-cases/create', () => {
             );
         });
 
-        it('should mark payment record as used after successful user creation', async () => {
+        it('should mark payment record as used after successful user creation', async() => {
             const hashedPassword = 'hashedPassword123';
             const freshPayment = PaymentFixture.getEntity({
                 id: 'payment-id-123',
@@ -173,11 +173,11 @@ describe('@user/application/use-cases/create', () => {
 
             expect(paymentRepository.update).toHaveBeenCalledWith('payment-id-123', {
                 status: PaymentStatus.USED,
-                usedAt: expect.any(Date),
+                usedAt: expect.any(Date) as Date,
             });
         });
 
-        it('should throw ConflictException when email already exists', async () => {
+        it('should throw ConflictException when email already exists', async() => {
             const existingUser = UserFixture.getEntity({
                 id: '1',
                 name: 'existinguser',
@@ -197,7 +197,7 @@ describe('@user/application/use-cases/create', () => {
             expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is not found', async () => {
+        it('should throw BadRequestException when payment record is not found', async() => {
             userRepository.findByEmail.mockResolvedValue(null);
             paymentRepository.findById.mockResolvedValue(null);
 
@@ -210,7 +210,7 @@ describe('@user/application/use-cases/create', () => {
             expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is not verified', async () => {
+        it('should throw BadRequestException when payment record is not verified', async() => {
             const pendingPayment = PaymentFixture.getEntity({
                 id: 'payment-id-123',
                 planType: PlanType.BASIC,
@@ -230,7 +230,7 @@ describe('@user/application/use-cases/create', () => {
             expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is deleted', async () => {
+        it('should throw BadRequestException when payment record is deleted', async() => {
             const deletedPayment = PaymentFixture.getEntity({
                 id: 'payment-id-123',
                 planType: PlanType.BASIC,

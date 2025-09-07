@@ -1,3 +1,4 @@
+import { CreateInvitationUseCase } from '@invitation/application/use-cases/create';
 import {
     CelebratedPersonType,
     InvitationType,
@@ -18,7 +19,6 @@ import { InvitationFixture } from '@test/fixture/invitation';
 import { UserFixture } from '@test/fixture/user';
 import { DateTime } from 'luxon';
 
-import { CreateInvitationUseCase } from '@invitation/application/use-cases/create';
 
 describe('@invitation/application/use-cases/create', () => {
     let useCase: CreateInvitationUseCase;
@@ -78,7 +78,7 @@ describe('@invitation/application/use-cases/create', () => {
         rsvpDueDate: '2025-06-08T00:00:00.000Z',
     };
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockInvitationRepository = {
             create: jest.fn(),
             findAll: jest.fn(),
@@ -117,7 +117,7 @@ describe('@invitation/application/use-cases/create', () => {
     });
 
     describe('execute', () => {
-        it('should create an invitation successfully with valid props', async () => {
+        it('should create an invitation successfully with valid props', async() => {
             const invitation = InvitationFixture.getEntity({
                 id: '000000000000000000000002',
                 userId: '000000000000000000000001',
@@ -142,11 +142,11 @@ describe('@invitation/application/use-cases/create', () => {
                     celebratedPersons: expect.arrayContaining([
                         expect.objectContaining({
                             name: 'Jane Doe',
-                            celebrationDate: expect.any(Date),
+                            celebrationDate: expect.any(Date) as Date,
                         }),
                     ]),
                     date: expect.objectContaining({
-                        gregorianDate: expect.any(Date),
+                        gregorianDate: expect.any(Date) as Date,
                         hijriDate: createInvitationDto.date.hijriDate,
                     }),
                     location: createInvitationDto.location,
@@ -158,14 +158,14 @@ describe('@invitation/application/use-cases/create', () => {
                         }),
                     ]),
                     contactPersons: createInvitationDto.contactPersons,
-                    rsvpDueDate: expect.any(Date),
+                    rsvpDueDate: expect.any(Date) as Date,
                 }),
             );
 
             expect(result).toEqual(invitation);
         });
 
-        it('should throw ForbiddenException when user reaches invitation limit', async () => {
+        it('should throw ForbiddenException when user reaches invitation limit', async() => {
             mockRepository.countByUserId.mockResolvedValue(1); // User already has 1 invitation (basic package limit)
             mockDateValidator.parseDate.mockReturnValue(DateTime.utc());
             mockDateValidator.isPastDate.mockReturnValue(false);
@@ -176,7 +176,7 @@ describe('@invitation/application/use-cases/create', () => {
             expect(mockRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when RSVP due date is after event date', async () => {
+        it('should throw BadRequestException when RSVP due date is after event date', async() => {
             mockRepository.countByUserId.mockResolvedValue(0);
 
             // Mock the date validator to return the actual dates for comparison
@@ -199,7 +199,7 @@ describe('@invitation/application/use-cases/create', () => {
             expect(mockRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when event date is in the past', async () => {
+        it('should throw BadRequestException when event date is in the past', async() => {
             mockRepository.countByUserId.mockResolvedValue(0);
             mockDateValidator.parseDate.mockReturnValue(DateTime.utc());
             mockDateValidator.isPastDate.mockReturnValue(true);

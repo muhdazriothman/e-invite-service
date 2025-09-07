@@ -1,3 +1,4 @@
+import { GetInvitationByIdUseCase } from '@invitation/application/use-cases/get-by-id';
 import { InvitationRepository } from '@invitation/infra/repository';
 import { NotFoundException } from '@nestjs/common';
 import {
@@ -6,7 +7,6 @@ import {
 } from '@nestjs/testing';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-import { GetInvitationByIdUseCase } from '@invitation/application/use-cases/get-by-id';
 
 describe('@invitation/application/use-cases/get-by-id', () => {
     let useCase: GetInvitationByIdUseCase;
@@ -14,7 +14,7 @@ describe('@invitation/application/use-cases/get-by-id', () => {
 
     const mockInvitation = InvitationFixture.getEntity();
 
-    beforeEach(async () => {
+    beforeEach(async() => {
         const mockInvitationRepository = {
             findById: jest.fn(),
         };
@@ -38,7 +38,7 @@ describe('@invitation/application/use-cases/get-by-id', () => {
     });
 
     describe('execute', () => {
-        it('should return invitation when found', async () => {
+        it('should return invitation when found', async() => {
             const invitationId = 'invitation-id-1';
             const userId = '000000000000000000000001';
 
@@ -53,7 +53,7 @@ describe('@invitation/application/use-cases/get-by-id', () => {
             expect(result).toEqual(mockInvitation);
         });
 
-        it('should throw NotFoundException when invitation not found', async () => {
+        it('should throw NotFoundException when invitation not found', async() => {
             const invitationId = 'non-existent-id';
             const userId = '000000000000000000000001';
 

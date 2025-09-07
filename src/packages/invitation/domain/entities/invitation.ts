@@ -1,7 +1,4 @@
-import {
-  CelebratedPersonDto,
-  CreateInvitationDto,
-} from '@invitation/interfaces/http/dtos/create';
+import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 
 export enum InvitationType {
   WEDDING = 'wedding',
@@ -114,78 +111,78 @@ export interface CreateInvitationProps {
 }
 
 export class Invitation {
-  public readonly id: string;
-  public readonly userId: string;
-  public type: InvitationType;
-  public title: string;
-  public hosts: Host[];
-  public celebratedPersons: CelebratedPerson[];
-  public date: EventDate;
-  public location: Location;
-  public itineraries: Itinerary[];
-  public contactPersons: ContactPerson[];
-  public rsvpDueDate: Date;
-  public isDeleted: boolean;
-  public readonly createdAt: Date;
-  public updatedAt: Date;
-  public deletedAt: Date | null;
+    public readonly id: string;
+    public readonly userId: string;
+    public type: InvitationType;
+    public title: string;
+    public hosts: Host[];
+    public celebratedPersons: CelebratedPerson[];
+    public date: EventDate;
+    public location: Location;
+    public itineraries: Itinerary[];
+    public contactPersons: ContactPerson[];
+    public rsvpDueDate: Date;
+    public isDeleted: boolean;
+    public readonly createdAt: Date;
+    public updatedAt: Date;
+    public deletedAt: Date | null;
 
-  constructor(props: InvitationProps) {
-    this.id = props.id;
-    this.userId = props.userId;
-    this.type = props.type;
-    this.title = props.title;
-    this.hosts = props.hosts;
-    this.celebratedPersons = props.celebratedPersons;
-    this.date = props.date;
-    this.location = props.location;
-    this.itineraries = props.itineraries;
-    this.contactPersons = props.contactPersons;
-    this.rsvpDueDate = props.rsvpDueDate;
-    this.isDeleted = props.isDeleted;
-    this.createdAt = props.createdAt;
-    this.updatedAt = props.updatedAt;
-    this.deletedAt = props.deletedAt;
-  }
-
-  static createNew(dto: CreateInvitationDto, userId: string): Invitation {
-    const now = new Date();
-
-    const celebratedPersons: CelebratedPerson[] = [];
-    for (const person of dto.celebratedPersons) {
-      celebratedPersons.push({
-        name: person.name,
-        title: person.title,
-        relationshipWithHost: person.relationshipWithHost,
-
-        type: person.type,
-        celebrationDate: new Date(person.celebrationDate),
-      });
+    constructor(props: InvitationProps) {
+        this.id = props.id;
+        this.userId = props.userId;
+        this.type = props.type;
+        this.title = props.title;
+        this.hosts = props.hosts;
+        this.celebratedPersons = props.celebratedPersons;
+        this.date = props.date;
+        this.location = props.location;
+        this.itineraries = props.itineraries;
+        this.contactPersons = props.contactPersons;
+        this.rsvpDueDate = props.rsvpDueDate;
+        this.isDeleted = props.isDeleted;
+        this.createdAt = props.createdAt;
+        this.updatedAt = props.updatedAt;
+        this.deletedAt = props.deletedAt;
     }
 
-    return new Invitation({
-      id: '', // Will be set by the database
-      userId,
-      type: dto.type,
-      title: dto.title,
-      hosts: dto.hosts,
-      celebratedPersons,
-      date: {
-        gregorianDate: new Date(dto.date.gregorianDate),
-        hijriDate: dto.date.hijriDate,
-      },
-      location: dto.location,
-      itineraries: dto.itineraries,
-      contactPersons: dto.contactPersons,
-      rsvpDueDate: new Date(dto.rsvpDueDate),
-      isDeleted: false,
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-    });
-  }
+    static createNew(dto: CreateInvitationDto, userId: string): Invitation {
+        const now = new Date();
 
-  static createFromDb(props: InvitationProps): Invitation {
-    return new Invitation(props);
-  }
+        const celebratedPersons: CelebratedPerson[] = [];
+        for (const person of dto.celebratedPersons) {
+            celebratedPersons.push({
+                name: person.name,
+                title: person.title,
+                relationshipWithHost: person.relationshipWithHost,
+
+                type: person.type,
+                celebrationDate: new Date(person.celebrationDate),
+            });
+        }
+
+        return new Invitation({
+            id: '', // Will be set by the database
+            userId,
+            type: dto.type,
+            title: dto.title,
+            hosts: dto.hosts,
+            celebratedPersons,
+            date: {
+                gregorianDate: new Date(dto.date.gregorianDate),
+                hijriDate: dto.date.hijriDate,
+            },
+            location: dto.location,
+            itineraries: dto.itineraries,
+            contactPersons: dto.contactPersons,
+            rsvpDueDate: new Date(dto.rsvpDueDate),
+            isDeleted: false,
+            createdAt: now,
+            updatedAt: now,
+            deletedAt: null,
+        });
+    }
+
+    static createFromDb(props: InvitationProps): Invitation {
+        return new Invitation(props);
+    }
 }

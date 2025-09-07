@@ -1,80 +1,80 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  Payment,
-  PaymentMethod,
-  PaymentStatus,
-  PlanType,
+    Payment,
+    PaymentMethod,
+    PaymentStatus,
+    PlanType,
 } from '@payment/domain/entities/payment';
 
 export class PaymentDto {
   @ApiProperty()
-    id: string;
+      id: string;
 
   @ApiProperty()
-    amount: number;
+      amount: number;
 
   @ApiProperty()
-    currency: string;
+      currency: string;
 
   @ApiProperty({ enum: PaymentMethod })
-    paymentMethod: PaymentMethod;
+      paymentMethod: PaymentMethod;
 
   @ApiProperty({ enum: PaymentStatus })
-    status: PaymentStatus;
+      status: PaymentStatus;
 
   @ApiProperty()
-    reference: string;
+      reference: string;
 
   @ApiProperty({ required: false })
-    description?: string;
+      description?: string;
 
   @ApiProperty({ enum: PlanType })
-    planType: PlanType;
+      planType: PlanType;
 
   @ApiProperty({ required: false })
-    usedAt: Date | null;
+      usedAt: Date | null;
 
   @ApiProperty()
-    createdBy: string;
+      createdBy: string;
 
   @ApiProperty()
-    createdAt: Date;
+      createdAt: Date;
 
   @ApiProperty()
-    updatedAt: Date;
+      updatedAt: Date;
 }
 
 export class PaymentResponseDto {
   @ApiProperty()
-    message: string;
+      message: string;
 
   @ApiProperty({ type: PaymentDto })
-    data: PaymentDto;
+      data: PaymentDto;
 }
 
 export class PaymentListResponseDto {
   @ApiProperty()
-    message: string;
+      message: string;
 
   @ApiProperty({ type: [PaymentDto] })
-    data: PaymentDto[];
+      data: PaymentDto[];
 }
 
 export class PaymentMapper {
-  static toDto(payment: Payment): PaymentDto {
-    return {
-      id: payment.id,
-      amount: payment.amount,
-      currency: payment.currency,
-      paymentMethod: payment.paymentMethod,
-      status: payment.status,
-      reference: payment.reference,
-      description: payment.description,
-      planType: payment.planType,
-      usedAt: payment.usedAt,
-      createdBy: payment.createdBy,
-      createdAt: payment.createdAt,
-      updatedAt: payment.updatedAt,
-    };
-  }
+    static toDto(payment: Payment): PaymentDto {
+        return {
+            id: payment.id,
+            amount: payment.amount,
+            currency: payment.currency,
+            paymentMethod: payment.paymentMethod,
+            status: payment.status,
+            reference: payment.reference,
+            description: payment.description,
+            planType: payment.planType,
+            usedAt: payment.usedAt,
+            createdBy: payment.createdBy,
+            createdAt: payment.createdAt,
+            updatedAt: payment.updatedAt,
+        };
+    }
 }
