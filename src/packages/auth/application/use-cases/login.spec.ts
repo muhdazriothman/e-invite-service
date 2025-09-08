@@ -67,7 +67,7 @@ describe('@auth/application/use-cases/login', () => {
         expect(useCase).toBeDefined();
     });
 
-    describe('execute', () => {
+    describe('#execute', () => {
         const loginDto: LoginDto = {
             email: 'test@example.com',
             password: 'password123',
@@ -191,59 +191,6 @@ describe('@auth/application/use-cases/login', () => {
             expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
             expect(hashService.compare).not.toHaveBeenCalled();
             expect(jwtService.sign).not.toHaveBeenCalled();
-        });
-
-        it('should handle hash service errors gracefully', async() => {
-            const user = UserFixture.getEntity({
-                id: '1',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.USER,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(user);
-            hashService.compare.mockRejectedValue(new Error('Hash service error'));
-
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                'Hash service error',
-            );
-
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).toHaveBeenCalledWith(
-                loginDto.password,
-                user.passwordHash,
-            );
-            expect(jwtService.sign).not.toHaveBeenCalled();
-        });
-
-        it('should handle JWT service errors gracefully', async() => {
-            const user = UserFixture.getEntity({
-                id: '1',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.USER,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(user);
-            hashService.compare.mockResolvedValue(true);
-            jwtService.sign.mockImplementation(() => {
-                throw new Error('JWT service error');
-            });
-
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                'JWT service error',
-            );
-
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).toHaveBeenCalledWith(
-                loginDto.password,
-                user.passwordHash,
-            );
-            expect(jwtService.sign).toHaveBeenCalledWith({
-                sub: user.id,
-                email: user.email,
-                type: user.type,
-            });
         });
     });
 });

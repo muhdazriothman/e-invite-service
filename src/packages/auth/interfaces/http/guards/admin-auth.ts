@@ -6,6 +6,7 @@ import {
     ForbiddenException,
     Inject,
 } from '@nestjs/common';
+import { authErrors } from '@shared/constants/error-codes';
 import { UserAuthService } from '@user/application/services/user-auth.service';
 
 
@@ -28,12 +29,12 @@ export class AdminAuthGuard extends JwtAuthGuard {
         const jwtUser = request.user;
 
         if (!jwtUser || !jwtUser.id) {
-            throw new ForbiddenException('Admin access required');
+            throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
         }
 
         const isAdmin = await this.userAuthService.isUserAdmin(jwtUser.id);
         if (!isAdmin) {
-            throw new ForbiddenException('Admin access required');
+            throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
         }
 
         const userAuthInfo = await this.userAuthService.getUserAuthInfo(jwtUser.id);

@@ -8,6 +8,7 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { authErrors } from '@shared/constants/error-codes';
 
 interface MockRequestHeaders {
     authorization?: string | null;
@@ -81,7 +82,7 @@ describe('BasicAuthGuard', () => {
             setupMockRequest({});
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Basic authentication required'),
+                new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
             );
         });
 
@@ -91,7 +92,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Basic authentication required'),
+                new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
             );
         });
 
@@ -101,7 +102,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Basic authentication required'),
+                new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
             );
         });
 
@@ -113,7 +114,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Admin creation credentials not configured'),
+                new UnauthorizedException(authErrors.ADMIN_CREATION_CREDENTIALS_NOT_CONFIGURED),
             );
         });
 
@@ -124,7 +125,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -135,7 +136,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -146,7 +147,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -156,7 +157,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -167,7 +168,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -178,7 +179,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
@@ -189,7 +190,7 @@ describe('BasicAuthGuard', () => {
             });
 
             expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException('Invalid admin creation credentials'),
+                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 

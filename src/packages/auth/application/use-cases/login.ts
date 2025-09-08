@@ -5,6 +5,7 @@ import {
     Injectable,
     UnauthorizedException,
 } from '@nestjs/common';
+import { authErrors } from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
 import { JwtService } from '@shared/services/jwt';
 import { UserRepository } from '@user/infra/repository';
@@ -23,28 +24,32 @@ export class LoginUseCase {
     ) {}
 
     async execute(loginDto: LoginDto): Promise<{ token: string }> {
-        const user = await this.userRepository.findByEmail(loginDto.email);
+        const {
+            email,
+            password,
+        } = loginDto;
 
+        const user = await this.userRepository.findByEmail(email);
         if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException(authErrors.INVALID_CREDENTIALS);
         }
 
         if (user.isDeleted) {
-            throw new UnauthorizedException('Account has been deactivated');
+            throw new UnauthorizedException(authErrors.ACCOUNT_DEACTIVATED);
         }
 
         const isPasswordValid = await this.hashService.compare(
-            loginDto.password,
+            password,
             user.passwordHash,
         );
 
         if (!isPasswordValid) {
-            throw new UnauthorizedException('Invalid credentials');
+            throw new UnauthorizedException(authErrors.INVALID_CREDENTIALS);
         }
 
         const jwtPayload: JwtPayload = {
             sub: user.id,
-            email: user.email,
+            email,
             type: user.type,
         };
 

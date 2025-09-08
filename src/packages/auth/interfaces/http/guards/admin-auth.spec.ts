@@ -7,6 +7,7 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { authErrors } from '@shared/constants/error-codes';
 import { UserAuthService } from '@user/application/services/user-auth.service';
 import { UserType } from '@user/domain/entities/user';
 
@@ -51,7 +52,7 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
         expect(guard).toBeDefined();
     });
 
-    describe('canActivate', () => {
+    describe('#canActivate', () => {
         let mockContext: ExecutionContext;
 
         beforeEach(() => {
@@ -66,7 +67,6 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
         });
 
         it('should return false if JWT authentication fails', async() => {
-            // Mock the parent class to return false
             jest
                 .spyOn(guard, 'canActivate')
                 .mockImplementation((context: ExecutionContext) => {
@@ -83,15 +83,14 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
         });
 
         it('should throw ForbiddenException if user is null', async() => {
-            // Mock the parent class to return true (JWT auth passes)
             jest
                 .spyOn(guard, 'canActivate')
                 .mockImplementation(async(context: ExecutionContext) => {
                     const request: unknown = context.switchToHttp().getRequest();
                     if (!isMockRequest(request) || !request.user || !request.user.userId) {
-                        throw new ForbiddenException('Admin access required');
+                        throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
                     }
-                    await Promise.resolve(); // Add await to satisfy linter
+                    await Promise.resolve();
                     return true;
                 });
 
@@ -109,24 +108,22 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
                 getResponse: jest.fn().mockReturnValue({}),
             });
 
-            // Mock the parent class to return true (JWT auth passes)
             jest
                 .spyOn(guard, 'canActivate')
                 .mockImplementation(async(context: ExecutionContext) => {
                     const request: unknown = context.switchToHttp().getRequest();
                     if (!isMockRequest(request) || !request.user) {
-                        throw new ForbiddenException('Admin access required');
+                        throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
                     }
                     const isAdmin = await mockUserAuthService.isUserAdmin(
                         request.user.userId,
                     );
                     if (!isAdmin) {
-                        throw new ForbiddenException('Admin access required');
+                        throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
                     }
                     return true;
                 });
 
-            // Mock service to return false (not admin)
             mockUserAuthService.isUserAdmin.mockResolvedValue(false);
 
             await expect(guard.canActivate(mockContext)).rejects.toThrow(
@@ -147,13 +144,12 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
                 getResponse: jest.fn().mockReturnValue({}),
             });
 
-            // Mock the parent class to return true (JWT auth passes)
             jest
                 .spyOn(guard, 'canActivate')
                 .mockImplementation(async(context: ExecutionContext) => {
                     const request: unknown = context.switchToHttp().getRequest();
                     if (!isMockRequest(request) || !request.user) {
-                        throw new ForbiddenException('Admin access required');
+                        throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
                     }
                     const isAdmin = await mockUserAuthService.isUserAdmin(
                         request.user.userId,
@@ -161,10 +157,9 @@ describe('@auth/interfaces/http/guards/admin-auth', () => {
                     if (isAdmin) {
                         return true;
                     }
-                    throw new ForbiddenException('Admin access required');
+                    throw new ForbiddenException(authErrors.ADMIN_ACCESS_REQUIRED);
                 });
 
-            // Mock service to return true (is admin)
             mockUserAuthService.isUserAdmin.mockResolvedValue(true);
             mockUserAuthService.getUserAuthInfo.mockResolvedValue({
                 id: '123',

@@ -15,6 +15,7 @@ export class CreateInvitationUseCase {
     constructor(
     @Inject('InvitationRepository')
     private readonly invitationRepository: InvitationRepository,
+
     @Inject('DateValidator')
     private readonly dateValidator: DateValidator,
     ) {}
