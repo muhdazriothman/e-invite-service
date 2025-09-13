@@ -5,17 +5,24 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { invitationErrors } from '@shared/constants/error-codes';
 import { InvitationFixture } from '@test/fixture/invitation';
 
 
 describe('@invitation/application/use-cases/get-by-id', () => {
-    let useCase: GetInvitationByIdUseCase;
-    let invitationRepository: jest.Mocked<InvitationRepository>;
+    const userId = '000000000000000000000001';
+    const invitationId = '000000000000000000000001';
 
-    const mockInvitation = InvitationFixture.getEntity();
+    let useCase: GetInvitationByIdUseCase;
+    let mockInvitationRepository: jest.Mocked<InvitationRepository>;
+
+    const invitation = InvitationFixture.getEntity({
+        id: invitationId,
+        userId,
+    });
 
     beforeEach(async() => {
-        const mockInvitationRepository = {
+        const invitationRepository = {
             findById: jest.fn(),
         };
 
@@ -24,45 +31,49 @@ describe('@invitation/application/use-cases/get-by-id', () => {
                 GetInvitationByIdUseCase,
                 {
                     provide: 'InvitationRepository',
-                    useValue: mockInvitationRepository,
+                    useValue: invitationRepository,
                 },
             ],
         }).compile();
 
         useCase = module.get<GetInvitationByIdUseCase>(GetInvitationByIdUseCase);
-        invitationRepository = module.get('InvitationRepository');
+        mockInvitationRepository = module.get('InvitationRepository');
     });
 
     it('should be defined', () => {
         expect(useCase).toBeDefined();
     });
 
-    describe('execute', () => {
+    describe('#execute', () => {
         it('should return invitation when found', async() => {
-            const invitationId = 'invitation-id-1';
-            const userId = '000000000000000000000001';
+            mockInvitationRepository.findById.mockResolvedValue(invitation);
 
-            invitationRepository.findById.mockResolvedValue(mockInvitation);
-
-            const result = await useCase.execute(invitationId, userId);
-
-            expect(invitationRepository.findById).toHaveBeenCalledWith(
+            const result = await useCase.execute(
                 invitationId,
                 userId,
             );
-            expect(result).toEqual(mockInvitation);
+
+            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+                invitationId,
+                userId,
+            );
+
+            expect(result).toEqual(invitation);
         });
 
         it('should throw NotFoundException when invitation not found', async() => {
             const invitationId = 'non-existent-id';
-            const userId = '000000000000000000000001';
 
-            invitationRepository.findById.mockResolvedValue(null);
+            mockInvitationRepository.findById.mockResolvedValue(null);
 
-            await expect(useCase.execute(invitationId, userId)).rejects.toThrow(
-                NotFoundException,
+            await expect(useCase.execute(
+                invitationId,
+                userId,
+            )).rejects.toThrow(
+                new NotFoundException(invitationErrors.INVITATION_NOT_FOUND),
             );
-            expect(invitationRepository.findById).toHaveBeenCalledWith(
+
+            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );

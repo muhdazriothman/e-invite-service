@@ -5,6 +5,7 @@ import {
     Inject,
     NotFoundException,
 } from '@nestjs/common';
+import { invitationErrors } from '@shared/constants/error-codes';
 
 @Injectable()
 export class GetInvitationByIdUseCase {
@@ -13,12 +14,13 @@ export class GetInvitationByIdUseCase {
     private readonly invitationRepository: InvitationRepository,
     ) {}
 
-    async execute(id: string, userId?: string): Promise<Invitation> {
+    async execute(
+        id: string,
+        userId?: string,
+    ): Promise<Invitation> {
         const invitation = await this.invitationRepository.findById(id, userId);
-
         if (!invitation) {
-            // TODO: throw machine readable error
-            throw new NotFoundException('Invitation not found');
+            throw new NotFoundException(invitationErrors.INVITATION_NOT_FOUND);
         }
 
         return invitation;

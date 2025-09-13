@@ -23,9 +23,13 @@ import {
 } from 'mongoose';
 
 describe('@invitation/infra/repositories/invitation', () => {
+    const userId = '000000000000000000000001';
+
     let invitationRepository: InvitationRepository;
     let invitationModel: Model<InvitationMongoDocument>;
     let module: TestingModule;
+
+    let spyToDomain: jest.SpyInstance;
 
     beforeAll(async() => {
         const testContext = await setupRepositoryTest(
@@ -34,11 +38,20 @@ describe('@invitation/infra/repositories/invitation', () => {
         );
 
         module = testContext.module;
-        invitationRepository =
-      module.get<InvitationRepository>(InvitationRepository);
+        invitationRepository = module.get<InvitationRepository>(InvitationRepository);
         invitationModel = module.get<Model<InvitationMongoDocument>>(
             getModelToken(InvitationMongoModelName),
         );
+    });
+
+    beforeEach(() => {
+        spyToDomain = jest.spyOn(InvitationRepository, 'toDomain');
+    });
+
+    afterEach(async() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+        await invitationModel.deleteMany({});
     });
 
     afterAll(async() => {
@@ -46,15 +59,17 @@ describe('@invitation/infra/repositories/invitation', () => {
         await MongoTestSetup.stop();
     });
 
-    beforeEach(async() => {
-        await invitationModel.deleteMany({});
-    });
-
     describe('#toDomain', () => {
+        let spyCreateFromDb: jest.SpyInstance;
+
+        beforeEach(() => {
+            spyCreateFromDb = jest.spyOn(Invitation, 'createFromDb');
+        });
+
         it('should convert MongoDB document to domain entity correctly', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
-                userId: '000000000000000000000001',
+                userId,
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [
@@ -109,28 +124,32 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const result = InvitationRepository.toDomain(mockDocument);
 
+            expect(spyCreateFromDb).toHaveBeenCalledWith(mockDocument);
+
             expect(result).toBeInstanceOf(Invitation);
-            expect(result.id).toBe('507f1f77bcf86cd799439011');
-            expect(result.userId).toBe('000000000000000000000001');
-            expect(result.type).toBe(InvitationType.WEDDING);
-            expect(result.title).toBe('Wedding Celebration');
-            expect(result.hosts).toEqual(mockDocument.hosts);
-            expect(result.celebratedPersons).toEqual(mockDocument.celebratedPersons);
-            expect(result.date).toEqual(mockDocument.date);
-            expect(result.location).toEqual(mockDocument.location);
-            expect(result.itineraries).toEqual(mockDocument.itineraries);
-            expect(result.contactPersons).toEqual(mockDocument.contactPersons);
-            expect(result.rsvpDueDate).toEqual(mockDocument.rsvpDueDate);
-            expect(result.isDeleted).toBe(false);
-            expect(result.createdAt).toEqual(mockDocument.createdAt);
-            expect(result.updatedAt).toEqual(mockDocument.updatedAt);
-            expect(result.deletedAt).toBeNull();
+            expect(result).toEqual({
+                id: mockDocument._id.toString(),
+                userId: mockDocument.userId,
+                type: mockDocument.type,
+                title: mockDocument.title,
+                hosts: mockDocument.hosts,
+                celebratedPersons: mockDocument.celebratedPersons,
+                date: mockDocument.date,
+                location: mockDocument.location,
+                itineraries: mockDocument.itineraries,
+                contactPersons: mockDocument.contactPersons,
+                rsvpDueDate: mockDocument.rsvpDueDate,
+                isDeleted: mockDocument.isDeleted,
+                createdAt: mockDocument.createdAt,
+                updatedAt: mockDocument.updatedAt,
+                deletedAt: mockDocument.deletedAt,
+            });
         });
 
         it('should handle document with null deletedAt', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
-                userId: '000000000000000000000001',
+                userId,
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -155,6 +174,8 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const result = InvitationRepository.toDomain(mockDocument);
 
+            expect(spyCreateFromDb).toHaveBeenCalledWith(mockDocument);
+
             expect(result).toBeInstanceOf(Invitation);
             expect(result.deletedAt).toBeNull();
         });
@@ -162,7 +183,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with undefined isDeleted', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
-                userId: '000000000000000000000001',
+                userId,
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -187,6 +208,8 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const result = InvitationRepository.toDomain(mockDocument);
 
+            expect(spyCreateFromDb).toHaveBeenCalledWith(mockDocument);
+
             expect(result).toBeInstanceOf(Invitation);
             expect(result.isDeleted).toBe(false);
             expect(result.deletedAt).toBeNull();
@@ -195,7 +218,7 @@ describe('@invitation/infra/repositories/invitation', () => {
         it('should handle document with deleted invitation', () => {
             const mockDocument = {
                 _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
-                userId: '000000000000000000000001',
+                userId,
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
                 hosts: [],
@@ -220,152 +243,192 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const result = InvitationRepository.toDomain(mockDocument);
 
+            expect(spyCreateFromDb).toHaveBeenCalledWith(mockDocument);
+
             expect(result).toBeInstanceOf(Invitation);
             expect(result.isDeleted).toBe(true);
-            expect(result.deletedAt).toEqual(new Date('2024-01-02T00:00:00.000Z'));
-        });
-
-        it('should handle document with string _id', () => {
-            const mockDocument = {
-                _id: '507f1f77bcf86cd799439011',
-                userId: '000000000000000000000001',
-                type: InvitationType.WEDDING,
-                title: 'Wedding Celebration',
-                hosts: [],
-                celebratedPersons: [],
-                date: {
-                    gregorianDate: new Date('2024-06-15'),
-                    hijriDate: '1445-12-08',
-                },
-                location: {
-                    address: '123 Wedding Hall',
-                    wazeLink: null,
-                    googleMapsLink: null,
-                },
-                itineraries: [],
-                contactPersons: [],
-                rsvpDueDate: new Date('2024-06-01'),
-                isDeleted: false,
-                createdAt: new Date('2024-01-01T00:00:00.000Z'),
-                updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-                deletedAt: null,
-            };
-
-            const result = InvitationRepository.toDomain(mockDocument);
-
-            expect(result).toBeInstanceOf(Invitation);
-            expect(result.id).toBe('507f1f77bcf86cd799439011');
-        });
-
-        it('should handle document with null _id', () => {
-            const mockDocument = {
-                _id: null,
-                userId: '000000000000000000000001',
-                type: InvitationType.WEDDING,
-                title: 'Wedding Celebration',
-                hosts: [],
-                celebratedPersons: [],
-                date: {
-                    gregorianDate: new Date('2024-06-15'),
-                    hijriDate: '1445-12-08',
-                },
-                location: {
-                    address: '123 Wedding Hall',
-                    wazeLink: null,
-                    googleMapsLink: null,
-                },
-                itineraries: [],
-                contactPersons: [],
-                rsvpDueDate: new Date('2024-06-01'),
-                isDeleted: false,
-                createdAt: new Date('2024-01-01T00:00:00.000Z'),
-                updatedAt: new Date('2024-01-01T00:00:00.000Z'),
-                deletedAt: null,
-            };
-
-            const result = InvitationRepository.toDomain(mockDocument);
-
-            expect(result).toBeInstanceOf(Invitation);
-            expect(result.id).toBe('');
+            expect(result.deletedAt).toEqual(new Date(mockDocument.deletedAt));
         });
     });
 
     describe('#create', () => {
         it('should create a new invitation successfully', async() => {
-            const createInvitationData = InvitationFixture.getEntity({
+            const invitation = InvitationFixture.getEntity({
+                userId,
                 title: 'Wedding Celebration',
                 type: InvitationType.WEDDING,
             });
 
-            const result = await invitationRepository.create(createInvitationData);
+            const result = await invitationRepository.create(invitation);
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                userId: invitation.userId,
+                type: invitation.type,
+                title: invitation.title,
+                hosts: invitation.hosts,
+                celebratedPersons: invitation.celebratedPersons,
+                date: invitation.date,
+                location: invitation.location,
+                itineraries: invitation.itineraries,
+                contactPersons: invitation.contactPersons,
+                rsvpDueDate: invitation.rsvpDueDate,
+                isDeleted: invitation.isDeleted,
+                createdAt: invitation.createdAt,
+                updatedAt: invitation.updatedAt,
+                deletedAt: invitation.deletedAt,
+            });
+
+            const createdInvitation = spyToDomain.mock.results[0].value as Invitation;
 
             expect(result).toBeInstanceOf(Invitation);
-            expect(result.id).toBeDefined();
-            expect(result.title).toBe('Wedding Celebration');
-            expect(result.type).toBe(InvitationType.WEDDING);
-            expect(result.isDeleted).toBe(false);
-            expect(result.createdAt).toBeInstanceOf(Date);
-            expect(result.updatedAt).toBeInstanceOf(Date);
-            expect(result.deletedAt).toBeNull();
+            expect(result).toBe(createdInvitation);
 
-            // Verify the invitation was actually saved to the database
-            const savedInvitation = await invitationModel
-                .findOne({ title: 'Wedding Celebration' })
-                .lean();
-            expect(savedInvitation).toBeDefined();
-            expect(savedInvitation?.title).toBe('Wedding Celebration');
-            expect(savedInvitation?.type).toBe(InvitationType.WEDDING);
+            // Verify invitation is saved in database
+            const createdInvitationDocument = await invitationModel
+                .findOne({
+                    _id: result.id,
+                })
+                .lean<InvitationMongoDocument>();
+            expect(createdInvitationDocument).toBeDefined();
         });
 
         it('should create multiple invitations with different data', async() => {
-            const createInvitationData1 = InvitationFixture.getEntity({
+            const invitation1 = InvitationFixture.getEntity({
+                userId,
                 title: 'Wedding Celebration 1',
                 type: InvitationType.WEDDING,
             });
 
-            const createInvitationData2 = InvitationFixture.getEntity({
+            const invitation2 = InvitationFixture.getEntity({
+                userId,
                 title: 'Birthday Party',
                 type: InvitationType.BIRTHDAY,
             });
 
-            const result1 = await invitationRepository.create(createInvitationData1);
-            const result2 = await invitationRepository.create(createInvitationData2);
+            const result1 = await invitationRepository.create(invitation1);
+            const result2 = await invitationRepository.create(invitation2);
 
-            expect(result1).toBeInstanceOf(Invitation);
-            expect(result2).toBeInstanceOf(Invitation);
+            expect(spyToDomain).toHaveBeenCalledTimes(2);
+            expect(spyToDomain).toHaveBeenNthCalledWith(1, {
+                userId: invitation1.userId,
+                type: invitation1.type,
+                title: invitation1.title,
+                hosts: invitation1.hosts,
+                celebratedPersons: invitation1.celebratedPersons,
+                date: invitation1.date,
+                location: invitation1.location,
+                itineraries: invitation1.itineraries,
+                contactPersons: invitation1.contactPersons,
+                rsvpDueDate: invitation1.rsvpDueDate,
+                isDeleted: invitation1.isDeleted,
+                createdAt: invitation1.createdAt,
+                updatedAt: invitation1.updatedAt,
+                deletedAt: invitation1.deletedAt,
+            });
+
+            expect(spyToDomain).toHaveBeenNthCalledWith(2, {
+                userId: invitation2.userId,
+                type: invitation2.type,
+                title: invitation2.title,
+                hosts: invitation2.hosts,
+                celebratedPersons: invitation2.celebratedPersons,
+                date: invitation2.date,
+                location: invitation2.location,
+                itineraries: invitation2.itineraries,
+                contactPersons: invitation2.contactPersons,
+                rsvpDueDate: invitation2.rsvpDueDate,
+                isDeleted: invitation2.isDeleted,
+                createdAt: invitation2.createdAt,
+                updatedAt: invitation2.updatedAt,
+                deletedAt: invitation2.deletedAt,
+            });
+
+            const createdInvitation1 = spyToDomain.mock.results[0].value as Invitation;
+            const createdInvitation2 = spyToDomain.mock.results[1].value as Invitation;
+
+            expect(result1).toBe(createdInvitation1);
+            expect(result2).toBe(createdInvitation2);
+
             expect(result1.id).not.toBe(result2.id);
-            expect(result1.title).toBe('Wedding Celebration 1');
-            expect(result2.title).toBe('Birthday Party');
 
             // Verify both invitations were saved
-            const savedInvitations = await invitationModel.find({}).lean();
-            expect(savedInvitations).toHaveLength(2);
+            const createdInvitations = await invitationModel
+                .find({
+                    userId,
+                })
+                .sort({
+                    _id: 1,
+                })
+                .lean<InvitationMongoDocument[]>();
+            expect(createdInvitations).toHaveLength(2);
+
+            expect(createdInvitations[0].id).toBe(createdInvitation1.id);
+            expect(createdInvitations[1].id).toBe(createdInvitation2.id);
         });
     });
 
     describe('#findAll', () => {
         it('should return all non-deleted invitations', async() => {
-            // Create test invitations
-            const createInvitationData1 = InvitationFixture.getEntity({
+            const invitation1 = InvitationFixture.getEntity({
+                userId,
                 title: 'Wedding Celebration 1',
                 type: InvitationType.WEDDING,
             });
 
-            const createInvitationData2 = InvitationFixture.getEntity({
+            const invitation2 = InvitationFixture.getEntity({
+                userId,
                 title: 'Birthday Party',
                 type: InvitationType.BIRTHDAY,
             });
 
-            await invitationRepository.create(createInvitationData1);
-            await invitationRepository.create(createInvitationData2);
+            await invitationRepository.create(invitation1);
+            await invitationRepository.create(invitation2);
 
-            const result = await invitationRepository.findAll();
+            const result = await invitationRepository.findAll(userId);
+
+            expect(spyToDomain).toHaveBeenCalledTimes(2);
+            expect(spyToDomain).toHaveBeenNthCalledWith(1, {
+                userId: invitation1.userId,
+                type: invitation1.type,
+                title: invitation1.title,
+                hosts: invitation1.hosts,
+                celebratedPersons: invitation1.celebratedPersons,
+                date: invitation1.date,
+                location: invitation1.location,
+                itineraries: invitation1.itineraries,
+                contactPersons: invitation1.contactPersons,
+                rsvpDueDate: invitation1.rsvpDueDate,
+                isDeleted: invitation1.isDeleted,
+                createdAt: invitation1.createdAt,
+                updatedAt: invitation1.updatedAt,
+                deletedAt: invitation1.deletedAt,
+            });
+
+            expect(spyToDomain).toHaveBeenNthCalledWith(2, {
+                userId: invitation2.userId,
+                type: invitation2.type,
+                title: invitation2.title,
+                hosts: invitation2.hosts,
+                celebratedPersons: invitation2.celebratedPersons,
+                date: invitation2.date,
+                location: invitation2.location,
+                itineraries: invitation2.itineraries,
+                contactPersons: invitation2.contactPersons,
+                rsvpDueDate: invitation2.rsvpDueDate,
+                isDeleted: invitation2.isDeleted,
+                createdAt: invitation2.createdAt,
+                updatedAt: invitation2.updatedAt,
+                deletedAt: invitation2.deletedAt,
+            });
+
+            const createdInvitation1 = spyToDomain.mock.results[0].value as Invitation;
+            const createdInvitation2 = spyToDomain.mock.results[1].value as Invitation;
 
             expect(result).toHaveLength(2);
             expect(result[0]).toBeInstanceOf(Invitation);
+            expect(result[0]).toBe(createdInvitation1);
             expect(result[1]).toBeInstanceOf(Invitation);
-            expect(result[0].title).toBe('Wedding Celebration 1');
-            expect(result[1].title).toBe('Birthday Party');
+            expect(result[1]).toBe(createdInvitation2);
         });
 
         it('should return empty array when no invitations exist', async() => {

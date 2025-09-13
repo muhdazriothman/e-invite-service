@@ -1,20 +1,5 @@
 import { DateTime } from 'luxon';
 
-export interface ParseDateParams {
-  date: string;
-  format: string;
-}
-
-interface DateComparisonParams {
-  targetDate: DateTime;
-  referenceDate: DateTime;
-}
-
-interface DaysBetweenDatesParams {
-  firstDate: DateTime;
-  secondDate: DateTime;
-}
-
 export interface DateValidatorOptions {
   format?: string;
 }
@@ -45,45 +30,40 @@ export class DateValidator {
         }
     }
 
-    isPastDate(date: DateTime): boolean {
+    isOnOrBeforeDate(
+        date: DateTime,
+        compareToDate: DateTime,
+    ): boolean {
         if (!this._isValidDate(date)) {
             throw new Error('Invalid date');
         }
 
-        return date < DateTime.utc();
+        if (!this._isValidDate(compareToDate)) {
+            throw new Error('Invalid compareToDate');
+        }
+
+        return date <= compareToDate;
     }
 
-    isBeforeDate(params: DateComparisonParams): boolean {
-        const { targetDate, referenceDate } = params;
+    getDaysBetweenDates(
+        dateA: DateTime,
+        dateB: DateTime,
+    ): number {
 
-        if (!this._isValidDate(targetDate)) {
-            throw new Error('Invalid targetDate');
+        if (!this._isValidDate(dateA)) {
+            throw new Error('Invalid dateA');
         }
 
-        if (!this._isValidDate(referenceDate)) {
-            throw new Error('Invalid referenceDate');
+        if (!this._isValidDate(dateB)) {
+            throw new Error('Invalid dateB');
         }
 
-        return targetDate <= referenceDate;
-    }
+        let startDate = dateA;
+        let endDate = dateB;
 
-    getDaysBetweenDates(params: DaysBetweenDatesParams): number {
-        const { firstDate, secondDate } = params;
-
-        if (!this._isValidDate(firstDate)) {
-            throw new Error('Invalid firstDate');
-        }
-
-        if (!this._isValidDate(secondDate)) {
-            throw new Error('Invalid secondDate');
-        }
-
-        let startDate = firstDate;
-        let endDate = secondDate;
-
-        if (firstDate > secondDate) {
-            startDate = secondDate;
-            endDate = firstDate;
+        if (dateA > dateB) {
+            startDate = dateB;
+            endDate = dateA;
         }
 
         return endDate.diff(startDate, 'days').days;

@@ -1,4 +1,4 @@
-import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
+import { InvitationDocumentSchema } from '@invitation/infra/schema';
 
 export enum InvitationType {
   WEDDING = 'wedding',
@@ -145,16 +145,15 @@ export class Invitation {
         this.deletedAt = props.deletedAt;
     }
 
-    static createNew(dto: CreateInvitationDto, userId: string): Invitation {
+    static createNew(props: CreateInvitationProps): Invitation {
         const now = new Date();
 
         const celebratedPersons: CelebratedPerson[] = [];
-        for (const person of dto.celebratedPersons) {
+        for (const person of props.celebratedPersons) {
             celebratedPersons.push({
                 name: person.name,
                 title: person.title,
                 relationshipWithHost: person.relationshipWithHost,
-
                 type: person.type,
                 celebrationDate: new Date(person.celebrationDate),
             });
@@ -162,19 +161,19 @@ export class Invitation {
 
         return new Invitation({
             id: '', // Will be set by the database
-            userId,
-            type: dto.type,
-            title: dto.title,
-            hosts: dto.hosts,
+            userId: props.userId,
+            type: props.type,
+            title: props.title,
+            hosts: props.hosts,
             celebratedPersons,
             date: {
-                gregorianDate: new Date(dto.date.gregorianDate),
-                hijriDate: dto.date.hijriDate,
+                gregorianDate: new Date(props.date.gregorianDate),
+                hijriDate: props.date.hijriDate,
             },
-            location: dto.location,
-            itineraries: dto.itineraries,
-            contactPersons: dto.contactPersons,
-            rsvpDueDate: new Date(dto.rsvpDueDate),
+            location: props.location,
+            itineraries: props.itineraries,
+            contactPersons: props.contactPersons,
+            rsvpDueDate: new Date(props.rsvpDueDate),
             isDeleted: false,
             createdAt: now,
             updatedAt: now,
@@ -182,7 +181,23 @@ export class Invitation {
         });
     }
 
-    static createFromDb(props: InvitationProps): Invitation {
-        return new Invitation(props);
+    static createFromDb(props: InvitationDocumentSchema): Invitation {
+        return new Invitation({
+            id: props._id.toString(),
+            userId: props.userId,
+            type: props.type,
+            title: props.title,
+            hosts: props.hosts,
+            celebratedPersons: props.celebratedPersons,
+            date: props.date,
+            location: props.location,
+            itineraries: props.itineraries,
+            contactPersons: props.contactPersons,
+            rsvpDueDate: props.rsvpDueDate,
+            isDeleted: props.isDeleted ?? false,
+            createdAt: props.createdAt,
+            updatedAt: props.updatedAt,
+            deletedAt: props.deletedAt ?? null,
+        });
     }
 }

@@ -23,48 +23,51 @@ export class CreateUserUseCase {
     ) {}
 
     async execute(createUserDto: CreateUserDto): Promise<User> {
-    // TODO: to use transaction to ensure data consistency
-        const existingUser = await this.userRepository.findByEmail(
-            createUserDto.email,
-        );
+        const {
+            name,
+            email,
+            password,
+            type,
+            paymentId,
+        } = createUserDto;
+
+        // TODO: to use transaction to ensure data consistency
+        const existingUser = await this.userRepository.findByEmail(email);
         if (existingUser) {
             throw new ConflictException('User with this email already exists');
         }
 
-        // Validate payment record exists and is available for user creation
-        const paymentRecord = await this.paymentRepository.findById(
-            createUserDto.paymentId,
-        );
+        const paymentRecord = await this.paymentRepository.findById(paymentId);
         if (!paymentRecord) {
-            throw new BadRequestException('Payment record not found');
+            throw new BadRequestException('not_found.payment_record');
         }
 
         if (
             paymentRecord.status !== PaymentStatus.VERIFIED ||
-      paymentRecord.isDeleted
+            paymentRecord.isDeleted
         ) {
             throw new BadRequestException(
                 'Payment record is not available for user creation',
             );
         }
 
-        const hashedPassword = await this.hashService.hash(createUserDto.password);
+        const hashedPassword = await this.hashService.hash(password);
 
         const user = User.createNewUser(
             {
-                name: createUserDto.name,
-                email: createUserDto.email,
+                name,
+                email,
                 passwordHash: hashedPassword,
-                type: createUserDto.type,
-                paymentId: createUserDto.paymentId,
+                type,
+                paymentId,
             },
             paymentRecord.planType,
         );
 
-        // Mark payment record as used
         if (paymentRecord.status !== PaymentStatus.VERIFIED) {
             throw new Error('Only verified payments can be marked as used');
         }
+
         await this.paymentRepository.update(paymentRecord.id, {
             status: PaymentStatus.USED,
             usedAt: new Date(),

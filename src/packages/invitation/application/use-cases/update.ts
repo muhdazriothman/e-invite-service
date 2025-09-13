@@ -7,13 +7,17 @@ import {
     NotFoundException,
     BadRequestException,
 } from '@nestjs/common';
+import { invitationErrors } from '@shared/constants/error-codes';
 import { DateValidator } from '@shared/utils/date';
+import { User } from '@user/domain/entities/user';
+import { DateTime } from 'luxon';
 
 @Injectable()
 export class UpdateInvitationUseCase {
     constructor(
     @Inject('InvitationRepository')
     private readonly invitationRepository: InvitationRepository,
+
     @Inject('DateValidator')
     private readonly dateValidator: DateValidator,
     ) {}
@@ -21,96 +25,127 @@ export class UpdateInvitationUseCase {
     async execute(
         id: string,
         updateInvitationDto: UpdateInvitationDto,
-        userId?: string,
+        user?: User,
     ): Promise<Invitation> {
+        const {
+            date,
+            rsvpDueDate,
+            type,
+            title,
+            hosts,
+            celebratedPersons,
+            location,
+            itineraries,
+            contactPersons,
+        } = updateInvitationDto;
+
+        const {
+            id: userId,
+        } = user!;
+
         const existingInvitation = await this.invitationRepository.findById(
             id,
             userId,
         );
 
         if (!existingInvitation) {
-            throw new NotFoundException('Invitation not found');
+            throw new NotFoundException(invitationErrors.INVITATION_NOT_FOUND);
         }
 
-        // Validate dates if they are being updated
-        if (updateInvitationDto.date || updateInvitationDto.rsvpDueDate) {
-            this.validateDates(updateInvitationDto, existingInvitation);
+        if (date?.gregorianDate) {
+            if (this.isEventDateInThePast(date.gregorianDate)) {
+                throw new BadRequestException(invitationErrors.EVENT_DATE_IN_THE_PAST);
+            }
         }
 
-        // Build update object with only provided fields
+        if (rsvpDueDate) {
+            const eventDate = date?.gregorianDate || existingInvitation.date.gregorianDate.toISOString();
+            if (this.isRsvpDueDateAfterEventDate(rsvpDueDate, eventDate)) {
+                throw new BadRequestException(invitationErrors.RSVP_DUE_DATE_AFTER_EVENT_DATE);
+            }
+        }
+
         const updateData: Partial<Invitation> = {};
 
-        if (updateInvitationDto.type !== undefined) {
+        if (type !== undefined) {
             updateData.type = updateInvitationDto.type;
         }
 
-        if (updateInvitationDto.title !== undefined) {
+        if (title !== undefined) {
             updateData.title = updateInvitationDto.title;
         }
 
-        if (updateInvitationDto.hosts !== undefined) {
-            updateData.hosts = updateInvitationDto.hosts.map((host) => ({
-                name: host.name!,
-                title: host.title!,
-                relationshipWithCelebratedPerson:
-          host.relationshipWithCelebratedPerson!,
-                phoneNumber: host.phoneNumber,
-                email: host.email,
-            }));
+        if (hosts !== undefined) {
+            updateData.hosts = [];
+
+            for (const host of hosts) {
+                updateData.hosts.push({
+                    name: host.name!,
+                    title: host.title!,
+                    relationshipWithCelebratedPerson: host.relationshipWithCelebratedPerson!,
+                    phoneNumber: host.phoneNumber,
+                    email: host.email,
+                });
+            }
         }
 
-        if (updateInvitationDto.celebratedPersons !== undefined) {
-            updateData.celebratedPersons = updateInvitationDto.celebratedPersons.map(
-                (person) => ({
+        if (celebratedPersons !== undefined) {
+            updateData.celebratedPersons = [];
+
+            for (const person of celebratedPersons) {
+                updateData.celebratedPersons.push({
                     name: person.name!,
                     title: person.title!,
                     relationshipWithHost: person.relationshipWithHost!,
                     celebrationDate: new Date(person.celebrationDate!),
                     type: person.type!,
-                }),
-            );
+                });
+            }
         }
 
-        if (updateInvitationDto.date !== undefined) {
+        if (date !== undefined) {
             updateData.date = {
-                gregorianDate: new Date(updateInvitationDto.date.gregorianDate!),
-                hijriDate: updateInvitationDto.date.hijriDate,
+                gregorianDate: new Date(date.gregorianDate!),
+                hijriDate: date.hijriDate,
             };
         }
 
-        if (updateInvitationDto.location !== undefined) {
+        if (location !== undefined) {
             updateData.location = {
-                address: updateInvitationDto.location.address!,
-                wazeLink: updateInvitationDto.location.wazeLink,
-                googleMapsLink: updateInvitationDto.location.googleMapsLink,
+                address: location.address!,
+                wazeLink: location.wazeLink,
+                googleMapsLink: location.googleMapsLink,
             };
         }
 
-        if (updateInvitationDto.itineraries !== undefined) {
-            updateData.itineraries = updateInvitationDto.itineraries.map(
-                (itinerary) => ({
+        if (itineraries !== undefined) {
+            updateData.itineraries = [];
+
+            for (const itinerary of itineraries) {
+                updateData.itineraries.push({
                     activities: itinerary.activities!,
                     startTime: itinerary.startTime!,
                     endTime: itinerary.endTime!,
-                }),
-            );
+                });
+            }
         }
 
-        if (updateInvitationDto.contactPersons !== undefined) {
-            updateData.contactPersons = updateInvitationDto.contactPersons.map(
-                (contact) => ({
+        if (contactPersons !== undefined) {
+            updateData.contactPersons = [];
+
+            for (const contact of contactPersons) {
+                updateData.contactPersons.push({
                     name: contact.name!,
                     title: contact.title!,
-                    relationshipWithCelebratedPerson:
-            contact.relationshipWithCelebratedPerson!,
+                    relationshipWithCelebratedPerson: contact.relationshipWithCelebratedPerson!,
                     phoneNumber: contact.phoneNumber,
                     whatsappNumber: contact.whatsappNumber,
-                }),
-            );
+                });
+            }
         }
 
-        if (updateInvitationDto.rsvpDueDate !== undefined) {
-            updateData.rsvpDueDate = new Date(updateInvitationDto.rsvpDueDate);
+        if (rsvpDueDate !== undefined) {
+            updateData.rsvpDueDate = new Date(rsvpDueDate);
         }
 
         const result = await this.invitationRepository.update(
@@ -120,43 +155,28 @@ export class UpdateInvitationUseCase {
         );
 
         if (!result) {
-            throw new NotFoundException('Failed to update invitation');
+            throw new NotFoundException(invitationErrors.FAILED_TO_UPDATE_INVITATION);
         }
 
         return result;
     }
 
-    validateDates(
-        updateInvitationDto: UpdateInvitationDto,
-        existingInvitation: Invitation,
-    ): void {
-        if (updateInvitationDto.date?.gregorianDate) {
-            const eventDate = this.dateValidator.parseDate(
-                updateInvitationDto.date.gregorianDate,
-            );
-            if (this.dateValidator.isPastDate(eventDate)) {
-                throw new BadRequestException(
-                    'eventDate: Event date cannot be in the past',
-                );
-            }
-        }
+    isEventDateInThePast(eventDate: string): boolean {
+        const now = DateTime.utc();
+        const parsedDate = this.dateValidator.parseDate(eventDate);
 
-        if (updateInvitationDto.rsvpDueDate) {
-            const rsvpDate = this.dateValidator.parseDate(
-                updateInvitationDto.rsvpDueDate,
-            );
+        return this.dateValidator.isOnOrBeforeDate(
+            parsedDate,
+            now,
+        );
+    }
 
-            // Get event date (new or existing)
-            const eventDateString =
-        updateInvitationDto.date?.gregorianDate ||
-        existingInvitation.date.gregorianDate.toISOString();
-            const eventDate = this.dateValidator.parseDate(eventDateString);
-
-            if (rsvpDate > eventDate) {
-                throw new BadRequestException(
-                    'rsvpDueDate: RSVP due date must be before or on the event date',
-                );
-            }
-        }
+    isRsvpDueDateAfterEventDate(
+        rsvpDueDate: string,
+        eventDate: string,
+    ): boolean {
+        const parsedRsvpDate = this.dateValidator.parseDate(rsvpDueDate);
+        const parsedEventDate = this.dateValidator.parseDate(eventDate);
+        return parsedRsvpDate > parsedEventDate;
     }
 }

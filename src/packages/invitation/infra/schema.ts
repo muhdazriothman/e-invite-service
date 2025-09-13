@@ -14,10 +14,13 @@ import {
     Schema,
     SchemaFactory,
 } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import {
+    Document,
+    Types,
+} from 'mongoose';
 
 export interface InvitationDocumentSchema {
-  _id: unknown;
+  _id: Types.ObjectId;
   userId: string;
   type: InvitationType;
   title: string;

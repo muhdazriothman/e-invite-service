@@ -7,7 +7,44 @@ import {
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
-import { Model } from 'mongoose';
+import {
+    Model,
+    Types,
+} from 'mongoose';
+
+interface FindAllFilter {
+    isDeleted: boolean;
+    userId?: string;
+}
+
+interface FindAllWithPaginationFilter {
+    isDeleted: boolean;
+    userId?: string;
+    _id?: {
+        $gt?: string;
+        $lt?: string;
+    };
+}
+
+interface FindByIdFilter {
+    isDeleted: boolean;
+    userId?: string;
+    _id: string;
+}
+
+interface UpdateFilter {
+    isDeleted: boolean;
+    userId?: string;
+    _id: string;
+}
+
+interface DeleteFilter {
+    isDeleted: {
+        $ne: boolean
+    };
+    userId?: string;
+    _id: string;
+}
 
 @Injectable()
 export class InvitationRepository {
@@ -22,7 +59,7 @@ export class InvitationRepository {
 
     static toDomain(doc: InvitationDocumentSchema): Invitation {
         return Invitation.createFromDb({
-            id: doc._id?.toString() ?? '',
+            _id: doc._id,
             userId: doc.userId,
             type: doc.type,
             title: doc.title,
@@ -40,8 +77,9 @@ export class InvitationRepository {
         });
     }
 
-    async create(invitation: Invitation): Promise<Invitation> {
-        const createdInvitation = await this.invitationModel.create({
+    static toDocument(invitation: Invitation): InvitationDocumentSchema {
+        return {
+            _id: new Types.ObjectId(),
             userId: invitation.userId,
             type: invitation.type,
             title: invitation.title,
@@ -53,28 +91,42 @@ export class InvitationRepository {
             contactPersons: invitation.contactPersons,
             rsvpDueDate: invitation.rsvpDueDate,
             isDeleted: invitation.isDeleted,
+            createdAt: invitation.createdAt,
+            updatedAt: invitation.updatedAt,
             deletedAt: invitation.deletedAt,
-        });
+        };
+    }
 
-        const document = createdInvitation.toObject();
-        return InvitationRepository.toDomain(document);
+    async create(invitation: Invitation): Promise<Invitation> {
+        const document = InvitationRepository.toDocument(invitation);
+
+        const createdInvitation = (await this.invitationModel.create(document))
+            .toObject() as InvitationDocumentSchema;
+
+        return InvitationRepository.toDomain(createdInvitation);
     }
 
     async findAll(userId?: string): Promise<Invitation[]> {
-        const filter: {
-      isDeleted: boolean;
-      userId?: string;
-    } = {
-        isDeleted: false,
-    };
+        const filter: FindAllFilter = {
+            isDeleted: false,
+        };
 
         if (userId) {
             filter.userId = userId;
         }
 
-        const documents = await this.invitationModel.find(filter).lean();
+        const documents = await this.invitationModel
+            .find(filter)
+            .sort({
+                _id: 1,
+            })
+            .lean<InvitationDocumentSchema[]>();
 
-        return documents.map((document) => InvitationRepository.toDomain(document));
+        const invitations: Invitation[] = [];
+        for (const document of documents) {
+            invitations.push(InvitationRepository.toDomain(document));
+        }
+        return invitations;
     }
 
     async findAllWithPagination(
@@ -83,13 +135,9 @@ export class InvitationRepository {
         previous?: string,
         limit: number = 20,
     ): Promise<PaginationResult<Invitation>> {
-        const filter: {
-      isDeleted: boolean;
-      userId?: string;
-      _id?: { $gt?: string; $lt?: string };
-    } = {
-        isDeleted: false,
-    };
+        const filter: FindAllWithPaginationFilter = {
+            isDeleted: false,
+        };
 
         if (userId) {
             filter.userId = userId;
@@ -122,7 +170,7 @@ export class InvitationRepository {
             .find(filter)
             .sort({ _id: sortDirection })
             .limit(limit + 1)
-            .lean();
+            .lean<InvitationDocumentSchema[]>();
 
         if (sortDirection === 1) {
             // Forward pagination
@@ -213,20 +261,18 @@ export class InvitationRepository {
     }
 
     async findById(id: string, userId?: string): Promise<Invitation | null> {
-        const filter: {
-      _id: string;
-      isDeleted: boolean;
-      userId?: string;
-    } = {
-        _id: id,
-        isDeleted: false,
-    };
+        const filter: FindByIdFilter = {
+            _id: id,
+            isDeleted: false,
+        };
 
         if (userId) {
             filter.userId = userId;
         }
 
-        const document = await this.invitationModel.findOne(filter).lean();
+        const document = await this.invitationModel
+            .findOne(filter)
+            .lean<InvitationDocumentSchema>();
 
         if (!document) {
             return null;
@@ -241,7 +287,7 @@ export class InvitationRepository {
                 userId,
                 isDeleted: false,
             })
-            .lean();
+            .lean<InvitationDocumentSchema[]>();
 
         return documents.map((document) => InvitationRepository.toDomain(document));
     }
@@ -258,14 +304,10 @@ export class InvitationRepository {
         invitationData: Partial<Invitation>,
         userId?: string,
     ): Promise<Invitation | null> {
-        const filter: {
-      _id: string;
-      isDeleted: boolean;
-      userId?: string;
-    } = {
-        _id: id,
-        isDeleted: false,
-    };
+        const filter: UpdateFilter = {
+            _id: id,
+            isDeleted: false,
+        };
 
         if (userId) {
             filter.userId = userId;
@@ -283,7 +325,7 @@ export class InvitationRepository {
                 new: true,
                 lean: true,
             },
-        );
+        ).lean<InvitationDocumentSchema>();
 
         if (!document) {
             return null;
@@ -293,16 +335,12 @@ export class InvitationRepository {
     }
 
     async delete(id: string, userId?: string): Promise<boolean> {
-        const filter: {
-      _id: string;
-      isDeleted: { $ne: boolean };
-      userId?: string;
-    } = {
-        _id: id,
-        isDeleted: {
-            $ne: true,
-        },
-    };
+        const filter: DeleteFilter = {
+            _id: id,
+            isDeleted: {
+                $ne: true,
+            },
+        };
 
         if (userId) {
             filter.userId = userId;

@@ -9,15 +9,15 @@ import { InvitationFixture } from '@test/fixture/invitation';
 
 
 describe('@invitation/application/use-cases/list', () => {
+    const userId = '000000000000000000000001';
+
     let useCase: ListInvitationsUseCase;
-    let invitationRepository: jest.Mocked<InvitationRepository>;
+    let mockInvitationRepository: jest.Mocked<InvitationRepository>;
+
 
     beforeEach(async() => {
-        const mockInvitationRepository = {
-            create: jest.fn(),
-            findAll: jest.fn(),
+        const invitationRepository = {
             findAllWithPagination: jest.fn(),
-            delete: jest.fn(),
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -25,13 +25,18 @@ describe('@invitation/application/use-cases/list', () => {
                 ListInvitationsUseCase,
                 {
                     provide: 'InvitationRepository',
-                    useValue: mockInvitationRepository,
+                    useValue: invitationRepository,
                 },
             ],
         }).compile();
 
         useCase = module.get<ListInvitationsUseCase>(ListInvitationsUseCase);
-        invitationRepository = module.get('InvitationRepository');
+        mockInvitationRepository = module.get('InvitationRepository');
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     it('should be defined', () => {
@@ -40,7 +45,7 @@ describe('@invitation/application/use-cases/list', () => {
 
     describe('execute', () => {
         it('should return paginated invitations from repository', async() => {
-            const mockInvitations = [
+            const invitations = [
                 InvitationFixture.getEntity({
                     id: '000000000000000000000001',
                     title: 'Wedding Celebration 1',
@@ -50,99 +55,100 @@ describe('@invitation/application/use-cases/list', () => {
                 }),
             ];
 
-            const mockPaginationResult = PaginationResult.create(
-                mockInvitations,
+            const paginationResult = PaginationResult.create(
+                invitations,
                 '000000000000000000000002',
                 '000000000000000000000001',
                 true,
                 false,
             );
 
-            invitationRepository.findAllWithPagination.mockResolvedValue(
-                mockPaginationResult,
+            mockInvitationRepository.findAllWithPagination.mockResolvedValue(
+                paginationResult,
             );
 
-            const result = await useCase.execute('user123');
+            const result = await useCase.execute(userId);
 
-            expect(invitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                'user123',
+            expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
+                userId,
                 undefined,
                 undefined,
                 20,
             );
-            expect(result).toEqual(mockPaginationResult);
+
+            expect(result).toEqual(paginationResult);
         });
 
         it('should return paginated invitations with next cursor and limit', async() => {
-            const mockInvitations = [
+            const invitations = [
                 InvitationFixture.getEntity({
                     id: '3',
                     title: 'Wedding Celebration 3',
                 }),
             ];
 
-            const mockPaginationResult = PaginationResult.create(
-                mockInvitations,
+            const paginationResult = PaginationResult.create(
+                invitations,
                 undefined,
                 '000000000000000000000002',
                 false,
                 true,
             );
 
-            invitationRepository.findAllWithPagination.mockResolvedValue(
-                mockPaginationResult,
+            mockInvitationRepository.findAllWithPagination.mockResolvedValue(
+                paginationResult,
             );
 
             const result = await useCase.execute(
-                'user123',
+                userId,
                 '000000000000000000000002',
                 undefined,
                 10,
             );
 
-            expect(invitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                'user123',
+            expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
+                userId,
                 '000000000000000000000002',
                 undefined,
                 10,
             );
-            expect(result).toEqual(mockPaginationResult);
+            expect(result).toEqual(paginationResult);
         });
 
         it('should return paginated invitations with previous cursor and limit', async() => {
-            const mockInvitations = [
+            const invitations = [
                 InvitationFixture.getEntity({
                     id: '1',
                     title: 'Wedding Celebration 1',
                 }),
             ];
 
-            const mockPaginationResult = PaginationResult.create(
-                mockInvitations,
+            const paginationResult = PaginationResult.create(
+                invitations,
                 '000000000000000000000002',
                 undefined,
                 true,
                 false,
             );
 
-            invitationRepository.findAllWithPagination.mockResolvedValue(
-                mockPaginationResult,
+            mockInvitationRepository.findAllWithPagination.mockResolvedValue(
+                paginationResult,
             );
 
             const result = await useCase.execute(
-                'user123',
+                userId,
                 undefined,
                 '000000000000000000000001',
                 10,
             );
 
-            expect(invitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                'user123',
+            expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
+                userId,
                 undefined,
                 '000000000000000000000001',
                 10,
             );
-            expect(result).toEqual(mockPaginationResult);
+            expect(result).toEqual(paginationResult);
         });
     });
 });

@@ -1,61 +1,54 @@
-import { InvitationFixture } from '@test/fixture/invitation';
-
 import {
     Invitation,
     InvitationType,
-} from './invitation';
+} from '@invitation/domain/entities/invitation';
+import { InvitationFixture } from '@test/fixture/invitation';
+import { ObjectId } from 'mongodb';
 
 describe('@invitation/domain/entities/invitation', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date('2024-01-01T00:00:00.000Z'));
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
     describe('createNew', () => {
         it('should create a new invitation with correct properties', () => {
-            const createProps = InvitationFixture.getCreateInvitationDto();
-            const userId = '000000000000000000000001';
-            const invitation = Invitation.createNew(createProps, userId);
+            const createProps = InvitationFixture.getInvitationProps();
+            const invitation = Invitation.createNew(createProps);
 
-            expect(invitation.id).toBe('');
-            expect(invitation.userId).toBe(userId);
-            expect(invitation.type).toBe(createProps.type);
-            expect(invitation.title).toBe(createProps.title);
-            expect(invitation.hosts).toEqual(createProps.hosts);
-            expect(invitation.celebratedPersons).toEqual(
-                createProps.celebratedPersons.map((person) => ({
-                    ...person,
-                    celebrationDate: expect.any(Date) as Date,
-                })),
-            );
-            expect(invitation.date).toEqual({
-                gregorianDate: expect.any(Date) as Date,
-                hijriDate: createProps.date.hijriDate,
+            expect(invitation).toBeInstanceOf(Invitation);
+            expect(invitation).toEqual({
+                id: '',
+                userId: createProps.userId,
+                type: createProps.type,
+                title: createProps.title,
+                hosts: createProps.hosts,
+                celebratedPersons: [
+                    {
+                        name: createProps.celebratedPersons[0].name,
+                        title: createProps.celebratedPersons[0].title,
+                        relationshipWithHost: createProps.celebratedPersons[0].relationshipWithHost,
+                        celebrationDate: new Date(createProps.celebratedPersons[0].celebrationDate),
+                        type: createProps.celebratedPersons[0].type,
+                    },
+                ],
+                date: {
+                    gregorianDate: new Date(createProps.date.gregorianDate),
+                    hijriDate: createProps.date.hijriDate,
+                },
+                location: createProps.location,
+                itineraries: createProps.itineraries,
+                contactPersons: createProps.contactPersons,
+                rsvpDueDate: new Date(createProps.rsvpDueDate),
+                isDeleted: false,
+                deletedAt: null,
+                createdAt: new Date('2024-01-01T00:00:00.000Z'),
+                updatedAt: new Date('2024-01-01T00:00:00.000Z'),
             });
-            expect(invitation.location).toEqual(createProps.location);
-            expect(invitation.itineraries).toEqual(createProps.itineraries);
-            expect(invitation.contactPersons).toEqual(createProps.contactPersons);
-            expect(invitation.rsvpDueDate).toEqual(expect.any(Date));
-            expect(invitation.isDeleted).toBe(false);
-            expect(invitation.deletedAt).toBeNull();
-            expect(invitation.createdAt).toBeInstanceOf(Date);
-            expect(invitation.updatedAt).toBeInstanceOf(Date);
-        });
-
-        it('should set current timestamp for createdAt and updatedAt', () => {
-            const beforeCreation = new Date();
-            const createProps = InvitationFixture.getCreateInvitationDto();
-            const userId = '000000000000000000000001';
-            const invitation = Invitation.createNew(createProps, userId);
-            const afterCreation = new Date();
-
-            expect(invitation.createdAt.getTime()).toBeGreaterThanOrEqual(
-                beforeCreation.getTime(),
-            );
-            expect(invitation.createdAt.getTime()).toBeLessThanOrEqual(
-                afterCreation.getTime(),
-            );
-            expect(invitation.updatedAt.getTime()).toBeGreaterThanOrEqual(
-                beforeCreation.getTime(),
-            );
-            expect(invitation.updatedAt.getTime()).toBeLessThanOrEqual(
-                afterCreation.getTime(),
-            );
         });
     });
 
@@ -63,8 +56,8 @@ describe('@invitation/domain/entities/invitation', () => {
         it('should create an invitation from database props', () => {
             const createProps = InvitationFixture.getCreateInvitationProps();
             const dbProps = {
-                id: 'test-id-123',
-                userId: '000000000000000000000001',
+                _id: new ObjectId('000000000000000000000001'),
+                userId: createProps.userId,
                 type: InvitationType.BIRTHDAY,
                 title: 'Birthday Party',
                 hosts: createProps.hosts,
@@ -82,14 +75,24 @@ describe('@invitation/domain/entities/invitation', () => {
 
             const invitation = Invitation.createFromDb(dbProps);
 
-            expect(invitation.id).toBe(dbProps.id);
-            expect(invitation.userId).toBe(dbProps.userId);
-            expect(invitation.type).toBe(dbProps.type);
-            expect(invitation.title).toBe(dbProps.title);
-            expect(invitation.isDeleted).toBe(dbProps.isDeleted);
-            expect(invitation.createdAt).toEqual(dbProps.createdAt);
-            expect(invitation.updatedAt).toEqual(dbProps.updatedAt);
-            expect(invitation.deletedAt).toBe(dbProps.deletedAt);
+            expect(invitation).toBeInstanceOf(Invitation);
+            expect(invitation).toEqual({
+                id: dbProps._id.toString(),
+                userId: dbProps.userId,
+                type: dbProps.type,
+                title: dbProps.title,
+                hosts: dbProps.hosts,
+                celebratedPersons: dbProps.celebratedPersons,
+                date: dbProps.date,
+                location: dbProps.location,
+                itineraries: dbProps.itineraries,
+                contactPersons: dbProps.contactPersons,
+                rsvpDueDate: dbProps.rsvpDueDate,
+                isDeleted: dbProps.isDeleted,
+                createdAt: dbProps.createdAt,
+                updatedAt: dbProps.updatedAt,
+                deletedAt: dbProps.deletedAt,
+            });
         });
     });
 
@@ -97,8 +100,8 @@ describe('@invitation/domain/entities/invitation', () => {
         it('should create an invitation with all provided properties', () => {
             const createProps = InvitationFixture.getCreateInvitationProps();
             const props = {
-                id: 'test-id',
-                userId: '000000000000000000000001',
+                id: '000000000000000000000001',
+                userId: createProps.userId,
                 type: InvitationType.CORPORATE,
                 title: 'Corporate Event',
                 hosts: createProps.hosts,
@@ -116,14 +119,24 @@ describe('@invitation/domain/entities/invitation', () => {
 
             const invitation = new Invitation(props);
 
-            expect(invitation.id).toBe(props.id);
-            expect(invitation.userId).toBe(props.userId);
-            expect(invitation.type).toBe(props.type);
-            expect(invitation.title).toBe(props.title);
-            expect(invitation.isDeleted).toBe(props.isDeleted);
-            expect(invitation.createdAt).toEqual(props.createdAt);
-            expect(invitation.updatedAt).toEqual(props.updatedAt);
-            expect(invitation.deletedAt).toEqual(props.deletedAt);
+            expect(invitation).toBeInstanceOf(Invitation);
+            expect(invitation).toEqual({
+                id: props.id,
+                userId: props.userId,
+                type: props.type,
+                title: props.title,
+                hosts: props.hosts,
+                celebratedPersons: props.celebratedPersons,
+                date: props.date,
+                location: props.location,
+                itineraries: props.itineraries,
+                contactPersons: props.contactPersons,
+                rsvpDueDate: props.rsvpDueDate,
+                isDeleted: props.isDeleted,
+                createdAt: props.createdAt,
+                updatedAt: props.updatedAt,
+                deletedAt: props.deletedAt,
+            });
         });
     });
 });

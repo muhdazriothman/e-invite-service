@@ -4,6 +4,7 @@ import {
     Inject,
     NotFoundException,
 } from '@nestjs/common';
+import { invitationErrors } from '@shared/constants/error-codes';
 
 @Injectable()
 export class DeleteInvitationUseCase {
@@ -12,20 +13,21 @@ export class DeleteInvitationUseCase {
     private readonly invitationRepository: InvitationRepository,
     ) {}
 
-    async execute(id: string, userId?: string): Promise<void> {
+    async execute(
+        id: string,
+        userId?: string,
+    ): Promise<void> {
         const existingInvitation = await this.invitationRepository.findById(
             id,
             userId,
         );
-
         if (!existingInvitation) {
-            throw new NotFoundException('Invitation not found');
+            throw new NotFoundException(invitationErrors.INVITATION_NOT_FOUND);
         }
 
         const deleted = await this.invitationRepository.delete(id, userId);
-
         if (!deleted) {
-            throw new NotFoundException('Failed to delete invitation');
+            throw new NotFoundException(invitationErrors.FAILED_TO_DELETE_INVITATION);
         }
     }
 }
