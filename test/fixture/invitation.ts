@@ -4,8 +4,11 @@ import {
     InvitationType,
     RelationshipType,
 } from '@invitation/domain/entities/invitation';
+import { InvitationLean } from '@invitation/infra/schema';
 import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 import { plainToClass } from 'class-transformer';
+import { Types } from 'mongoose';
+
 
 export class InvitationFixture {
     static getInvitationProps(props: Partial<Invitation> = {}) {
@@ -83,9 +86,31 @@ export class InvitationFixture {
         };
     }
 
-    static getEntity(params: Partial<Invitation> = {}) {
+    static getEntity(params: Partial<Invitation> = {}): Invitation {
         const props = InvitationFixture.getInvitationProps(params);
         return new Invitation(props);
+    }
+
+    static getLean(params: Partial<Invitation> = {}): InvitationLean {
+        const props = InvitationFixture.getInvitationProps(params);
+
+        return {
+            _id: new Types.ObjectId(props.id),
+            userId: props.userId,
+            type: props.type,
+            title: props.title,
+            hosts: props.hosts,
+            celebratedPersons: props.celebratedPersons,
+            date: props.date,
+            location: props.location,
+            itineraries: props.itineraries,
+            contactPersons: props.contactPersons,
+            rsvpDueDate: props.rsvpDueDate,
+            isDeleted: props.isDeleted,
+            createdAt: props.createdAt,
+            updatedAt: props.updatedAt,
+            deletedAt: props.deletedAt,
+        };
     }
 
     static getCreateInvitationProps(

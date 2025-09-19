@@ -1,8 +1,11 @@
-import { Invitation } from '@invitation/domain/entities/invitation';
 import {
-    InvitationMongoDocument,
+    Invitation,
+    UpdateInvitationProps,
+} from '@invitation/domain/entities/invitation';
+import {
+    InvitationHydrated,
+    InvitationLean,
     InvitationMongoModelName,
-    InvitationDocumentSchema,
 } from '@invitation/infra/schema';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,11 +14,6 @@ import {
     Model,
     Types,
 } from 'mongoose';
-
-interface FindAllFilter {
-    isDeleted: boolean;
-    userId?: string;
-}
 
 interface FindAllWithPaginationFilter {
     isDeleted: boolean;
@@ -26,14 +24,14 @@ interface FindAllWithPaginationFilter {
     };
 }
 
-interface FindByIdFilter {
+interface FindByFilter {
     isDeleted: boolean;
     userId?: string;
     _id: string;
 }
 
 interface UpdateFilter {
-    isDeleted: boolean;
+    isDeleted?: boolean;
     userId?: string;
     _id: string;
 }
@@ -50,35 +48,40 @@ interface DeleteFilter {
 export class InvitationRepository {
     constructor(
     @InjectModel(InvitationMongoModelName)
-    private readonly invitationModel: Model<InvitationMongoDocument>,
+    private readonly invitationModel: Model<InvitationHydrated>,
     ) {}
 
     static getCollectionName(): string {
         return 'invitations';
     }
 
-    static toDomain(doc: InvitationDocumentSchema): Invitation {
+    static toDomain(
+        document: InvitationLean,
+    ): Invitation {
         return Invitation.createFromDb({
-            _id: doc._id,
-            userId: doc.userId,
-            type: doc.type,
-            title: doc.title,
-            hosts: doc.hosts,
-            celebratedPersons: doc.celebratedPersons,
-            date: doc.date,
-            location: doc.location,
-            itineraries: doc.itineraries,
-            contactPersons: doc.contactPersons,
-            rsvpDueDate: doc.rsvpDueDate,
-            isDeleted: doc.isDeleted ?? false,
-            createdAt: doc.createdAt,
-            updatedAt: doc.updatedAt,
-            deletedAt: doc.deletedAt ?? null,
+            _id: document._id,
+            userId: document.userId,
+            type: document.type,
+            title: document.title,
+            hosts: document.hosts,
+            celebratedPersons: document.celebratedPersons,
+            date: document.date,
+            location: document.location,
+            itineraries: document.itineraries,
+            contactPersons: document.contactPersons,
+            rsvpDueDate: document.rsvpDueDate,
+            isDeleted: document.isDeleted ?? false,
+            createdAt: document.createdAt,
+            updatedAt: document.updatedAt,
+            deletedAt: document.deletedAt ?? null,
         });
     }
 
-    static toDocument(invitation: Invitation): InvitationDocumentSchema {
-        return {
+    static toDocument(
+        invitation: Invitation,
+        model: Model<InvitationHydrated>,
+    ): InvitationHydrated {
+        return new model({
             _id: new Types.ObjectId(),
             userId: invitation.userId,
             type: invitation.type,
@@ -94,39 +97,19 @@ export class InvitationRepository {
             createdAt: invitation.createdAt,
             updatedAt: invitation.updatedAt,
             deletedAt: invitation.deletedAt,
-        };
+        });
     }
 
     async create(invitation: Invitation): Promise<Invitation> {
-        const document = InvitationRepository.toDocument(invitation);
+        const document = InvitationRepository.toDocument(
+            invitation,
+            this.invitationModel,
+        );
 
         const createdInvitation = (await this.invitationModel.create(document))
-            .toObject() as InvitationDocumentSchema;
+            .toObject();
 
         return InvitationRepository.toDomain(createdInvitation);
-    }
-
-    async findAll(userId?: string): Promise<Invitation[]> {
-        const filter: FindAllFilter = {
-            isDeleted: false,
-        };
-
-        if (userId) {
-            filter.userId = userId;
-        }
-
-        const documents = await this.invitationModel
-            .find(filter)
-            .sort({
-                _id: 1,
-            })
-            .lean<InvitationDocumentSchema[]>();
-
-        const invitations: Invitation[] = [];
-        for (const document of documents) {
-            invitations.push(InvitationRepository.toDomain(document));
-        }
-        return invitations;
     }
 
     async findAllWithPagination(
@@ -170,7 +153,7 @@ export class InvitationRepository {
             .find(filter)
             .sort({ _id: sortDirection })
             .limit(limit + 1)
-            .lean<InvitationDocumentSchema[]>();
+            .lean<InvitationHydrated[]>();
 
         if (sortDirection === 1) {
             // Forward pagination
@@ -260,36 +243,49 @@ export class InvitationRepository {
         }
     }
 
-    async findById(id: string, userId?: string): Promise<Invitation | null> {
-        const filter: FindByIdFilter = {
+    async findById(
+        id: string,
+    ): Promise<Invitation | null> {
+        const document = await this._findByFilter({
             _id: id,
             isDeleted: false,
-        };
-
-        if (userId) {
-            filter.userId = userId;
+        });
+        if (!document) {
+            return null;
         }
 
-        const document = await this.invitationModel
-            .findOne(filter)
-            .lean<InvitationDocumentSchema>();
+        return document;
+    }
 
+    async findByIdAndUserId(
+        id: string,
+        userId: string,
+    ): Promise<Invitation | null> {
+        const document = await this._findByFilter({
+            _id: id,
+            userId,
+            isDeleted: false,
+        });
+        if (!document) {
+            return null;
+        }
+
+        return document;
+    }
+
+    async _findByFilter(
+        filter: FindByFilter,
+    ): Promise<Invitation | null> {
+        const document = await this.invitationModel
+            .findOne(
+                filter,
+            )
+            .lean<InvitationHydrated>();
         if (!document) {
             return null;
         }
 
         return InvitationRepository.toDomain(document);
-    }
-
-    async findByUserId(userId: string): Promise<Invitation[]> {
-        const documents = await this.invitationModel
-            .find({
-                userId,
-                isDeleted: false,
-            })
-            .lean<InvitationDocumentSchema[]>();
-
-        return documents.map((document) => InvitationRepository.toDomain(document));
     }
 
     async countByUserId(userId: string): Promise<number> {
@@ -299,33 +295,96 @@ export class InvitationRepository {
         });
     }
 
-    async update(
+    async updateById(
         id: string,
-        invitationData: Partial<Invitation>,
-        userId?: string,
+        updates: UpdateInvitationProps,
     ): Promise<Invitation | null> {
-        const filter: UpdateFilter = {
-            _id: id,
-            isDeleted: false,
-        };
+        return this._update(
+            {
+                _id: id,
+                isDeleted: false,
+            },
+            updates,
+        );
+    }
 
-        if (userId) {
-            filter.userId = userId;
-        }
+    async updateByIdAndUserId(
+        id: string,
+        userId: string,
+        updates: UpdateInvitationProps,
+    ): Promise<Invitation | null> {
+        return this._update(
+            {
+                _id: id,
+                userId,
+                isDeleted: false,
+            },
+            updates,
+        );
+    }
 
-        const updateData = {
-            ...invitationData,
+    async _update(
+        filter: UpdateFilter,
+        updates: UpdateInvitationProps,
+    ): Promise<Invitation | null> {
+
+        const updatesToApply: Partial<Invitation> = {
             updatedAt: new Date(),
         };
 
-        const document = await this.invitationModel.findOneAndUpdate(
-            filter,
-            updateData,
-            {
-                new: true,
-                lean: true,
-            },
-        ).lean<InvitationDocumentSchema>();
+        if(updates.type !== undefined) {
+            updatesToApply.type = updates.type;
+        }
+
+        if(updates.title !== undefined) {
+            updatesToApply.title = updates.title;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.hosts !== undefined) {
+            updatesToApply.hosts = updates.hosts;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.celebratedPersons !== undefined) {
+            updatesToApply.celebratedPersons = updates.celebratedPersons;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.date !== undefined) {
+            updatesToApply.date = updates.date;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.location !== undefined) {
+            updatesToApply.location = updates.location;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.itineraries !== undefined) {
+            updatesToApply.itineraries = updates.itineraries;
+        }
+
+        // TODO: Support partial updates without replacing whole objects
+        if(updates.contactPersons !== undefined) {
+            updatesToApply.contactPersons = updates.contactPersons;
+        }
+
+        if(updates.rsvpDueDate !== undefined) {
+            updatesToApply.rsvpDueDate = updates.rsvpDueDate;
+        }
+
+        console.log('updatesToApply', updatesToApply);
+
+        const document = await this.invitationModel
+            .findOneAndUpdate(
+                filter,
+                updatesToApply,
+                {
+                    new: true,
+                },
+            )
+            .lean<InvitationHydrated>();
 
         if (!document) {
             return null;
@@ -334,7 +393,9 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async delete(id: string, userId?: string): Promise<boolean> {
+    async deleteById(
+        id: string,
+    ): Promise<boolean> {
         const filter: DeleteFilter = {
             _id: id,
             isDeleted: {
@@ -342,15 +403,34 @@ export class InvitationRepository {
             },
         };
 
-        if (userId) {
-            filter.userId = userId;
-        }
+        return this._delete(filter);
+    }
 
-        const result = await this.invitationModel.updateOne(filter, {
-            isDeleted: true,
-            deletedAt: new Date(),
-            updatedAt: new Date(),
-        });
+    async deleteByIdAndUserId(
+        id: string,
+        userId: string,
+    ): Promise<boolean> {
+        const filter: DeleteFilter = {
+            _id: id,
+            userId,
+            isDeleted: {
+                $ne: true,
+            },
+        };
+
+        return this._delete(filter);
+    }
+
+    async _delete(
+        filter: DeleteFilter,
+    ): Promise<boolean> {
+        const result = await this.invitationModel.updateOne(
+            filter,
+            {
+                isDeleted: true,
+                deletedAt: new Date(),
+                updatedAt: new Date(),
+            });
 
         return result.modifiedCount > 0;
     }

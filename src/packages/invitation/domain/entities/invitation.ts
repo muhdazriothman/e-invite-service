@@ -1,4 +1,4 @@
-import { InvitationDocumentSchema } from '@invitation/infra/schema';
+import { InvitationLean } from '@invitation/infra/schema';
 
 export enum InvitationType {
   WEDDING = 'wedding',
@@ -91,9 +91,9 @@ export interface InvitationProps {
   itineraries: Itinerary[];
   contactPersons: ContactPerson[];
   rsvpDueDate: Date;
-  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  isDeleted: boolean;
   deletedAt: Date | null;
 }
 
@@ -110,6 +110,18 @@ export interface CreateInvitationProps {
   rsvpDueDate: Date;
 }
 
+export interface UpdateInvitationProps {
+  type?: InvitationType;
+  title?: string;
+  hosts?: Host[];
+  celebratedPersons?: CelebratedPerson[];
+  date?: EventDate;
+  location?: Location;
+  itineraries?: Itinerary[];
+  contactPersons?: ContactPerson[];
+  rsvpDueDate?: Date;
+}
+
 export class Invitation {
     public readonly id: string;
     public readonly userId: string;
@@ -122,9 +134,9 @@ export class Invitation {
     public itineraries: Itinerary[];
     public contactPersons: ContactPerson[];
     public rsvpDueDate: Date;
-    public isDeleted: boolean;
     public readonly createdAt: Date;
     public updatedAt: Date;
+    public isDeleted: boolean;
     public deletedAt: Date | null;
 
     constructor(props: InvitationProps) {
@@ -139,9 +151,9 @@ export class Invitation {
         this.itineraries = props.itineraries;
         this.contactPersons = props.contactPersons;
         this.rsvpDueDate = props.rsvpDueDate;
-        this.isDeleted = props.isDeleted;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
+        this.isDeleted = props.isDeleted;
         this.deletedAt = props.deletedAt;
     }
 
@@ -174,14 +186,14 @@ export class Invitation {
             itineraries: props.itineraries,
             contactPersons: props.contactPersons,
             rsvpDueDate: new Date(props.rsvpDueDate),
-            isDeleted: false,
             createdAt: now,
             updatedAt: now,
+            isDeleted: false,
             deletedAt: null,
         });
     }
 
-    static createFromDb(props: InvitationDocumentSchema): Invitation {
+    static createFromDb(props: InvitationLean): Invitation {
         return new Invitation({
             id: props._id.toString(),
             userId: props.userId,
@@ -194,9 +206,9 @@ export class Invitation {
             itineraries: props.itineraries,
             contactPersons: props.contactPersons,
             rsvpDueDate: props.rsvpDueDate,
-            isDeleted: props.isDeleted ?? false,
             createdAt: props.createdAt,
             updatedAt: props.updatedAt,
+            isDeleted: props.isDeleted ?? false,
             deletedAt: props.deletedAt ?? null,
         });
     }
