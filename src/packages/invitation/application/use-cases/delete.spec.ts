@@ -1,13 +1,18 @@
+import { InvitationService } from '@invitation/application/services/invitation';
 import { DeleteInvitationUseCase } from '@invitation/application/use-cases/delete';
 import { InvitationRepository } from '@invitation/infra/repository';
-import { NotFoundException } from '@nestjs/common';
+import {
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
 import { invitationErrors } from '@shared/constants/error-codes';
 import { InvitationFixture } from '@test/fixture/invitation';
-
+import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 
 describe('@invitation/application/use-cases/delete', () => {
     const userId = '000000000000000000000001';
@@ -15,30 +20,35 @@ describe('@invitation/application/use-cases/delete', () => {
 
     let useCase: DeleteInvitationUseCase;
     let mockInvitationRepository: jest.Mocked<InvitationRepository>;
+    let mockInvitationService: jest.Mocked<InvitationService>;
 
     const invitation = InvitationFixture.getEntity({
         id: invitationId,
         userId,
     });
 
-    beforeEach(async() => {
-        const invitationRepository = {
-            findById: jest.fn(),
-            delete: jest.fn(),
-        };
+    const user = UserFixture.getEntity({
+        id: userId,
+    });
 
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 DeleteInvitationUseCase,
                 {
-                    provide: 'InvitationRepository',
-                    useValue: invitationRepository,
+                    provide: InvitationRepository,
+                    useValue: createMock<InvitationRepository>(),
+                },
+                {
+                    provide: InvitationService,
+                    useValue: createMock<InvitationService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<DeleteInvitationUseCase>(DeleteInvitationUseCase);
-        mockInvitationRepository = module.get('InvitationRepository');
+        mockInvitationRepository = module.get(InvitationRepository);
+        mockInvitationService = module.get(InvitationService);
     });
 
     afterEach(() => {
@@ -52,68 +62,64 @@ describe('@invitation/application/use-cases/delete', () => {
 
     describe('#execute', () => {
         beforeEach(() => {
-            mockInvitationRepository.findById.mockResolvedValue(invitation);
-            mockInvitationRepository.delete.mockResolvedValue(true);
+            mockInvitationService.findByIdAndUserIdOrFail.mockResolvedValue(invitation);
+            mockInvitationRepository.deleteByIdAndUserId.mockResolvedValue(true);
         });
 
-        it('should delete invitation successfully', async() => {
+        it('should delete invitation successfully', async () => {
             await expect(useCase.execute(
+                user,
                 invitationId,
-                userId,
-            ),
-            ).resolves.toBeUndefined();
+            )).resolves.toBeUndefined();
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockInvitationRepository.delete).toHaveBeenCalledWith(
+            expect(mockInvitationRepository.deleteByIdAndUserId).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
         });
 
-        it('should throw NotFoundException when invitation not found', async() => {
+        it('should handle NotFoundException', async () => {
             const invitationId = 'non-existent-id';
 
-            mockInvitationRepository.findById.mockResolvedValue(null);
+            mockInvitationService.findByIdAndUserIdOrFail.mockRejectedValue(
+                new NotFoundException(invitationErrors.INVITATION_NOT_FOUND),
+            );
 
             await expect(useCase.execute(
+                user,
                 invitationId,
-                userId,
             )).rejects.toThrow(
                 new NotFoundException(invitationErrors.INVITATION_NOT_FOUND),
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockInvitationRepository.delete).not.toHaveBeenCalled();
+            expect(mockInvitationRepository.deleteByIdAndUserId).not.toHaveBeenCalled();
         });
 
-        it('should throw NotFoundException when delete operation fails', async() => {
-            mockInvitationRepository.findById.mockResolvedValue(invitation);
-            mockInvitationRepository.delete.mockResolvedValue(false);
-
-            await expect(useCase.execute(
-                invitationId,
-                userId,
-            )).rejects.toThrow(
-                new NotFoundException(invitationErrors.FAILED_TO_DELETE_INVITATION),
+        it('should throw unexpected error', async () => {
+            mockInvitationService.findByIdAndUserIdOrFail.mockRejectedValue(
+                new Error('Unexpected error'),
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            await expect(useCase.execute(user, invitationId)).rejects.toThrow(
+                new InternalServerErrorException(new Error('Unexpected error')),
+            );
+
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockInvitationRepository.delete).toHaveBeenCalledWith(
-                invitationId,
-                userId,
-            );
+            expect(mockInvitationRepository.deleteByIdAndUserId).not.toHaveBeenCalled();
         });
     });
 });

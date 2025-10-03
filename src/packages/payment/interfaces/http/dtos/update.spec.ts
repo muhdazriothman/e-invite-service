@@ -4,167 +4,254 @@ import {
     PlanType,
 } from '@payment/domain/entities/payment';
 import { UpdatePaymentDto } from '@payment/interfaces/http/dtos/update';
+import { PaymentFixture } from '@test/fixture/payment';
+import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 
-
 describe('@payment/interfaces/http/dtos/update', () => {
-    let dto: UpdatePaymentDto;
-
-    beforeEach(() => {
-        dto = new UpdatePaymentDto();
-    });
-
-    describe('validation', () => {
-        it('should pass validation with valid data', async() => {
-            dto.amount = 25.0;
-            dto.currency = 'USD';
-            dto.paymentMethod = PaymentMethod.CREDIT_CARD;
-            dto.reference = 'PAY-001';
-            dto.description = 'Updated payment';
-            dto.status = PaymentStatus.VERIFIED;
-            dto.planType = PlanType.PREMIUM;
-
+    describe('#validation', () => {
+        it('should pass validation with empty object', async () => {
+            const dto = plainToClass(UpdatePaymentDto, {});
             const errors = await validate(dto);
-
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with empty object (all optional fields)', async() => {
+        it('should pass validation with partial data', async () => {
+            const dto = plainToClass(UpdatePaymentDto, {
+                amount: 25.0,
+                currency: 'USD',
+            });
             const errors = await validate(dto);
+            expect(errors).toHaveLength(0);
+        });
 
+        it('should pass validation with complete data', async () => {
+            const dto = PaymentFixture.getUpdateDto();
+            const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
 
         describe('amount', () => {
-            it('should pass validation with valid amount', async() => {
-                dto.amount = 10.0;
-
+            it('should pass validation when amount is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with zero amount', async() => {
-                dto.amount = 0;
-
+            it('should pass validation when amount is a valid number', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    amount: 25.0,
+                });
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('amount');
-                expect(errors[0].constraints).toHaveProperty('min');
+                expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with negative amount', async() => {
-                dto.amount = -10.0;
-
+            it('should fail validation when amount is zero', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    amount: 0,
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveValidationError('amount', 'min');
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('amount');
-                expect(errors[0].constraints).toHaveProperty('min');
+            it('should fail validation when amount is negative', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    amount: -10.0,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('amount', 'min');
+            });
+
+            it('should fail validation when amount is not a number', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    amount: 'not-a-number',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('amount', 'isNumber');
             });
         });
 
         describe('currency', () => {
-            it('should pass validation with valid currency', async() => {
-                dto.currency = 'USD';
-
+            it('should pass validation when currency is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with invalid currency length', async() => {
-                dto.currency = 'US';
-
+            it('should pass validation when currency is a valid 3-character string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    currency: 'USD',
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('currency');
-                expect(errors[0].constraints).toHaveProperty('isLength');
+            it('should fail validation when currency is not 3 characters', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    currency: 'US',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('currency', 'isLength');
+            });
+
+            it('should fail validation when currency is not a string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    currency: 123,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('currency', 'isString');
             });
         });
 
         describe('paymentMethod', () => {
-            it('should pass validation with valid payment method', async() => {
-                dto.paymentMethod = PaymentMethod.BANK_TRANSFER;
-
+            it('should pass validation when paymentMethod is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with invalid payment method', async() => {
-                // @ts-expect-error Testing invalid enum value
-                dto.paymentMethod = 'invalid';
-
+            it('should pass validation when paymentMethod is a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    paymentMethod: PaymentMethod.CREDIT_CARD,
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('paymentMethod');
-                expect(errors[0].constraints).toHaveProperty('isEnum');
+            it('should fail validation when paymentMethod is not a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    paymentMethod: 'invalid',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('paymentMethod', 'isEnum');
             });
         });
 
-        describe('reference', () => {
-            it('should pass validation with valid reference', async() => {
-                dto.reference = 'PAY-001';
-
+        describe('referenceNumber', () => {
+            it('should pass validation when referenceNumber is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with empty reference', async() => {
-                dto.reference = '';
-
+            it('should pass validation when referenceNumber is a valid string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    referenceNumber: 'PAY-001',
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('reference');
-                expect(errors[0].constraints).toHaveProperty('isLength');
+            it('should fail validation when referenceNumber is empty', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    referenceNumber: '',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('referenceNumber', 'isLength');
+            });
+
+            it('should fail validation when referenceNumber is too long', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    referenceNumber: 'a'.repeat(101),
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('referenceNumber', 'isLength');
+            });
+
+            it('should fail validation when referenceNumber is not a string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    referenceNumber: 123,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('referenceNumber', 'isString');
+            });
+        });
+
+        describe('description', () => {
+            it('should pass validation when description is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
+
+            it('should pass validation when description is a valid string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    description: 'Updated payment description',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
+
+            it('should fail validation when description is empty', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    description: '',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('description', 'isLength');
+            });
+
+            it('should fail validation when description is too long', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    description: 'a'.repeat(501),
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('description', 'isLength');
+            });
+
+            it('should fail validation when description is not a string', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    description: 123,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('description', 'isString');
             });
         });
 
         describe('status', () => {
-            it('should pass validation with valid status', async() => {
-                dto.status = PaymentStatus.VERIFIED;
-
+            it('should pass validation when status is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with invalid status', async() => {
-                // @ts-expect-error Testing invalid enum value
-                dto.status = 'invalid';
-
+            it('should pass validation when status is a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    status: PaymentStatus.VERIFIED,
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('status');
-                expect(errors[0].constraints).toHaveProperty('isEnum');
+            it('should fail validation when status is not a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    status: 'invalid',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('status', 'isEnum');
             });
         });
 
         describe('planType', () => {
-            it('should pass validation with valid plan type', async() => {
-                dto.planType = PlanType.BASIC;
-
+            it('should pass validation when planType is not provided', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {});
                 const errors = await validate(dto);
-
                 expect(errors).toHaveLength(0);
             });
 
-            it('should fail validation with invalid plan type', async() => {
-                // @ts-expect-error Testing invalid enum value
-                dto.planType = 'invalid';
-
+            it('should pass validation when planType is a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    planType: PlanType.PREMIUM,
+                });
                 const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('planType');
-                expect(errors[0].constraints).toHaveProperty('isEnum');
+            it('should fail validation when planType is not a valid enum value', async () => {
+                const dto = plainToClass(UpdatePaymentDto, {
+                    planType: 'invalid',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('planType', 'isEnum');
             });
         });
     });

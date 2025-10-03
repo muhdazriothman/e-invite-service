@@ -3,29 +3,35 @@ import {
     PlanType,
 } from '@payment/domain/entities/payment';
 import {
-    IsString,
     IsEnum,
+    IsNumber,
     IsOptional,
+    IsString,
     Length,
+    Min,
 } from 'class-validator';
 
 export class CreatePaymentDto {
-  @IsString()
-  @Length(3, 3)
-      currency: string;
+    @IsNumber()
+    @Min(0.01)
+    amount: number;
 
-  @IsEnum(PaymentMethod)
-      paymentMethod: PaymentMethod;
+    @IsString()
+    @Length(3, 3)
+    currency: string;
 
-  @IsString()
-  @Length(1, 100)
-      reference: string;
+    @IsEnum(PaymentMethod)
+    paymentMethod: PaymentMethod;
 
-  @IsOptional()
-  @IsString()
-  @Length(1, 500)
-      description?: string;
+    @IsString()
+    @Length(1, 100)
+    referenceNumber: string;
 
-  @IsEnum(PlanType)
-      planType: PlanType;
+    @IsOptional()
+    @IsString()
+    @Length(1, 500)
+    description: string | null;
+
+    @IsEnum(PlanType)
+    planType: PlanType;
 }

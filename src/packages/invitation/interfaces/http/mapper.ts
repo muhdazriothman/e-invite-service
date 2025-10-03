@@ -3,155 +3,179 @@ import { ApiProperty } from '@nestjs/swagger';
 import { PaginationMetaDto } from '@shared/dtos/pagination-result';
 
 export class InvitationDto {
-  @ApiProperty()
-      id: string;
+    @ApiProperty()
+    id: string;
 
-  @ApiProperty()
-      userId: string;
+    @ApiProperty()
+    userId: string;
 
-  @ApiProperty()
-      type: string;
-
-  @ApiProperty()
-      title: string;
-
-  @ApiProperty({
-      type: 'array',
-      items: {
-          type: 'object',
-          properties: {
-              name: { type: 'string' },
-              title: { type: 'string' },
-              relationshipWithCelebratedPerson: { type: 'string' },
-              phoneNumber: { type: 'string', nullable: true },
-              email: { type: 'string', nullable: true },
-          },
-      },
-  })
-      hosts: Array<{
-    name: string;
-    title: string;
-    relationshipWithCelebratedPerson: string;
-    phoneNumber?: string | null;
-    email?: string | null;
-  }>;
-
-  @ApiProperty({
-      type: 'array',
-      items: {
-          type: 'object',
-          properties: {
-              name: { type: 'string' },
-              title: { type: 'string' },
-              relationshipWithHost: { type: 'string' },
-              celebrationDate: { type: 'string' },
-              type: { type: 'string' },
-          },
-      },
-  })
-      celebratedPersons: Array<{
-    name: string;
-    title: string;
-    relationshipWithHost: string;
-    celebrationDate: string;
+    @ApiProperty()
     type: string;
-  }>;
 
-  @ApiProperty({
-      type: 'object',
-      properties: {
-          gregorianDate: { type: 'string' },
-          hijriDate: { type: 'string', nullable: true },
-      },
-  })
-      date: {
-    gregorianDate: string;
-    hijriDate?: string | null;
-  };
-
-  @ApiProperty({
-      type: 'object',
-      properties: {
-          address: { type: 'string' },
-          wazeLink: { type: 'string', nullable: true },
-          googleMapsLink: { type: 'string', nullable: true },
-      },
-  })
-      location: {
-    address: string;
-    wazeLink?: string | null;
-    googleMapsLink?: string | null;
-  };
-
-  @ApiProperty({
-      type: 'array',
-      items: {
-          type: 'object',
-          properties: {
-              activities: { type: 'array', items: { type: 'string' } },
-              startTime: { type: 'string' },
-              endTime: { type: 'string' },
-          },
-      },
-  })
-      itineraries: Array<{
-    activities: string[];
-    startTime: string;
-    endTime: string;
-  }>;
-
-  @ApiProperty({
-      type: 'array',
-      items: {
-          type: 'object',
-          properties: {
-              name: { type: 'string' },
-              title: { type: 'string' },
-              relationshipWithCelebratedPerson: { type: 'string' },
-              phoneNumber: { type: 'string', nullable: true },
-              whatsappNumber: { type: 'string', nullable: true },
-          },
-      },
-  })
-      contactPersons: Array<{
-    name: string;
+    @ApiProperty()
     title: string;
-    relationshipWithCelebratedPerson: string;
-    phoneNumber?: string | null;
-    whatsappNumber?: string | null;
-  }>;
 
-  @ApiProperty()
-      rsvpDueDate: string;
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithCelebratedPerson: { type: 'string' },
+                phoneNumber: {
+                    type: 'string',
+                    nullable: true,
+                },
+                email: {
+                    type: 'string',
+                    nullable: true,
+                },
+            },
+        },
+    })
+    hosts: Array<{
+        name: string;
+        title: string;
+        relationshipWithCelebratedPerson: string;
+        phoneNumber?: string | null;
+        email?: string | null;
+    }>;
 
-  @ApiProperty()
-      createdAt: string;
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithHost: { type: 'string' },
+                celebrationDate: { type: 'string' },
+                type: { type: 'string' },
+            },
+        },
+    })
+    celebratedPersons: Array<{
+        name: string;
+        title: string;
+        relationshipWithHost: string;
+        celebrationDate: string;
+        type: string;
+    }>;
 
-  @ApiProperty()
-      updatedAt: string;
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            gregorianDate: { type: 'string' },
+            hijriDate: {
+                type: 'string',
+                nullable: true,
+            },
+        },
+    })
+    date: {
+        gregorianDate: string;
+        hijriDate?: string | null;
+    };
+
+    @ApiProperty({
+        type: 'object',
+        properties: {
+            address: { type: 'string' },
+            wazeLink: {
+                type: 'string',
+                nullable: true,
+            },
+            googleMapsLink: {
+                type: 'string',
+                nullable: true,
+            },
+        },
+    })
+    location: {
+        address: string;
+        wazeLink?: string | null;
+        googleMapsLink?: string | null;
+    };
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                activities: {
+                    type: 'array',
+                    items: { type: 'string' },
+                },
+                startTime: { type: 'string' },
+                endTime: { type: 'string' },
+            },
+        },
+    })
+    itineraries: Array<{
+        activities: string[];
+        startTime: string;
+        endTime: string;
+    }>;
+
+    @ApiProperty({
+        type: 'array',
+        items: {
+            type: 'object',
+            properties: {
+                name: { type: 'string' },
+                title: { type: 'string' },
+                relationshipWithCelebratedPerson: { type: 'string' },
+                phoneNumber: {
+                    type: 'string',
+                    nullable: true,
+                },
+                whatsappNumber: {
+                    type: 'string',
+                    nullable: true,
+                },
+            },
+        },
+    })
+    contactPersons: Array<{
+        name: string;
+        title: string;
+        relationshipWithCelebratedPerson: string;
+        phoneNumber?: string | null;
+        whatsappNumber?: string | null;
+    }>;
+
+    @ApiProperty()
+    rsvpDueDate: string;
+
+    @ApiProperty()
+    createdAt: string;
+
+    @ApiProperty()
+    updatedAt: string;
 }
 
 export class InvitationResponseDto {
-  @ApiProperty({ example: 'Invitation created successfully' })
-      message: string;
+    @ApiProperty({ example: 'Invitation created successfully' })
+    message: string;
 
-  @ApiProperty({ type: InvitationDto })
-      data: InvitationDto;
+    @ApiProperty({ type: InvitationDto })
+    data: InvitationDto;
 }
 
 export class InvitationListResponseDto {
-  @ApiProperty({ example: 'Invitations retrieved successfully' })
-      message: string;
+    @ApiProperty({ example: 'Invitations retrieved successfully' })
+    message: string;
 
-  @ApiProperty({ type: [InvitationDto] })
-      data: InvitationDto[];
+    @ApiProperty({ type: [InvitationDto] })
+    data: InvitationDto[];
 
-  @ApiProperty({ type: PaginationMetaDto })
-      pagination: PaginationMetaDto;
+    @ApiProperty({ type: PaginationMetaDto })
+    pagination: PaginationMetaDto;
 }
 
 export class InvitationMapper {
-    static toDto(invitation: Invitation): InvitationDto {
+    static toDto (invitation: Invitation): InvitationDto {
         return {
             id: invitation.id,
             userId: invitation.userId,
@@ -189,7 +213,7 @@ export class InvitationMapper {
                 name: contact.name,
                 title: contact.title,
                 relationshipWithCelebratedPerson:
-          contact.relationshipWithCelebratedPerson,
+                    contact.relationshipWithCelebratedPerson,
                 phoneNumber: contact.phoneNumber,
                 whatsappNumber: contact.whatsappNumber,
             })),

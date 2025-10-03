@@ -7,11 +7,13 @@ export interface DateValidatorOptions {
 export class DateValidator {
     private format: string;
 
-    constructor(options: DateValidatorOptions = {}) {
+    constructor (options: DateValidatorOptions = {}) {
         this.format = options.format || 'yyyy-MM-dd\'T\'HH:mm:ss.SSS\'Z\'';
     }
 
-    parseDate(value: string): DateTime {
+    parseDate (
+        value: string,
+    ): DateTime {
         const date = DateTime.fromFormat(value, this.format);
 
         if (!date.isValid) {
@@ -21,7 +23,9 @@ export class DateValidator {
         return date;
     }
 
-    isValidFormat(value: string): boolean {
+    isValidFormat (
+        value: string,
+    ): boolean {
         try {
             this.parseDate(value);
             return true;
@@ -30,31 +34,31 @@ export class DateValidator {
         }
     }
 
-    isOnOrBeforeDate(
+    static isOnOrBeforeDate (
         date: DateTime,
         compareToDate: DateTime,
     ): boolean {
-        if (!this._isValidDate(date)) {
+        if (!DateValidator._isValidDate(date)) {
             throw new Error('Invalid date');
         }
 
-        if (!this._isValidDate(compareToDate)) {
+        if (!DateValidator._isValidDate(compareToDate)) {
             throw new Error('Invalid compareToDate');
         }
 
         return date <= compareToDate;
     }
 
-    getDaysBetweenDates(
+    static getDaysBetweenDates (
         dateA: DateTime,
         dateB: DateTime,
     ): number {
 
-        if (!this._isValidDate(dateA)) {
+        if (!DateValidator._isValidDate(dateA)) {
             throw new Error('Invalid dateA');
         }
 
-        if (!this._isValidDate(dateB)) {
+        if (!DateValidator._isValidDate(dateB)) {
             throw new Error('Invalid dateB');
         }
 
@@ -69,7 +73,7 @@ export class DateValidator {
         return endDate.diff(startDate, 'days').days;
     }
 
-    private _isValidDate(date: DateTime): boolean {
+    private static _isValidDate (date: DateTime): boolean {
         return date instanceof DateTime && date.isValid;
     }
 }

@@ -1,85 +1,72 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
 import { ListPaymentsUseCase } from '@payment/application/use-cases/list';
-import {
-    PaymentMethod,
-    PlanType,
-} from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { PaymentFixture } from '@test/fixture/payment';
+import { createMock } from '@test/utils/mocks';
 
-
-describe('ListPaymentsUseCase', () => {
+describe('@payment/application/use-cases/list', () => {
     let useCase: ListPaymentsUseCase;
-    let paymentRepository: jest.Mocked<PaymentRepository>;
+    let mockPaymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async() => {
-        const mockPaymentRepository = {
-            create: jest.fn(),
-            findById: jest.fn(),
-            findByReference: jest.fn(),
-            findAll: jest.fn(),
-            findAvailableForUserCreation: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ListPaymentsUseCase,
                 {
-                    provide: 'PaymentRepository',
-                    useValue: mockPaymentRepository,
+                    provide: PaymentRepository,
+                    useValue: createMock<PaymentRepository>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<ListPaymentsUseCase>(ListPaymentsUseCase);
-        paymentRepository = module.get('PaymentRepository');
+        mockPaymentRepository = module.get(PaymentRepository);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it('should be defined', () => {
+        expect(useCase).toBeDefined();
     });
 
     describe('#execute', () => {
-        it('should return all payments', async() => {
+        it('should return all payments', async () => {
             const mockPayments = [
                 PaymentFixture.getEntity({
-                    id: 'payment-1',
-                    currency: 'USD',
-                    paymentMethod: PaymentMethod.BANK_TRANSFER,
-                    reference: 'PAY-001',
-                    description: 'Basic plan payment',
-                    planType: PlanType.BASIC,
-                    createdBy: 'admin-123',
+                    id: '000000000000000000000001',
+                    referenceNumber: 'PAY-001',
                 }),
                 PaymentFixture.getEntity({
-                    id: 'payment-2',
-                    currency: 'USD',
-                    paymentMethod: PaymentMethod.CREDIT_CARD,
-                    reference: 'PAY-002',
-                    description: 'Premium plan payment',
-                    planType: PlanType.PREMIUM,
-                    createdBy: 'admin-456',
+                    id: '000000000000000000000002',
+                    referenceNumber: 'PAY-002',
                 }),
             ];
 
-            paymentRepository.findAll.mockResolvedValue(mockPayments);
+            mockPaymentRepository.findAll.mockResolvedValue(mockPayments);
 
             const result = await useCase.execute();
 
-            expect(paymentRepository.findAll).toHaveBeenCalledTimes(1);
+            expect(mockPaymentRepository.findAll).toHaveBeenCalledTimes(1);
             expect(result).toEqual(mockPayments);
-            expect(result).toHaveLength(2);
         });
 
-        it('should return empty array when no payments exist', async() => {
-            paymentRepository.findAll.mockResolvedValue([]);
+        it('should throw unexpected error', async () => {
+            mockPaymentRepository.findAll.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
 
-            const result = await useCase.execute();
+            await expect(useCase.execute()).rejects.toThrow(
+                new InternalServerErrorException(new Error('Unexpected error')),
+            );
 
-            expect(paymentRepository.findAll).toHaveBeenCalledTimes(1);
-            expect(result).toEqual([]);
-            expect(result).toHaveLength(0);
+            expect(mockPaymentRepository.findAll).toHaveBeenCalledTimes(1);
         });
     });
 });

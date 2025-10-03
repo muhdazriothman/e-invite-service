@@ -81,7 +81,7 @@ describe('@shared/utils/date', () => {
             const date = DateTime.fromFormat('2024-01-14', format);
             const compareToDate = DateTime.fromFormat('2024-01-16', format);
 
-            const result = dateValidator.isOnOrBeforeDate(
+            const result = DateValidator.isOnOrBeforeDate(
                 date,
                 compareToDate,
             );
@@ -93,7 +93,7 @@ describe('@shared/utils/date', () => {
             const date = DateTime.fromFormat('2024-01-14', format);
             const compareToDate = DateTime.fromFormat('2024-01-14', format);
 
-            const result = dateValidator.isOnOrBeforeDate(
+            const result = DateValidator.isOnOrBeforeDate(
                 date,
                 compareToDate,
             );
@@ -105,7 +105,7 @@ describe('@shared/utils/date', () => {
             const date = DateTime.fromFormat('2024-01-16', format);
             const compareToDate = DateTime.fromFormat('2024-01-14', format);
 
-            const result = dateValidator.isOnOrBeforeDate(
+            const result = DateValidator.isOnOrBeforeDate(
                 date,
                 compareToDate,
             );
@@ -117,7 +117,7 @@ describe('@shared/utils/date', () => {
             const date = DateTime.fromFormat('2024-20-03', format);
             const compareToDate = DateTime.fromFormat('2024-01-16', format);
 
-            expect(() => dateValidator.isOnOrBeforeDate(
+            expect(() => DateValidator.isOnOrBeforeDate(
                 date,
                 compareToDate,
             )).toThrow(
@@ -129,7 +129,7 @@ describe('@shared/utils/date', () => {
             const date = DateTime.fromFormat('2024-01-14', format);
             const compareToDate = DateTime.fromFormat('2024-20-03', format);
 
-            expect(() => dateValidator.isOnOrBeforeDate(
+            expect(() => DateValidator.isOnOrBeforeDate(
                 date,
                 compareToDate,
             )).toThrow(
@@ -143,7 +143,7 @@ describe('@shared/utils/date', () => {
             const dateA = DateTime.fromFormat('2024-01-14', format);
             const dateB = DateTime.fromFormat('2024-01-16', format);
 
-            const result = dateValidator.getDaysBetweenDates(
+            const result = DateValidator.getDaysBetweenDates(
                 dateA,
                 dateB,
             );
@@ -155,7 +155,7 @@ describe('@shared/utils/date', () => {
             const dateA = DateTime.fromFormat('2024-01-16', format);
             const dateB = DateTime.fromFormat('2024-01-14', format);
 
-            const result = dateValidator.getDaysBetweenDates(
+            const result = DateValidator.getDaysBetweenDates(
                 dateA,
                 dateB,
             );
@@ -167,7 +167,7 @@ describe('@shared/utils/date', () => {
             const dateA = DateTime.fromFormat('2024-01-14', format);
             const dateB = DateTime.fromFormat('2024-01-14', format);
 
-            const result = dateValidator.getDaysBetweenDates(
+            const result = DateValidator.getDaysBetweenDates(
                 dateA,
                 dateB,
             );
@@ -179,7 +179,7 @@ describe('@shared/utils/date', () => {
             const invalidDateA = DateTime.fromFormat('2024-20-03', format);
             const validDateB = DateTime.fromFormat('2024-01-16', format);
 
-            expect(() => dateValidator.getDaysBetweenDates(
+            expect(() => DateValidator.getDaysBetweenDates(
                 invalidDateA,
                 validDateB,
             )).toThrow(
@@ -191,7 +191,7 @@ describe('@shared/utils/date', () => {
             const validDateA = DateTime.fromFormat('2024-01-14', format);
             const invalidDateB = DateTime.fromFormat('2024-20-03', format);
 
-            expect(() => dateValidator.getDaysBetweenDates(
+            expect(() => DateValidator.getDaysBetweenDates(
                 validDateA,
                 invalidDateB,
             )).toThrow(

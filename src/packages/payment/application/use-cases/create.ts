@@ -1,39 +1,66 @@
+import { JwtUser } from '@auth/interfaces/http/strategies/jwt';
 import {
     Injectable,
-    Inject,
+    InternalServerErrorException,
     ConflictException,
 } from '@nestjs/common';
 import { Payment } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { CreatePaymentDto } from '@payment/interfaces/http/dtos/create';
+import { paymentErrors } from '@shared/constants/error-codes';
 
 @Injectable()
 export class CreatePaymentUseCase {
-    constructor(
-    @Inject('PaymentRepository')
-    private readonly paymentRepository: PaymentRepository,
-    ) {}
+    constructor (
+        private readonly paymentRepository: PaymentRepository,
+    ) { }
 
-    async execute(
+    async execute (
+        user: JwtUser,
         createPaymentDto: CreatePaymentDto,
-        createdBy: string,
     ): Promise<Payment> {
-        const existingPayment = await this.paymentRepository.findByReference(
-            createPaymentDto.reference,
-        );
-        if (existingPayment) {
-            throw new ConflictException('Payment with this reference already exists');
+        const {
+            id: userId,
+        } = user;
+
+        const {
+            amount,
+            currency,
+            paymentMethod,
+            referenceNumber,
+            description,
+            planType,
+        } = createPaymentDto;
+
+        try {
+            await this.validateReferenceIsUnique(referenceNumber);
+
+            const payment = Payment.createNew({
+                amount,
+                currency,
+                paymentMethod,
+                referenceNumber,
+                description,
+                planType,
+                createdBy: userId,
+            });
+
+            return await this.paymentRepository.create(payment);
+        } catch (error) {
+            if (error instanceof ConflictException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
+    }
 
-        const payment = Payment.createNew({
-            currency: createPaymentDto.currency,
-            paymentMethod: createPaymentDto.paymentMethod,
-            reference: createPaymentDto.reference,
-            description: createPaymentDto.description,
-            planType: createPaymentDto.planType,
-            createdBy,
-        });
-
-        return await this.paymentRepository.create(payment);
+    async validateReferenceIsUnique (
+        referenceNumber: string,
+    ): Promise<void> {
+        const payment = await this.paymentRepository.findByReferenceNumber(referenceNumber);
+        if (payment) {
+            throw new ConflictException(paymentErrors.PAYMENT_REFERENCE_ALREADY_EXISTS);
+        }
     }
 }

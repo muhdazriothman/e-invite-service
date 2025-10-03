@@ -1,6 +1,8 @@
+import { PaymentLean } from '@payment/infra/schema';
+
 export enum PlanType {
-  BASIC = 'basic',
-  PREMIUM = 'premium',
+    BASIC = 'basic',
+    PREMIUM = 'premium',
 }
 
 export const PlanPricing = {
@@ -14,44 +16,56 @@ export const PlanInvitationLimits = {
 } as const;
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  VERIFIED = 'verified',
-  USED = 'used',
-  EXPIRED = 'expired',
-  REFUNDED = 'refunded',
+    PENDING = 'pending',
+    VERIFIED = 'verified',
+    USED = 'used',
+    EXPIRED = 'expired',
+    REFUNDED = 'refunded',
 }
 
 export enum PaymentMethod {
-  BANK_TRANSFER = 'bank_transfer',
-  CREDIT_CARD = 'credit_card',
-  CASH = 'cash',
-  OTHER = 'other',
+    BANK_TRANSFER = 'bank_transfer',
+    CREDIT_CARD = 'credit_card',
+    CASH = 'cash',
+    OTHER = 'other',
 }
 
 export interface PaymentProps {
-  id: string;
-  amount: number;
-  currency: string;
-  paymentMethod: PaymentMethod;
-  status: PaymentStatus;
-  reference: string;
-  description?: string;
-  planType: PlanType;
-  usedAt: Date | null;
-  createdBy: string;
-  isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
+    id: string;
+    amount: number;
+    currency: string;
+    paymentMethod: PaymentMethod;
+    status: PaymentStatus;
+    referenceNumber: string;
+    description: string | null;
+    planType: PlanType;
+    usedAt: Date | null;
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+    isDeleted: boolean;
+    deletedAt: Date | null;
 }
 
 export interface CreatePaymentProps {
-  currency: string;
-  paymentMethod: PaymentMethod;
-  reference: string;
-  description?: string;
-  planType: PlanType;
-  createdBy: string;
+    amount: number;
+    currency: string;
+    paymentMethod: PaymentMethod;
+    referenceNumber: string;
+    description: string | null;
+    planType: PlanType;
+    createdBy: string;
+}
+
+export interface UpdatePaymentProps {
+    amount?: number;
+    currency?: string;
+    paymentMethod?: PaymentMethod;
+    referenceNumber?: string;
+    description?: string;
+    status?: PaymentStatus;
+    planType?: PlanType;
+    usedAt?: Date;
 }
 
 export class Payment {
@@ -60,34 +74,34 @@ export class Payment {
     public currency: string;
     public paymentMethod: PaymentMethod;
     public status: PaymentStatus;
-    public reference: string;
-    public description?: string;
+    public referenceNumber: string;
+    public description: string | null;
     public planType: PlanType;
     public usedAt: Date | null;
     public createdBy: string;
-    public isDeleted: boolean;
     public readonly createdAt: Date;
     public updatedAt: Date;
+    public isDeleted: boolean;
     public deletedAt: Date | null;
 
-    constructor(props: PaymentProps) {
+    constructor (props: PaymentProps) {
         this.id = props.id;
         this.amount = props.amount;
         this.currency = props.currency;
         this.paymentMethod = props.paymentMethod;
         this.status = props.status;
-        this.reference = props.reference;
+        this.referenceNumber = props.referenceNumber;
         this.description = props.description;
         this.planType = props.planType;
         this.usedAt = props.usedAt;
         this.createdBy = props.createdBy;
-        this.isDeleted = props.isDeleted;
         this.createdAt = props.createdAt;
         this.updatedAt = props.updatedAt;
+        this.isDeleted = props.isDeleted;
         this.deletedAt = props.deletedAt;
     }
 
-    static createNew(props: CreatePaymentProps): Payment {
+    static createNew (props: CreatePaymentProps): Payment {
         const now = new Date();
         const amount = Payment.getAmount(props.planType);
 
@@ -97,23 +111,38 @@ export class Payment {
             currency: props.currency,
             paymentMethod: props.paymentMethod,
             status: PaymentStatus.VERIFIED,
-            reference: props.reference,
+            referenceNumber: props.referenceNumber,
             description: props.description,
             planType: props.planType,
             usedAt: null,
             createdBy: props.createdBy,
-            isDeleted: false,
             createdAt: now,
             updatedAt: now,
+            isDeleted: false,
             deletedAt: null,
         });
     }
 
-    static createFromDb(props: PaymentProps): Payment {
-        return new Payment(props);
+    static createFromDb (props: PaymentLean): Payment {
+        return new Payment({
+            id: props._id.toString(),
+            amount: props.amount,
+            currency: props.currency,
+            paymentMethod: props.paymentMethod,
+            status: props.status,
+            referenceNumber: props.referenceNumber,
+            description: props.description,
+            planType: props.planType,
+            usedAt: props.usedAt,
+            createdBy: props.createdBy,
+            createdAt: props.createdAt,
+            updatedAt: props.updatedAt,
+            isDeleted: props.isDeleted,
+            deletedAt: props.deletedAt,
+        });
     }
 
-    static getAmount(planType: PlanType): number {
+    static getAmount (planType: PlanType): number {
         const amount = PlanPricing[planType];
         if (!amount) {
             throw new Error(`Invalid plan type: ${planType}`);

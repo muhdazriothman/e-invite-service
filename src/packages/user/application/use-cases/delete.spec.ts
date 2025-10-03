@@ -1,45 +1,47 @@
-import { NotFoundException } from '@nestjs/common';
+import {
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { userErrors } from '@shared/constants/error-codes';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
+import { UserService } from '@user/application/services/user';
 import { DeleteUserUseCase } from '@user/application/use-cases/delete';
-import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
-
 describe('@user/application/use-cases/delete', () => {
-    let useCase: DeleteUserUseCase;
-    let mockRepository: jest.Mocked<UserRepository>;
+    const userId = '000000000000000000000001';
 
-    const mockUser = UserFixture.getEntity({
-        id: 'user-id-1',
-        name: 'testuser',
-        email: 'test@example.com',
-        passwordHash: 'hashedpassword123',
-        type: UserType.USER,
-        paymentId: 'payment-id-123',
+    let useCase: DeleteUserUseCase;
+    let mockUserRepository: jest.Mocked<UserRepository>;
+    let mockUserService: jest.Mocked<UserService>;
+
+    const user = UserFixture.getEntity({
+        id: userId,
     });
 
-    beforeEach(async() => {
-        const mockUserRepository = {
-            findById: jest.fn(),
-            delete: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 DeleteUserUseCase,
                 {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
+                    provide: UserRepository,
+                    useValue: createMock<UserRepository>(),
+                },
+                {
+                    provide: UserService,
+                    useValue: createMock<UserService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<DeleteUserUseCase>(DeleteUserUseCase);
-        mockRepository = module.get('UserRepository');
+        mockUserRepository = module.get(UserRepository);
+        mockUserService = module.get(UserService);
     });
 
     it('should be defined', () => {
@@ -47,37 +49,76 @@ describe('@user/application/use-cases/delete', () => {
     });
 
     describe('execute', () => {
-        it('should delete user successfully', async() => {
-            const userId = 'user-id-1';
+        let mockFindByIdOrFail: jest.SpyInstance;
+        let mockDeleteUser: jest.SpyInstance;
 
-            mockRepository.findById.mockResolvedValue(mockUser);
-            mockRepository.delete.mockResolvedValue(true);
+        beforeEach(() => {
+            mockFindByIdOrFail = jest.spyOn(
+                mockUserService,
+                'findByIdOrFail',
+            ).mockResolvedValue(user);
 
-            await expect(useCase.execute(userId)).resolves.toBeUndefined();
+            mockDeleteUser = jest.spyOn(
+                useCase,
+                'deleteUser',
+            ).mockResolvedValue();
 
-            expect(mockRepository.findById).toHaveBeenCalledWith(userId);
-            expect(mockRepository.delete).toHaveBeenCalledWith(userId);
+            mockUserRepository.deleteById.mockResolvedValue(true);
         });
 
-        it('should throw NotFoundException when user not found', async() => {
-            const userId = 'non-existent-id';
+        it('should delete a user when user exists', async () => {
+            await useCase.execute(userId);
 
-            mockRepository.findById.mockResolvedValue(null);
-
-            await expect(useCase.execute(userId)).rejects.toThrow(NotFoundException);
-            expect(mockRepository.findById).toHaveBeenCalledWith(userId);
-            expect(mockRepository.delete).not.toHaveBeenCalled();
+            expect(mockFindByIdOrFail).toHaveBeenCalledWith(userId);
+            expect(mockDeleteUser).toHaveBeenCalledWith(userId);
         });
 
-        it('should throw NotFoundException when delete operation fails', async() => {
-            const userId = 'user-id-1';
+        it('should handle NotFoundException when user does not exist', async () => {
+            mockFindByIdOrFail.mockRejectedValue(
+                new NotFoundException(userErrors.NOT_FOUND),
+            );
 
-            mockRepository.findById.mockResolvedValue(mockUser);
-            mockRepository.delete.mockResolvedValue(false);
+            await expect(useCase.execute(userId)).rejects.toThrow(
+                new NotFoundException(userErrors.NOT_FOUND),
+            );
 
-            await expect(useCase.execute(userId)).rejects.toThrow(NotFoundException);
-            expect(mockRepository.findById).toHaveBeenCalledWith(userId);
-            expect(mockRepository.delete).toHaveBeenCalledWith(userId);
+            expect(mockDeleteUser).not.toHaveBeenCalled();
+        });
+
+        it('should handle unexpected error', async () => {
+            mockFindByIdOrFail.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(userId)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
+
+            expect(mockDeleteUser).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('deleteUser', () => {
+        beforeEach(() => {
+            mockUserRepository.deleteById.mockResolvedValue(true);
+        });
+
+        it('should delete user successfully when user exists', async () => {
+            await useCase.deleteUser(userId);
+
+            expect(mockUserRepository.deleteById).toHaveBeenCalledWith(userId);
+        });
+
+        it('should throw NotFoundException when user does not exist', async () => {
+            mockUserRepository.deleteById.mockResolvedValue(false);
+
+            await expect(useCase.deleteUser(userId)).rejects.toThrow(
+                new NotFoundException(userErrors.NOT_FOUND),
+            );
+
+            expect(mockUserRepository.deleteById).toHaveBeenCalledWith(userId);
         });
     });
 });

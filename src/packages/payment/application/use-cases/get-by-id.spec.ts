@@ -1,77 +1,87 @@
-import { NotFoundException } from '@nestjs/common';
+import {
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { PaymentService } from '@payment/application/services/payment';
 import { GetPaymentByIdUseCase } from '@payment/application/use-cases/get-by-id';
-import {
-    PaymentMethod,
-    PlanType,
-} from '@payment/domain/entities/payment';
-import { PaymentRepository } from '@payment/infra/repository';
+import { paymentErrors } from '@shared/constants/error-codes';
 import { PaymentFixture } from '@test/fixture/payment';
-
+import { createMock } from '@test/utils/mocks';
 
 describe('@payment/application/use-cases/get-by-id', () => {
+    const paymentId = '000000000000000000000001';
+
     let useCase: GetPaymentByIdUseCase;
-    let paymentRepository: jest.Mocked<PaymentRepository>;
+    let mockPaymentService: jest.Mocked<PaymentService>;
 
-    beforeEach(async() => {
-        const mockPaymentRepository = {
-            create: jest.fn(),
-            findById: jest.fn(),
-            findByReference: jest.fn(),
-            findAll: jest.fn(),
-            findAvailableForUserCreation: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
+    const payment = PaymentFixture.getEntity({
+        id: paymentId,
+    });
 
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 GetPaymentByIdUseCase,
                 {
-                    provide: 'PaymentRepository',
-                    useValue: mockPaymentRepository,
+                    provide: PaymentService,
+                    useValue: createMock<PaymentService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<GetPaymentByIdUseCase>(GetPaymentByIdUseCase);
-        paymentRepository = module.get('PaymentRepository');
+        mockPaymentService = module.get(PaymentService);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+    });
+
+    it('should be defined', () => {
+        expect(useCase).toBeDefined();
     });
 
     describe('#execute', () => {
-        it('should return payment when found', async() => {
-            const paymentId = 'payment-123';
-            const mockPayment = PaymentFixture.getEntity({
-                id: paymentId,
-                currency: 'USD',
-                paymentMethod: PaymentMethod.CREDIT_CARD,
-                reference: 'PAY-001',
-                description: 'Premium plan payment',
-                planType: PlanType.PREMIUM,
-                createdBy: 'admin-123',
-            });
-
-            paymentRepository.findById.mockResolvedValue(mockPayment);
-
-            const result = await useCase.execute(paymentId);
-
-            expect(paymentRepository.findById).toHaveBeenCalledWith(paymentId);
-            expect(result).toEqual(mockPayment);
+        beforeEach(() => {
+            mockPaymentService.findByIdOrFail.mockResolvedValue(payment);
         });
 
-        it('should throw NotFoundException when payment not found', async() => {
+        it('should return payment when found', async () => {;
+            const result = await useCase.execute(paymentId);
+
+            expect(mockPaymentService.findByIdOrFail).toHaveBeenCalledWith(paymentId);
+            expect(result).toEqual(payment);
+        });
+
+        it('should handle NotFoundException', async () => {
             const paymentId = 'non-existent';
 
-            paymentRepository.findById.mockResolvedValue(null);
-
-            await expect(useCase.execute(paymentId)).rejects.toThrow(
-                NotFoundException,
+            mockPaymentService.findByIdOrFail.mockRejectedValue(
+                new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND),
             );
 
-            expect(paymentRepository.findById).toHaveBeenCalledWith(paymentId);
+            await expect(useCase.execute(paymentId)).rejects.toThrow(
+                new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND),
+            );
+
+            expect(mockPaymentService.findByIdOrFail).toHaveBeenCalledWith(paymentId);
+        });
+
+        it('should throw unexpected error', async () => {
+            mockPaymentService.findByIdOrFail.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(paymentId)).rejects.toThrow(
+                new InternalServerErrorException(new Error('Unexpected error')),
+            );
+
+            expect(mockPaymentService.findByIdOrFail).toHaveBeenCalledWith(paymentId);
         });
     });
 });

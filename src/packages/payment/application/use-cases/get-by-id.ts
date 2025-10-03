@@ -1,24 +1,29 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
+import { PaymentService } from '@payment/application/services/payment';
 import { Payment } from '@payment/domain/entities/payment';
-import { PaymentRepository } from '@payment/infra/repository';
 
 @Injectable()
 export class GetPaymentByIdUseCase {
-    constructor(
-    @Inject('PaymentRepository')
-    private readonly paymentRepository: PaymentRepository,
-    ) {}
+    constructor (
+        private readonly paymentService: PaymentService,
+    ) { }
 
-    async execute(id: string): Promise<Payment> {
-        const payment = await this.paymentRepository.findById(id);
-        if (!payment) {
-            throw new NotFoundException('Payment not found');
+    async execute (id: string): Promise<Payment> {
+        try {
+            const payment = await this.paymentService.findByIdOrFail(id);
+
+            return payment;
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
 
-        return payment;
     }
 }

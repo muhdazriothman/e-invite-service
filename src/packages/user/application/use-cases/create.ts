@@ -1,78 +1,92 @@
 import {
-    Injectable,
-    Inject,
-    ConflictException,
     BadRequestException,
+    ConflictException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
 } from '@nestjs/common';
-import { PaymentStatus } from '@payment/domain/entities/payment';
+import {
+    Payment,
+    PaymentStatus,
+} from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
+import { paymentErrors } from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
+import { UserService } from '@user/application/services/user';
 import { User } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 
 @Injectable()
 export class CreateUserUseCase {
-    constructor(
-    @Inject('UserRepository')
-    private readonly userRepository: UserRepository,
-    @Inject('PaymentRepository')
-    private readonly paymentRepository: PaymentRepository,
-    @Inject('HashService')
-    private readonly hashService: HashService,
-    ) {}
+    constructor (
+        private readonly userRepository: UserRepository,
 
-    async execute(createUserDto: CreateUserDto): Promise<User> {
-        const {
-            name,
-            email,
-            password,
-            type,
-            paymentId,
-        } = createUserDto;
+        private readonly paymentRepository: PaymentRepository,
 
-        // TODO: to use transaction to ensure data consistency
-        const existingUser = await this.userRepository.findByEmail(email);
-        if (existingUser) {
-            throw new ConflictException('User with this email already exists');
-        }
+        private readonly userService: UserService,
+    ) { }
 
-        const paymentRecord = await this.paymentRepository.findById(paymentId);
-        if (!paymentRecord) {
-            throw new BadRequestException('not_found.payment_record');
-        }
-
-        if (
-            paymentRecord.status !== PaymentStatus.VERIFIED ||
-            paymentRecord.isDeleted
-        ) {
-            throw new BadRequestException(
-                'Payment record is not available for user creation',
-            );
-        }
-
-        const hashedPassword = await this.hashService.hash(password);
-
-        const user = User.createNewUser(
-            {
+    async execute (
+        createUserDto: CreateUserDto,
+    ): Promise<User> {
+        try {
+            const {
                 name,
                 email,
-                passwordHash: hashedPassword,
+                password,
                 type,
                 paymentId,
-            },
-            paymentRecord.planType,
-        );
+            } = createUserDto;
 
-        if (paymentRecord.status !== PaymentStatus.VERIFIED) {
-            throw new Error('Only verified payments can be marked as used');
+            await this.userService.validateSameEmailExists(email);
+
+            const paymentRecord = await this.validatePaymentRecord(paymentId);
+
+            const hashedPassword = await HashService.hash(password);
+
+            const user = User.createNewUser(
+                {
+                    name,
+                    email,
+                    passwordHash: hashedPassword,
+                    type,
+                    paymentId,
+                },
+                paymentRecord.planType,
+            );
+
+            // TODO: use transaction to update payment record and create user
+            await this.paymentRepository.updateById(paymentRecord.id, {
+                status: PaymentStatus.USED,
+                usedAt: new Date(),
+            });
+
+            return await this.userRepository.create(user);
+        } catch (error) {
+            if (
+                error instanceof ConflictException ||
+                error instanceof BadRequestException
+            ) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
+        }
+    }
+
+    async validatePaymentRecord (
+        paymentId: string,
+    ): Promise<Payment> {
+        const paymentRecord = await this.paymentRepository.findById(paymentId);
+        if (!paymentRecord || paymentRecord.isDeleted) {
+            throw new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND);
         }
 
-        await this.paymentRepository.update(paymentRecord.id, {
-            status: PaymentStatus.USED,
-            usedAt: new Date(),
-        });
+        if (paymentRecord.status !== PaymentStatus.VERIFIED) {
+            throw new BadRequestException(paymentErrors.PAYMENT_MUST_BE_VERIFIED);
+        }
 
-        return await this.userRepository.create(user);
+        return paymentRecord;
     }
 }

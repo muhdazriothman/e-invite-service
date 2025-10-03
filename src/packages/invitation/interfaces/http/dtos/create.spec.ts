@@ -7,84 +7,84 @@ import { InvitationFixture } from '@test/fixture/invitation';
 import { validate } from 'class-validator';
 
 describe('@invitation/interfaces/http/dtos/create', () => {
-    let createInvitationDto: CreateInvitationDto;
+    let dto: CreateInvitationDto;
 
     beforeEach(() => {
-        createInvitationDto = InvitationFixture.getCreateInvitationDto();
+        dto = InvitationFixture.getCreateDto();
     });
 
     describe('#validation', () => {
-        it('should pass validation with valid data', async() => {
-            const errors = await validate(createInvitationDto);
+        it('should pass validation with valid data', async () => {
+            const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
 
         describe('type', () => {
-            it('should fail validation when type is not provided', async() => {
+            it('should fail validation when type is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.type;
+                delete dto.type;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('type');
             });
 
-            it('should fail validation when type is not a valid enum value', async() => {
+            it('should fail validation when type is not a valid enum value', async () => {
                 // @ts-expect-error - we want to test the validation
-                createInvitationDto.type = 'invalid';
+                dto.type = 'invalid';
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('type', 'isEnum');
             });
         });
 
         describe('title', () => {
-            it('should fail validation when title is not provided', async() => {
+            it('should fail validation when title is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.title;
+                delete dto.title;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('title');
             });
 
-            it('should fail validation when title is not a string', async() => {
+            it('should fail validation when title is not a string', async () => {
                 // @ts-expect-error - we want to test the validation
-                createInvitationDto.title = 123;
+                dto.title = 123;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('title', 'isString');
             });
         });
 
         describe('hosts', () => {
-            it('should fail validation when hosts is not provided', async() => {
+            it('should fail validation when hosts is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.hosts;
+                delete dto.hosts;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('hosts');
             });
 
-            it('should fail validation when hosts array is empty', async() => {
-                createInvitationDto.hosts = [];
+            it('should fail validation when hosts array is empty', async () => {
+                dto.hosts = [];
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('hosts', 'arrayMinSize');
             });
 
             describe('name', () => {
-                it('should fail validation when name is not provided', async() => {
+                it('should fail validation when name is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.hosts[0].name;
+                    delete dto.hosts[0].name;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError('hosts', 'name');
                 });
 
-                it('should fail validation when name is not a string', async() => {
+                it('should fail validation when name is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.hosts[0].name = 123;
+                    dto.hosts[0].name = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'name',
@@ -94,19 +94,19 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('title', () => {
-                it('should fail validation when title is not provided', async() => {
+                it('should fail validation when title is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.hosts[0].title;
+                    delete dto.hosts[0].title;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError('hosts', 'title');
                 });
 
-                it('should fail validation when title is not a string', async() => {
+                it('should fail validation when title is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.hosts[0].title = 123;
+                    dto.hosts[0].title = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'title',
@@ -128,32 +128,32 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                 ];
 
                 for (const relationshipWithCelebratedPerson of validRelationshipWithCelebratedPerson) {
-                    it(`should pass validation when relationshipWithCelebratedPerson is ${relationshipWithCelebratedPerson}`, async() => {
-                        createInvitationDto.hosts[0].relationshipWithCelebratedPerson =
-              relationshipWithCelebratedPerson;
+                    it(`should pass validation when relationshipWithCelebratedPerson is ${relationshipWithCelebratedPerson}`, async () => {
+                        dto.hosts[0].relationshipWithCelebratedPerson =
+                            relationshipWithCelebratedPerson;
 
-                        const errors = await validate(createInvitationDto);
+                        const errors = await validate(dto);
                         expect(errors).toHaveLength(0);
                     });
                 }
 
-                it('should fail validation when relationshipWithCelebratedPerson is not provided', async() => {
+                it('should fail validation when relationshipWithCelebratedPerson is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.hosts[0].relationshipWithCelebratedPerson;
+                    delete dto.hosts[0].relationshipWithCelebratedPerson;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'relationshipWithCelebratedPerson',
                     );
                 });
 
-                it('should fail validation when relationshipWithCelebratedPerson is not a valid enum value', async() => {
+                it('should fail validation when relationshipWithCelebratedPerson is not a valid enum value', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.hosts[0].relationshipWithCelebratedPerson =
-            'invalid';
+                    dto.hosts[0].relationshipWithCelebratedPerson =
+                        'invalid';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'relationshipWithCelebratedPerson',
@@ -163,25 +163,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('phoneNumber', () => {
-                it('should pass validation when phoneNumber is provided', async() => {
-                    createInvitationDto.hosts[0].phoneNumber = '+1234567890';
+                it('should pass validation when phoneNumber is provided', async () => {
+                    dto.hosts[0].phoneNumber = '+1234567890';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when phoneNumber is not provided', async() => {
-                    delete createInvitationDto.hosts[0].phoneNumber;
+                it('should pass validation when phoneNumber is not provided', async () => {
+                    delete dto.hosts[0].phoneNumber;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when phoneNumber is not a string', async() => {
+                it('should fail validation when phoneNumber is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.hosts[0].phoneNumber = 123;
+                    dto.hosts[0].phoneNumber = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'phoneNumber',
@@ -191,25 +191,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('email', () => {
-                it('should pass validation when email is provided', async() => {
-                    createInvitationDto.hosts[0].email = 'test@example.com';
+                it('should pass validation when email is provided', async () => {
+                    dto.hosts[0].email = 'test@example.com';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when email is not provided', async() => {
-                    delete createInvitationDto.hosts[0].email;
+                it('should pass validation when email is not provided', async () => {
+                    delete dto.hosts[0].email;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when email is not a string', async() => {
+                it('should fail validation when email is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.hosts[0].email = 123;
+                    dto.hosts[0].email = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'hosts',
                         'email',
@@ -220,40 +220,40 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('celebratedPersons', () => {
-            it('should fail validation when celebratedPersons is not provided', async() => {
+            it('should fail validation when celebratedPersons is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.celebratedPersons;
+                delete dto.celebratedPersons;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('celebratedPersons');
             });
 
-            it('should fail validation when celebratedPersons array is empty', async() => {
-                createInvitationDto.celebratedPersons = [];
+            it('should fail validation when celebratedPersons array is empty', async () => {
+                dto.celebratedPersons = [];
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('celebratedPersons');
             });
 
             describe('name', () => {
-                it('should fail validation when name is not provided', async() => {
+                it('should fail validation when name is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.celebratedPersons[0].name;
+                    delete dto.celebratedPersons[0].name;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'name',
                     );
                 });
 
-                it('should fail validation when name is not a string', async() => {
+                it('should fail validation when name is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.celebratedPersons[0].name = 123;
+                    dto.celebratedPersons[0].name = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'name',
@@ -263,22 +263,22 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('title', () => {
-                it('should fail validation when title is not provided', async() => {
+                it('should fail validation when title is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.celebratedPersons[0].title;
+                    delete dto.celebratedPersons[0].title;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'title',
                     );
                 });
 
-                it('should fail validation when title is not a string', async() => {
+                it('should fail validation when title is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.celebratedPersons[0].title = 123;
+                    dto.celebratedPersons[0].title = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'title',
@@ -300,32 +300,32 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                 ];
 
                 for (const relationshipWithHost of validRelationshipWithHost) {
-                    it(`should pass validation when relationshipWithHost is ${relationshipWithHost}`, async() => {
-                        createInvitationDto.celebratedPersons[0].relationshipWithHost =
-              relationshipWithHost;
+                    it(`should pass validation when relationshipWithHost is ${relationshipWithHost}`, async () => {
+                        dto.celebratedPersons[0].relationshipWithHost =
+                            relationshipWithHost;
 
-                        const errors = await validate(createInvitationDto);
+                        const errors = await validate(dto);
                         expect(errors).toHaveLength(0);
                     });
                 }
 
-                it('should fail validation when relationshipWithHost is not provided', async() => {
+                it('should fail validation when relationshipWithHost is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.celebratedPersons[0].relationshipWithHost;
+                    delete dto.celebratedPersons[0].relationshipWithHost;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'relationshipWithHost',
                     );
                 });
 
-                it('should fail validation when relationshipWithHost is not a valid enum value', async() => {
+                it('should fail validation when relationshipWithHost is not a valid enum value', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.celebratedPersons[0].relationshipWithHost =
-            'invalid';
+                    dto.celebratedPersons[0].relationshipWithHost =
+                        'invalid';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'relationshipWithHost',
@@ -335,22 +335,22 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('celebrationDate', () => {
-                it('should fail validation when celebrationDate is not provided', async() => {
+                it('should fail validation when celebrationDate is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.celebratedPersons[0].celebrationDate;
+                    delete dto.celebratedPersons[0].celebrationDate;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'celebrationDate',
                     );
                 });
 
-                it('should fail validation when celebrationDate is not a valid date string', async() => {
-                    createInvitationDto.celebratedPersons[0].celebrationDate =
-            'invalid-date';
+                it('should fail validation when celebrationDate is not a valid date string', async () => {
+                    dto.celebratedPersons[0].celebrationDate =
+                        'invalid-date';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'celebrationDate',
@@ -373,30 +373,30 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                 ];
 
                 for (const type of validTypes) {
-                    it(`should pass validation when type is ${type}`, async() => {
-                        createInvitationDto.celebratedPersons[0].type = type;
+                    it(`should pass validation when type is ${type}`, async () => {
+                        dto.celebratedPersons[0].type = type;
 
-                        const errors = await validate(createInvitationDto);
+                        const errors = await validate(dto);
                         expect(errors).toHaveLength(0);
                     });
                 }
 
-                it('should fail validation when type is not provided', async() => {
+                it('should fail validation when type is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.celebratedPersons[0].type;
+                    delete dto.celebratedPersons[0].type;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'type',
                     );
                 });
 
-                it('should fail validation when type is not a valid enum value', async() => {
+                it('should fail validation when type is not a valid enum value', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.celebratedPersons[0].type = 'invalid';
+                    dto.celebratedPersons[0].type = 'invalid';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'celebratedPersons',
                         'type',
@@ -407,21 +407,21 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('date', () => {
-            it('should fail validation when date is not provided', async() => {
+            it('should fail validation when date is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.date;
+                delete dto.date;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('date');
             });
 
             describe('gregorianDate', () => {
-                it('should fail validation when gregorianDate is not provided', async() => {
+                it('should fail validation when gregorianDate is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.date.gregorianDate;
+                    delete dto.date.gregorianDate;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'date',
                         'gregorianDate',
@@ -430,10 +430,10 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                     );
                 });
 
-                it('should fail validation when gregorianDate is not a valid date string', async() => {
-                    createInvitationDto.date.gregorianDate = 'invalid-date';
+                it('should fail validation when gregorianDate is not a valid date string', async () => {
+                    dto.date.gregorianDate = 'invalid-date';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'date',
                         'gregorianDate',
@@ -444,25 +444,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('hijriDate', () => {
-                it('should pass validation when hijriDate is provided', async() => {
-                    createInvitationDto.date.hijriDate = '1445-12-08';
+                it('should pass validation when hijriDate is provided', async () => {
+                    dto.date.hijriDate = '1445-12-08';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when hijriDate is not provided', async() => {
-                    delete createInvitationDto.date.hijriDate;
+                it('should pass validation when hijriDate is not provided', async () => {
+                    delete dto.date.hijriDate;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when hijriDate is not a string', async() => {
+                it('should fail validation when hijriDate is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.date.hijriDate = 123;
+                    dto.date.hijriDate = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'date',
                         'hijriDate',
@@ -474,20 +474,20 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('location', () => {
-            it('should fail validation when location is not provided', async() => {
+            it('should fail validation when location is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.location;
+                delete dto.location;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveValidationError('location');
             });
 
             describe('address', () => {
-                it('should fail validation when address is not provided', async() => {
+                it('should fail validation when address is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.location.address;
+                    delete dto.location.address;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'location',
                         'address',
@@ -496,11 +496,11 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                     );
                 });
 
-                it('should fail validation when address is not a string', async() => {
+                it('should fail validation when address is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.location.address = 123;
+                    dto.location.address = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'location',
                         'address',
@@ -511,24 +511,24 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('wazeLink', () => {
-                it('should pass validation when wazeLink is provided', async() => {
-                    createInvitationDto.location.wazeLink = 'https://waze.com/ul/123456';
+                it('should pass validation when wazeLink is provided', async () => {
+                    dto.location.wazeLink = 'https://waze.com/ul/123456';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when wazeLink is not provided', async() => {
-                    delete createInvitationDto.location.wazeLink;
+                it('should pass validation when wazeLink is not provided', async () => {
+                    delete dto.location.wazeLink;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when wazeLink is not a valid URL', async() => {
-                    createInvitationDto.location.wazeLink = 'invalid-url';
+                it('should fail validation when wazeLink is not a valid URL', async () => {
+                    dto.location.wazeLink = 'invalid-url';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'location',
                         'wazeLink',
@@ -539,25 +539,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('googleMapsLink', () => {
-                it('should pass validation when googleMapsLink is provided', async() => {
-                    createInvitationDto.location.googleMapsLink =
-            'https://maps.google.com/?q=123+Wedding+Hall';
+                it('should pass validation when googleMapsLink is provided', async () => {
+                    dto.location.googleMapsLink =
+                        'https://maps.google.com/?q=123+Wedding+Hall';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when googleMapsLink is not provided', async() => {
-                    delete createInvitationDto.location.googleMapsLink;
+                it('should pass validation when googleMapsLink is not provided', async () => {
+                    delete dto.location.googleMapsLink;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when googleMapsLink is not a valid URL', async() => {
-                    createInvitationDto.location.googleMapsLink = 'invalid-url';
+                it('should fail validation when googleMapsLink is not a valid URL', async () => {
+                    dto.location.googleMapsLink = 'invalid-url';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'location',
                         'googleMapsLink',
@@ -569,40 +569,40 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('itineraries', () => {
-            it('should fail validation when itineraries is not provided', async() => {
+            it('should fail validation when itineraries is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.itineraries;
+                delete dto.itineraries;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('itineraries');
             });
 
-            it('should fail validation when itineraries array is empty', async() => {
-                createInvitationDto.itineraries = [];
+            it('should fail validation when itineraries array is empty', async () => {
+                dto.itineraries = [];
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('itineraries');
             });
 
             describe('activities', () => {
-                it('should fail validation when activities is not provided', async() => {
+                it('should fail validation when activities is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.itineraries[0].activities;
+                    delete dto.itineraries[0].activities;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
                         'activities',
                     );
                 });
 
-                it('should fail validation when activities is not an array', async() => {
+                it('should fail validation when activities is not an array', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.itineraries[0].activities = 'not-an-array';
+                    dto.itineraries[0].activities = 'not-an-array';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
                         'activities',
@@ -610,15 +610,15 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                     );
                 });
 
-                it('should fail validation when activities array contains non-string values', async() => {
-                    createInvitationDto.itineraries[0].activities = [
+                it('should fail validation when activities array contains non-string values', async () => {
+                    dto.itineraries[0].activities = [
                         'valid',
                         // @ts-expect-error - we want to test the validation with invalid type
                         123,
                         'also-valid',
                     ];
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
 
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
@@ -629,21 +629,21 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('startTime', () => {
-                it('should fail validation when startTime is not provided', async() => {
+                it('should fail validation when startTime is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.itineraries[0].startTime;
+                    delete dto.itineraries[0].startTime;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
                         'startTime',
                     );
                 });
 
-                it('should fail validation when startTime is not a valid time string', async() => {
-                    createInvitationDto.itineraries[0].startTime = 'invalid-time';
+                it('should fail validation when startTime is not a valid time string', async () => {
+                    dto.itineraries[0].startTime = 'invalid-time';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
                         'startTime',
@@ -653,18 +653,18 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('endTime', () => {
-                it('should fail validation when endTime is not provided', async() => {
+                it('should fail validation when endTime is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.itineraries[0].endTime;
+                    delete dto.itineraries[0].endTime;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError('itineraries', 'endTime');
                 });
 
-                it('should fail validation when endTime is not a valid time string', async() => {
-                    createInvitationDto.itineraries[0].endTime = 'invalid-time';
+                it('should fail validation when endTime is not a valid time string', async () => {
+                    dto.itineraries[0].endTime = 'invalid-time';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'itineraries',
                         'endTime',
@@ -675,37 +675,37 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('contactPersons', () => {
-            it('should fail validation when contactPersons is not provided', async() => {
+            it('should fail validation when contactPersons is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.contactPersons;
+                delete dto.contactPersons;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('contactPersons');
             });
 
-            it('should fail validation when contactPersons array is empty', async() => {
-                createInvitationDto.contactPersons = [];
+            it('should fail validation when contactPersons array is empty', async () => {
+                dto.contactPersons = [];
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('contactPersons');
             });
 
             describe('name', () => {
-                it('should fail validation when name is not provided', async() => {
+                it('should fail validation when name is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.contactPersons[0].name;
+                    delete dto.contactPersons[0].name;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError('contactPersons', 'name');
                 });
 
-                it('should fail validation when name is not a string', async() => {
+                it('should fail validation when name is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.contactPersons[0].name = 123;
+                    dto.contactPersons[0].name = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'name',
@@ -715,19 +715,19 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('title', () => {
-                it('should fail validation when title is not provided', async() => {
+                it('should fail validation when title is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.contactPersons[0].title;
+                    delete dto.contactPersons[0].title;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError('contactPersons', 'title');
                 });
 
-                it('should fail validation when title is not a string', async() => {
+                it('should fail validation when title is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.contactPersons[0].title = 123;
+                    dto.contactPersons[0].title = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'title',
@@ -749,33 +749,33 @@ describe('@invitation/interfaces/http/dtos/create', () => {
                 ];
 
                 for (const relationshipWithCelebratedPerson of validRelationshipWithCelebratedPerson) {
-                    it(`should pass validation when relationshipWithCelebratedPerson is ${relationshipWithCelebratedPerson}`, async() => {
-                        createInvitationDto.contactPersons[0].relationshipWithCelebratedPerson =
-              relationshipWithCelebratedPerson;
+                    it(`should pass validation when relationshipWithCelebratedPerson is ${relationshipWithCelebratedPerson}`, async () => {
+                        dto.contactPersons[0].relationshipWithCelebratedPerson =
+                            relationshipWithCelebratedPerson;
 
-                        const errors = await validate(createInvitationDto);
+                        const errors = await validate(dto);
                         expect(errors).toHaveLength(0);
                     });
                 }
 
-                it('should fail validation when relationshipWithCelebratedPerson is not provided', async() => {
+                it('should fail validation when relationshipWithCelebratedPerson is not provided', async () => {
                     // @ts-expect-error - we want to test the validation
-                    delete createInvitationDto.contactPersons[0]
+                    delete dto.contactPersons[0]
                         .relationshipWithCelebratedPerson;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'relationshipWithCelebratedPerson',
                     );
                 });
 
-                it('should fail validation when relationshipWithCelebratedPerson is not a valid enum value', async() => {
+                it('should fail validation when relationshipWithCelebratedPerson is not a valid enum value', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.contactPersons[0].relationshipWithCelebratedPerson =
-            'invalid';
+                    dto.contactPersons[0].relationshipWithCelebratedPerson =
+                        'invalid';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'relationshipWithCelebratedPerson',
@@ -785,25 +785,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('phoneNumber', () => {
-                it('should pass validation when phoneNumber is provided', async() => {
-                    createInvitationDto.contactPersons[0].phoneNumber = '+1234567890';
+                it('should pass validation when phoneNumber is provided', async () => {
+                    dto.contactPersons[0].phoneNumber = '+1234567890';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when phoneNumber is not provided', async() => {
-                    delete createInvitationDto.contactPersons[0].phoneNumber;
+                it('should pass validation when phoneNumber is not provided', async () => {
+                    delete dto.contactPersons[0].phoneNumber;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when phoneNumber is not a string', async() => {
+                it('should fail validation when phoneNumber is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.contactPersons[0].phoneNumber = 123;
+                    dto.contactPersons[0].phoneNumber = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'phoneNumber',
@@ -813,25 +813,25 @@ describe('@invitation/interfaces/http/dtos/create', () => {
             });
 
             describe('whatsappNumber', () => {
-                it('should pass validation when whatsappNumber is provided', async() => {
-                    createInvitationDto.contactPersons[0].whatsappNumber = '+1234567890';
+                it('should pass validation when whatsappNumber is provided', async () => {
+                    dto.contactPersons[0].whatsappNumber = '+1234567890';
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should pass validation when whatsappNumber is not provided', async() => {
-                    delete createInvitationDto.contactPersons[0].whatsappNumber;
+                it('should pass validation when whatsappNumber is not provided', async () => {
+                    delete dto.contactPersons[0].whatsappNumber;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveLength(0);
                 });
 
-                it('should fail validation when whatsappNumber is not a string', async() => {
+                it('should fail validation when whatsappNumber is not a string', async () => {
                     // @ts-expect-error - we want to test the validation
-                    createInvitationDto.contactPersons[0].whatsappNumber = 123;
+                    dto.contactPersons[0].whatsappNumber = 123;
 
-                    const errors = await validate(createInvitationDto);
+                    const errors = await validate(dto);
                     expect(errors).toHaveNestedValidationError(
                         'contactPersons',
                         'whatsappNumber',
@@ -842,19 +842,19 @@ describe('@invitation/interfaces/http/dtos/create', () => {
         });
 
         describe('rsvpDueDate', () => {
-            it('should fail validation when rsvpDueDate is not provided', async() => {
+            it('should fail validation when rsvpDueDate is not provided', async () => {
                 // @ts-expect-error - we want to test the validation
-                delete createInvitationDto.rsvpDueDate;
+                delete dto.rsvpDueDate;
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('rsvpDueDate');
             });
 
-            it('should fail validation when rsvpDueDate is not a valid date string', async() => {
-                createInvitationDto.rsvpDueDate = 'invalid-date';
+            it('should fail validation when rsvpDueDate is not a valid date string', async () => {
+                dto.rsvpDueDate = 'invalid-date';
 
-                const errors = await validate(createInvitationDto);
+                const errors = await validate(dto);
                 expect(errors).toHaveLength(1);
                 expect(errors[0].property).toBe('rsvpDueDate');
             });

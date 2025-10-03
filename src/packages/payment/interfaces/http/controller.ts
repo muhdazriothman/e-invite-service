@@ -1,5 +1,5 @@
 import { AdminAuthGuard } from '@auth/interfaces/http/guards/admin-auth';
-import { JwtUser } from '@auth/interfaces/http/strategies/jwt';
+import { RequestWithUser } from '@invitation/interfaces/http/middleware/user-context.middleware';
 import {
     Controller,
     Get,
@@ -37,7 +37,7 @@ import {
 @Controller('payments')
 @UseGuards(AdminAuthGuard)
 export class PaymentController {
-    constructor(
+    constructor (
         private readonly createPaymentUseCase: CreatePaymentUseCase,
         private readonly listPaymentsUseCase: ListPaymentsUseCase,
         private readonly getPaymentByIdUseCase: GetPaymentByIdUseCase,
@@ -62,15 +62,13 @@ export class PaymentController {
         status: 409,
         description: 'Conflict - payment with this reference already exists',
     })
-    async createPayment(
+    async createPayment (
         @Body() createPaymentDto: CreatePaymentDto,
-        @Request() req: { user: JwtUser },
+        @Request() req: RequestWithUser,
     ) {
-        const createdBy = req.user.id;
-
         const payment = await this.createPaymentUseCase.execute(
+            req.userData,
             createPaymentDto,
-            createdBy,
         );
 
         return {
@@ -87,7 +85,7 @@ export class PaymentController {
         description: 'Payments retrieved successfully',
         type: PaymentListResponseDto,
     })
-    async listPayments() {
+    async listPayments () {
         const payments = await this.listPaymentsUseCase.execute();
 
         return {
@@ -99,7 +97,10 @@ export class PaymentController {
     @Get(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Get payment record by ID' })
-    @ApiParam({ name: 'id', description: 'Payment ID' })
+    @ApiParam({
+        name: 'id',
+        description: 'Payment ID',
+    })
     @ApiResponse({
         status: 200,
         description: 'Payment retrieved successfully',
@@ -109,7 +110,7 @@ export class PaymentController {
         status: 404,
         description: 'Payment not found',
     })
-    async getPaymentById(@Param('id') id: string) {
+    async getPaymentById (@Param('id') id: string) {
         const payment = await this.getPaymentByIdUseCase.execute(id);
 
         return {
@@ -121,7 +122,10 @@ export class PaymentController {
     @Put(':id')
     @HttpCode(HttpStatus.OK)
     @ApiOperation({ summary: 'Update payment record' })
-    @ApiParam({ name: 'id', description: 'Payment ID' })
+    @ApiParam({
+        name: 'id',
+        description: 'Payment ID',
+    })
     @ApiBody({ type: UpdatePaymentDto })
     @ApiResponse({
         status: 200,
@@ -140,7 +144,7 @@ export class PaymentController {
         status: 409,
         description: 'Conflict - payment with this reference already exists',
     })
-    async updatePayment(
+    async updatePayment (
         @Param('id') id: string,
         @Body() updatePaymentDto: UpdatePaymentDto,
     ) {
@@ -158,7 +162,10 @@ export class PaymentController {
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
     @ApiOperation({ summary: 'Delete payment record' })
-    @ApiParam({ name: 'id', description: 'Payment ID' })
+    @ApiParam({
+        name: 'id',
+        description: 'Payment ID',
+    })
     @ApiResponse({
         status: 204,
         description: 'Payment deleted successfully',
@@ -167,7 +174,7 @@ export class PaymentController {
         status: 404,
         description: 'Payment not found',
     })
-    async deletePayment(@Param('id') id: string) {
+    async deletePayment (@Param('id') id: string) {
         await this.deletePaymentUseCase.execute(id);
 
         return {

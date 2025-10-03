@@ -9,17 +9,16 @@ import {
 import { authErrors } from '@shared/constants/error-codes';
 import { UserAuthService } from '@user/application/services/user-auth.service';
 
-
 @Injectable()
 export class AdminAuthGuard extends JwtAuthGuard {
-    constructor(
+    constructor (
         @Inject('UserAuthService')
         private readonly userAuthService: UserAuthService,
     ) {
         super();
     }
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
+    async canActivate (context: ExecutionContext): Promise<boolean> {
         const isJwtValid = await super.canActivate(context);
         if (!isJwtValid) {
             return false;

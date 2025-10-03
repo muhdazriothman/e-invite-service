@@ -4,7 +4,7 @@ import { validate } from 'class-validator';
 
 describe('@invitation/interfaces/http/dtos/list', () => {
     describe('validation', () => {
-        it('should pass validation with valid forward pagination data', async() => {
+        it('should pass validation with valid forward pagination data', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 next: 'NjQ5ZjJhYzM5YzM5YzM5YzM5YzM5YzM5',
                 limit: 20,
@@ -14,7 +14,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with valid backward pagination data', async() => {
+        it('should pass validation with valid backward pagination data', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 previous: 'NjQ5ZjJhYzM5YzM5YzM5YzM5YzM5YzM5',
                 limit: 20,
@@ -24,7 +24,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with both cursors (next takes precedence)', async() => {
+        it('should pass validation with both cursors (next takes precedence)', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 next: 'NjQ5ZjJhYzM5YzM5YzM5YzM5YzM5YzM5',
                 previous: 'NjQ5ZjJhYzM5YzM5YzM5YzM5YzM5YzM5',
@@ -35,7 +35,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with no data (using defaults)', async() => {
+        it('should pass validation with no data (using defaults)', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {});
 
             const errors = await validate(dto);
@@ -43,7 +43,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(dto.limit).toBe(20);
         });
 
-        it('should fail validation with invalid limit (too low)', async() => {
+        it('should fail validation with invalid limit (too low)', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 limit: 0,
             });
@@ -53,7 +53,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors[0].constraints?.min).toBeDefined();
         });
 
-        it('should fail validation with invalid limit (too high)', async() => {
+        it('should fail validation with invalid limit (too high)', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 limit: 51,
             });
@@ -63,7 +63,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors[0].constraints?.max).toBeDefined();
         });
 
-        it('should fail validation with non-integer limit', async() => {
+        it('should fail validation with non-integer limit', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 limit: 20.5,
             });
@@ -73,7 +73,7 @@ describe('@invitation/interfaces/http/dtos/list', () => {
             expect(errors[0].constraints?.isInt).toBeDefined();
         });
 
-        it('should pass validation with string limit (will be transformed)', async() => {
+        it('should pass validation with string limit (will be transformed)', async () => {
             const dto = plainToClass(ListInvitationsQueryDto, {
                 limit: '25',
             });

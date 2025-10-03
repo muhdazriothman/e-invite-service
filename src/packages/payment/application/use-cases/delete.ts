@@ -1,23 +1,33 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
+import { PaymentService } from '@payment/application/services/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 
 @Injectable()
 export class DeletePaymentUseCase {
-    constructor(
-    @Inject('PaymentRepository')
-    private readonly paymentRepository: PaymentRepository,
-    ) {}
+    constructor (
+        private readonly paymentRepository: PaymentRepository,
 
-    async execute(id: string): Promise<void> {
-        const existingPayment = await this.paymentRepository.findById(id);
-        if (!existingPayment) {
-            throw new NotFoundException('Payment not found');
+        private readonly paymentService: PaymentService,
+    ) { }
+
+    async execute (
+        id: string,
+    ): Promise<void> {
+        try {
+            await this.paymentService.findByIdOrFail(id);
+
+            await this.paymentRepository.deleteById(id);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
-
-        await this.paymentRepository.delete(id);
     }
 }
+

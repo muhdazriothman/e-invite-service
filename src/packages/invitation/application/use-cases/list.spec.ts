@@ -6,7 +6,8 @@ import {
 } from '@nestjs/testing';
 import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 import { InvitationFixture } from '@test/fixture/invitation';
-
+import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 
 describe('@invitation/application/use-cases/list', () => {
     const userId = '000000000000000000000001';
@@ -14,24 +15,23 @@ describe('@invitation/application/use-cases/list', () => {
     let useCase: ListInvitationsUseCase;
     let mockInvitationRepository: jest.Mocked<InvitationRepository>;
 
+    const user = UserFixture.getEntity({
+        id: userId,
+    });
 
-    beforeEach(async() => {
-        const invitationRepository = {
-            findAllWithPagination: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ListInvitationsUseCase,
                 {
-                    provide: 'InvitationRepository',
-                    useValue: invitationRepository,
+                    provide: InvitationRepository,
+                    useValue: createMock<InvitationRepository>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<ListInvitationsUseCase>(ListInvitationsUseCase);
-        mockInvitationRepository = module.get('InvitationRepository');
+        mockInvitationRepository = module.get(InvitationRepository);
     });
 
     afterEach(() => {
@@ -44,7 +44,7 @@ describe('@invitation/application/use-cases/list', () => {
     });
 
     describe('execute', () => {
-        it('should return paginated invitations from repository', async() => {
+        it('should return paginated invitations from repository', async () => {
             const invitations = [
                 InvitationFixture.getEntity({
                     id: '000000000000000000000001',
@@ -67,10 +67,10 @@ describe('@invitation/application/use-cases/list', () => {
                 paginationResult,
             );
 
-            const result = await useCase.execute(userId);
+            const result = await useCase.execute(user);
 
             expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                userId,
+                user.id,
                 undefined,
                 undefined,
                 20,
@@ -79,7 +79,7 @@ describe('@invitation/application/use-cases/list', () => {
             expect(result).toEqual(paginationResult);
         });
 
-        it('should return paginated invitations with next cursor and limit', async() => {
+        it('should return paginated invitations with next cursor and limit', async () => {
             const invitations = [
                 InvitationFixture.getEntity({
                     id: '3',
@@ -100,14 +100,14 @@ describe('@invitation/application/use-cases/list', () => {
             );
 
             const result = await useCase.execute(
-                userId,
+                user,
                 '000000000000000000000002',
                 undefined,
                 10,
             );
 
             expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                userId,
+                user.id,
                 '000000000000000000000002',
                 undefined,
                 10,
@@ -115,7 +115,7 @@ describe('@invitation/application/use-cases/list', () => {
             expect(result).toEqual(paginationResult);
         });
 
-        it('should return paginated invitations with previous cursor and limit', async() => {
+        it('should return paginated invitations with previous cursor and limit', async () => {
             const invitations = [
                 InvitationFixture.getEntity({
                     id: '1',
@@ -136,14 +136,14 @@ describe('@invitation/application/use-cases/list', () => {
             );
 
             const result = await useCase.execute(
-                userId,
+                user,
                 undefined,
                 '000000000000000000000001',
                 10,
             );
 
             expect(mockInvitationRepository.findAllWithPagination).toHaveBeenCalledWith(
-                userId,
+                user.id,
                 undefined,
                 '000000000000000000000001',
                 10,

@@ -1,25 +1,30 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
+import { UserService } from '@user/application/services/user';
 import { User } from '@user/domain/entities/user';
-import { UserRepository } from '@user/infra/repository';
 
 @Injectable()
 export class GetUserByIdUseCase {
-    constructor(
-    @Inject('UserRepository')
-    private readonly userRepository: UserRepository,
+    constructor (
+        private readonly userService: UserService,
     ) {}
 
-    async execute(id: string): Promise<User> {
-        const user = await this.userRepository.findById(id);
+    async execute (
+        id: string,
+    ): Promise<User> {
+        try {
+            const user = await this.userService.findByIdOrFail(id);
 
-        if (!user) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            return user;
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
-
-        return user;
     }
 }

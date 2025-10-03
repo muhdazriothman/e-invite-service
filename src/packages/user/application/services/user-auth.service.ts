@@ -1,7 +1,4 @@
-import {
-    Injectable,
-    Inject,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
@@ -13,12 +10,13 @@ export interface UserAuthInfo {
 
 @Injectable()
 export class UserAuthService {
-    constructor(
-        @Inject('UserRepository')
+    constructor (
         private readonly userRepository: UserRepository,
     ) { }
 
-    async getUserAuthInfo(userId: string): Promise<UserAuthInfo | null> {
+    async getUserAuthInfo (
+        userId: string,
+    ): Promise<UserAuthInfo | null> {
         const user = await this.userRepository.findById(userId);
 
         if (!user) {
@@ -32,7 +30,9 @@ export class UserAuthService {
         };
     }
 
-    async isUserAdmin(userId: string): Promise<boolean> {
+    async isUserAdmin (
+        userId: string,
+    ): Promise<boolean> {
         const user = await this.userRepository.findById(userId);
 
         if (!user) {

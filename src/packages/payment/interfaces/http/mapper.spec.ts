@@ -6,7 +6,6 @@ import {
 import { PaymentMapper } from '@payment/interfaces/http/mapper';
 import { PaymentFixture } from '@test/fixture/payment';
 
-
 describe('@payment/interfaces/http/mapper', () => {
     let payment: Payment;
 
@@ -14,7 +13,7 @@ describe('@payment/interfaces/http/mapper', () => {
         payment = PaymentFixture.getEntity({
             currency: 'USD',
             paymentMethod: PaymentMethod.CREDIT_CARD,
-            reference: 'PAY-001',
+            referenceNumber: 'PAY-001',
             description: 'Test payment',
             planType: PlanType.PREMIUM,
             createdBy: 'admin-123',
@@ -30,7 +29,7 @@ describe('@payment/interfaces/http/mapper', () => {
             expect(dto.currency).toBe(payment.currency);
             expect(dto.paymentMethod).toBe(payment.paymentMethod);
             expect(dto.status).toBe(payment.status);
-            expect(dto.reference).toBe(payment.reference);
+            expect(dto.referenceNumber).toBe(payment.referenceNumber);
             expect(dto.description).toBe(payment.description);
             expect(dto.planType).toBe(payment.planType);
             expect(dto.usedAt).toBe(payment.usedAt);

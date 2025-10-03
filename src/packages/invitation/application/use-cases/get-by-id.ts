@@ -1,28 +1,35 @@
+import { InvitationService } from '@invitation/application/services/invitation';
 import { Invitation } from '@invitation/domain/entities/invitation';
-import { InvitationRepository } from '@invitation/infra/repository';
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
-import { invitationErrors } from '@shared/constants/error-codes';
+import { User } from '@user/domain/entities/user';
 
 @Injectable()
 export class GetInvitationByIdUseCase {
-    constructor(
-    @Inject('InvitationRepository')
-    private readonly invitationRepository: InvitationRepository,
-    ) {}
+    constructor (
+        private readonly invitationService: InvitationService,
+    ) { }
 
-    async execute(
+    async execute (
+        user: User,
         id: string,
-        userId?: string,
     ): Promise<Invitation> {
-        const invitation = await this.invitationRepository.findById(id, userId);
-        if (!invitation) {
-            throw new NotFoundException(invitationErrors.INVITATION_NOT_FOUND);
-        }
+        try {
+            const invitation = await this.invitationService.findByIdAndUserIdOrFail(
+                id,
+                user.id,
+            );
 
-        return invitation;
+            return invitation;
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
+        }
     }
 }

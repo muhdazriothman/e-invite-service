@@ -1,66 +1,76 @@
 import { LoginUseCase } from '@auth/application/use-cases/login';
 import { LoginDto } from '@auth/interfaces/http/dtos/login';
-import { UnauthorizedException } from '@nestjs/common';
+import {
+    InternalServerErrorException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { authErrors } from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
 import { JwtService } from '@shared/services/jwt';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 import { UserType } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 
-
 describe('@auth/application/use-cases/login', () => {
+    const userId = '000000000000000000000001';
+    const email = 'test@example.com';
+    const password = 'password123';
+    const token = 'jwt-token-123';
+
     let useCase: LoginUseCase;
-    let userRepository: jest.Mocked<UserRepository>;
-    let hashService: jest.Mocked<HashService>;
-    let jwtService: jest.Mocked<JwtService>;
+    let mockUserRepository: jest.Mocked<UserRepository>;
+    let mockJwtService: jest.Mocked<JwtService>;
 
-    beforeEach(async() => {
-        const mockUserRepository = {
-            create: jest.fn(),
-            findAll: jest.fn(),
-            findByName: jest.fn(),
-            findByEmail: jest.fn(),
-            findById: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
+    const user = UserFixture.getEntity({
+        id: userId,
+        email,
+        passwordHash: 'hashedPassword123',
+        type: UserType.USER,
+    });
 
-        const mockHashService = {
-            hash: jest.fn(),
-            compare: jest.fn(),
-        };
+    const adminUser = UserFixture.getEntity({
+        id: '000000000000000000000002',
+        email,
+        passwordHash: 'hashedPassword123',
+        type: UserType.ADMIN,
+    });
 
-        const mockJwtService = {
-            sign: jest.fn(),
-            verify: jest.fn(),
-        };
+    const deletedUser = UserFixture.getEntity({
+        id: userId,
+        email,
+        passwordHash: 'hashedPassword123',
+        type: UserType.USER,
+        isDeleted: true,
+    });
 
+    const loginDto: LoginDto = {
+        email,
+        password,
+    };
+
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 LoginUseCase,
                 {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
+                    provide: UserRepository,
+                    useValue: createMock<UserRepository>(),
                 },
                 {
-                    provide: 'HashService',
-                    useValue: mockHashService,
-                },
-                {
-                    provide: 'JwtService',
-                    useValue: mockJwtService,
+                    provide: JwtService,
+                    useValue: createMock<JwtService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<LoginUseCase>(LoginUseCase);
-        userRepository = module.get('UserRepository');
-        hashService = module.get('HashService');
-        jwtService = module.get('JwtService');
+        mockUserRepository = module.get(UserRepository);
+        mockJwtService = module.get(JwtService);
     });
 
     it('should be defined', () => {
@@ -68,129 +78,251 @@ describe('@auth/application/use-cases/login', () => {
     });
 
     describe('#execute', () => {
-        const loginDto: LoginDto = {
-            email: 'test@example.com',
-            password: 'password123',
-        };
+        let mockValidateUser: jest.SpyInstance;
+        let mockValidatePassword: jest.SpyInstance;
 
-        it('should return a JWT token when credentials are valid', async() => {
-            const user = UserFixture.getEntity({
-                id: '1',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.USER,
-            });
-            const expectedToken = 'jwt-token-123';
+        beforeEach(() => {
+            mockValidateUser = jest.spyOn(
+                useCase,
+                'validateUser',
+            ).mockResolvedValue(user);
 
-            userRepository.findByEmail.mockResolvedValue(user);
-            hashService.compare.mockResolvedValue(true);
-            jwtService.sign.mockReturnValue(expectedToken);
+            mockValidatePassword = jest.spyOn(
+                LoginUseCase,
+                'validatePassword',
+            ).mockResolvedValue();
 
+            mockJwtService.sign.mockReturnValue(token);
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it('should return a JWT token when credentials are valid', async () => {
             const result = await useCase.execute(loginDto);
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).toHaveBeenCalledWith(
-                loginDto.password,
-                user.passwordHash,
-            );
-            expect(jwtService.sign).toHaveBeenCalledWith({
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).toHaveBeenCalledWith(password, user);
+
+            expect(mockJwtService.sign).toHaveBeenCalledWith({
                 sub: user.id,
                 email: user.email,
                 type: user.type,
             });
-            expect(result).toEqual({ token: expectedToken });
+
+            expect(result).toEqual({ token });
         });
 
-        it('should return a JWT token for admin user when credentials are valid', async() => {
-            const adminUser = UserFixture.getEntity({
-                id: '2',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.ADMIN,
-            });
-            const expectedToken = 'admin-jwt-token-123';
-
-            userRepository.findByEmail.mockResolvedValue(adminUser);
-            hashService.compare.mockResolvedValue(true);
-            jwtService.sign.mockReturnValue(expectedToken);
+        it('should return a JWT token for admin user when credentials are valid', async () => {
+            mockValidateUser.mockResolvedValue(adminUser);
 
             const result = await useCase.execute(loginDto);
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).toHaveBeenCalledWith(
-                loginDto.password,
-                adminUser.passwordHash,
-            );
-            expect(jwtService.sign).toHaveBeenCalledWith({
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).toHaveBeenCalledWith(password, adminUser);
+
+            expect(mockJwtService.sign).toHaveBeenCalledWith({
                 sub: adminUser.id,
                 email: adminUser.email,
                 type: adminUser.type,
             });
-            expect(result).toEqual({ token: expectedToken });
+
+            expect(result).toEqual({ token });
         });
 
-        it('should throw UnauthorizedException when user is not found', async() => {
-            userRepository.findByEmail.mockResolvedValue(null);
-
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                UnauthorizedException,
-            );
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                'Invalid credentials',
+        it('should handle UnauthorizedException', async () => {
+            mockValidatePassword.mockRejectedValue(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
             );
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).not.toHaveBeenCalled();
-            expect(jwtService.sign).not.toHaveBeenCalled();
+            await expect(useCase.execute(loginDto)).rejects.toThrow(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
+            );
+
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).toHaveBeenCalledWith(password, user);
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
         });
 
-        it('should throw UnauthorizedException when password is invalid', async() => {
-            const user = UserFixture.getEntity({
-                id: '1',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.USER,
+        it('should handle UnauthorizedException when user validation fails', async () => {
+            mockValidateUser.mockRejectedValue(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
+            );
+
+            await expect(useCase.execute(loginDto)).rejects.toThrow(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
+            );
+
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).not.toHaveBeenCalled();
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
+        });
+
+        it('should handle UnauthorizedException when user is deleted', async () => {
+            mockValidateUser.mockRejectedValue(
+                new UnauthorizedException(authErrors.ACCOUNT_DEACTIVATED),
+            );
+
+            await expect(useCase.execute(loginDto)).rejects.toThrow(
+                new UnauthorizedException(authErrors.ACCOUNT_DEACTIVATED),
+            );
+
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).not.toHaveBeenCalled();
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
+        });
+
+        it('should handle unexpected error from validateUser', async () => {
+            mockValidateUser.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(loginDto)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
+
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).not.toHaveBeenCalled();
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
+        });
+
+        it('should handle unexpected error from validatePassword', async () => {
+            mockValidatePassword.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(loginDto)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
+
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).toHaveBeenCalledWith(password, user);
+            expect(mockJwtService.sign).not.toHaveBeenCalled();
+        });
+
+        it('should handle unexpected error from jwtService', async () => {
+            mockJwtService.sign.mockImplementation(() => {
+                throw new Error('JWT signing error');
             });
 
-            userRepository.findByEmail.mockResolvedValue(user);
-            hashService.compare.mockResolvedValue(false);
-
             await expect(useCase.execute(loginDto)).rejects.toThrow(
-                UnauthorizedException,
-            );
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                'Invalid credentials',
+                new InternalServerErrorException(
+                    new Error('JWT signing error'),
+                ),
             );
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).toHaveBeenCalledWith(
-                loginDto.password,
+            expect(mockValidateUser).toHaveBeenCalledWith(email);
+            expect(mockValidatePassword).toHaveBeenCalledWith(password, user);
+            expect(mockJwtService.sign).toHaveBeenCalledWith({
+                sub: user.id,
+                email: user.email,
+                type: user.type,
+            });
+        });
+    });
+
+    describe('#validateUser', () => {
+        it('should return user when found and not deleted', async () => {
+            mockUserRepository.findByEmail.mockResolvedValue(user);
+
+            const result = await useCase.validateUser(email);
+
+            expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+            expect(result).toEqual(user);
+        });
+
+        it('should handle UnauthorizedException when user is not found', async () => {
+            mockUserRepository.findByEmail.mockResolvedValue(null);
+
+            await expect(useCase.validateUser(email)).rejects.toThrow(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
+            );
+
+            expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+        });
+
+        it('should handle UnauthorizedException when user is deleted', async () => {
+            mockUserRepository.findByEmail.mockResolvedValue(deletedUser);
+
+            await expect(useCase.validateUser(email)).rejects.toThrow(
+                new UnauthorizedException(authErrors.ACCOUNT_DEACTIVATED),
+            );
+
+            expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+        });
+
+        it('should handle unexpected error', async () => {
+            mockUserRepository.findByEmail.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.validateUser(email)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
+        });
+    });
+
+    describe('#validatePassword', () => {
+        let mockCompare: jest.SpyInstance;
+
+        beforeEach(() => {
+            mockCompare = jest.spyOn(
+                HashService,
+                'compare',
+            ).mockResolvedValue(true);
+        });
+
+        afterEach(() => {
+            jest.clearAllMocks();
+            jest.restoreAllMocks();
+        });
+
+        it('should not throw when password is valid', async () => {
+            await expect(
+                LoginUseCase.validatePassword(password, user),
+            ).resolves.not.toThrow();
+
+            expect(mockCompare).toHaveBeenCalledWith(
+                password,
                 user.passwordHash,
             );
-            expect(jwtService.sign).not.toHaveBeenCalled();
         });
 
-        it('should throw UnauthorizedException when user is deleted', async() => {
-            const deletedUser = UserFixture.getEntity({
-                id: '1',
-                email: loginDto.email,
-                passwordHash: 'hashedPassword123',
-                type: UserType.USER,
-                isDeleted: true,
-            });
+        it('should handle UnauthorizedException when password is invalid', async () => {
+            mockCompare.mockResolvedValue(false);
 
-            userRepository.findByEmail.mockResolvedValue(deletedUser);
-
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                UnauthorizedException,
-            );
-            await expect(useCase.execute(loginDto)).rejects.toThrow(
-                'Account has been deactivated',
+            await expect(
+                LoginUseCase.validatePassword(password, user),
+            ).rejects.toThrow(
+                new UnauthorizedException(authErrors.INVALID_CREDENTIALS),
             );
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(loginDto.email);
-            expect(hashService.compare).not.toHaveBeenCalled();
-            expect(jwtService.sign).not.toHaveBeenCalled();
+            expect(mockCompare).toHaveBeenCalledWith(
+                password,
+                user.passwordHash,
+            );
+        });
+
+        it('should handle unexpected error', async () => {
+            mockCompare.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(
+                LoginUseCase.validatePassword(password, user),
+            ).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
         });
     });
 });

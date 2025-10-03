@@ -3,25 +3,28 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 import { CreateAdminUseCase } from '@user/application/use-cases/create-admin';
+import { UserType } from '@user/domain/entities/user';
 import { AdminController } from '@user/interfaces/http/controllers/admin';
-import { CreateAdminDto } from '@user/interfaces/http/dtos/create-admin';
+import { UserMapper } from '@user/interfaces/http/mapper';
 
 describe('@user/interfaces/http/controllers/admin', () => {
     let controller: AdminController;
     let createAdminUseCase: jest.Mocked<CreateAdminUseCase>;
 
-    beforeEach(async() => {
-        const mockCreateAdminUseCase = {
-            execute: jest.fn(),
-        };
+    const admin = UserFixture.getEntity({
+        id: '000000000000000000000001',
+        type: UserType.ADMIN,
+    });
 
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AdminController],
             providers: [
                 {
                     provide: CreateAdminUseCase,
-                    useValue: mockCreateAdminUseCase,
+                    useValue: createMock<CreateAdminUseCase>(),
                 },
             ],
         }).compile();
@@ -34,40 +37,27 @@ describe('@user/interfaces/http/controllers/admin', () => {
         expect(controller).toBeDefined();
     });
 
-    describe('createAdmin', () => {
-        const createAdminDto: CreateAdminDto = {
-            name: 'Admin User',
-            email: 'admin@example.com',
-            password: 'password123',
-        };
+    describe('#createAdmin', () => {
+        const createDto = UserFixture.getCreateDto();
 
-        it('should create admin user successfully', async() => {
-            const mockAdmin = UserFixture.getAdminUser();
+        it('should create admin user successfully', async () => {
+            createAdminUseCase.execute.mockResolvedValue(admin);
 
-            createAdminUseCase.execute.mockResolvedValue(mockAdmin);
+            const result = await controller.createAdmin(createDto);
 
-            const result = await controller.createAdmin(createAdminDto);
-
-            expect(createAdminUseCase.execute).toHaveBeenCalledWith(createAdminDto);
+            expect(createAdminUseCase.execute).toHaveBeenCalledWith(createDto);
             expect(result).toEqual({
                 message: 'Admin created successfully',
-                data: {
-                    id: mockAdmin.id,
-                    name: mockAdmin.name,
-                    email: mockAdmin.email,
-                    capabilities: mockAdmin.capabilities,
-                    createdAt: mockAdmin.createdAt.toISOString(),
-                    updatedAt: mockAdmin.updatedAt.toISOString(),
-                },
+                data: UserMapper.toDto(admin),
             });
         });
 
-        it('should handle admin creation failure', async() => {
+        it('should throw an error if the admin creation fails', async () => {
             createAdminUseCase.execute.mockRejectedValue(
                 new Error('User creation failed'),
             );
 
-            await expect(controller.createAdmin(createAdminDto)).rejects.toThrow(
+            await expect(controller.createAdmin(createDto)).rejects.toThrow(
                 'User creation failed',
             );
         });

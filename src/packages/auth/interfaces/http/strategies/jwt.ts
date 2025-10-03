@@ -22,7 +22,7 @@ export interface JwtUser {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(configService: ConfigService) {
+    constructor (configService: ConfigService) {
         const secret = configService.get<string>('JWT_SECRET')!;
 
         super({
@@ -33,10 +33,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     /**
-   * Transforms JWT payload into user object format
-   * Required by Passport.js - cannot rename this method
-   */
-    validate(payload: JwtPayload): JwtUser {
+     * Transforms JWT payload into user object format
+     * Required by Passport.js - cannot rename this method
+     */
+    // eslint-disable-next-line class-methods-use-this
+    validate (payload: JwtPayload): JwtUser {
         return {
             id: payload.sub,
             email: payload.email,

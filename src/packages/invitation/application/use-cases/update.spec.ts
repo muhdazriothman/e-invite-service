@@ -1,3 +1,4 @@
+import { InvitationService } from '@invitation/application/services/invitation';
 import { UpdateInvitationUseCase } from '@invitation/application/use-cases/update';
 import {
     CelebratedPersonType,
@@ -8,6 +9,7 @@ import { InvitationRepository } from '@invitation/infra/repository';
 import { UpdateInvitationDto } from '@invitation/interfaces/http/dtos/update';
 import {
     BadRequestException,
+    InternalServerErrorException,
     NotFoundException,
 } from '@nestjs/common';
 import {
@@ -15,10 +17,9 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { invitationErrors } from '@shared/constants/error-codes';
-import { DateValidator } from '@shared/utils/date';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { UserFixture } from '@test/fixture/user';
-import { DateTime } from 'luxon';
+import { createMock } from '@test/utils/mocks';
 
 describe('@invitation/application/use-cases/update', () => {
     const userId = '000000000000000000000001';
@@ -26,12 +27,7 @@ describe('@invitation/application/use-cases/update', () => {
 
     let useCase: UpdateInvitationUseCase;
     let mockInvitationRepository: jest.Mocked<InvitationRepository>;
-    let mockDateValidator: {
-        parseDate: jest.SpyInstance;
-        isValidFormat: jest.SpyInstance;
-        isOnOrBeforeDate: jest.SpyInstance;
-        getDaysBetweenDates: jest.SpyInstance;
-    };
+    let mockInvitationService: jest.Mocked<InvitationService>;
 
     const user = UserFixture.getEntity({
         id: userId,
@@ -86,43 +82,29 @@ describe('@invitation/application/use-cases/update', () => {
         rsvpDueDate: '2025-06-08T00:00:00.000Z',
     };
 
-
     const invitation = InvitationFixture.getEntity({
         id: invitationId,
         userId,
     });
 
-    beforeEach(async() => {
-        const invitationRepository = {
-            findById: jest.fn(),
-            update: jest.fn(),
-        };
-
-        const dateValidator = new DateValidator();
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 UpdateInvitationUseCase,
                 {
-                    provide: 'InvitationRepository',
-                    useValue: invitationRepository,
+                    provide: InvitationRepository,
+                    useValue: createMock<InvitationRepository>(),
                 },
                 {
-                    provide: 'DateValidator',
-                    useValue: dateValidator,
+                    provide: InvitationService,
+                    useValue: createMock<InvitationService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<UpdateInvitationUseCase>(UpdateInvitationUseCase);
-        mockInvitationRepository = module.get('InvitationRepository');
-
-        mockDateValidator = {
-            parseDate: jest.spyOn(dateValidator, 'parseDate'),
-            isValidFormat: jest.spyOn(dateValidator, 'isValidFormat'),
-            isOnOrBeforeDate: jest.spyOn(dateValidator, 'isOnOrBeforeDate'),
-            getDaysBetweenDates: jest.spyOn(dateValidator, 'getDaysBetweenDates'),
-        };
+        mockInvitationRepository = module.get(InvitationRepository);
+        mockInvitationService = module.get(InvitationService);
     });
 
     afterEach(() => {
@@ -135,44 +117,34 @@ describe('@invitation/application/use-cases/update', () => {
     });
 
     describe('#execute', () => {
-        let mockIsEventDateInThePast: jest.SpyInstance;
-        let mockIsRsvpDueDateAfterEventDate: jest.SpyInstance;
-
         beforeEach(() => {
-            mockIsEventDateInThePast = jest.spyOn(
-                useCase,
-                'isEventDateInThePast',
-            ).mockReturnValue(false);
-
-            mockIsRsvpDueDateAfterEventDate = jest.spyOn(
-                useCase,
-                'isRsvpDueDateAfterEventDate',
-            ).mockReturnValue(false);
-
-            mockInvitationRepository.findById.mockResolvedValue(invitation);
-            mockInvitationRepository.update.mockResolvedValue(invitation);
+            mockInvitationService.findByIdAndUserIdOrFail.mockResolvedValue(invitation);
+            mockInvitationService.validateEventDateIsFuture.mockReturnValue();
+            mockInvitationService.validateRsvpDueDateNotAfterEventDate.mockReturnValue();
+            mockInvitationRepository.updateByIdAndUserId.mockResolvedValue(invitation);
         });
 
-        it('should update invitation successfully with valid props', async() => {
+        it('should update invitation successfully with valid props', async () => {
             const result = await useCase.execute(
+                user,
                 invitationId,
                 updateInvitationDto,
-                user,
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockIsEventDateInThePast).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
-            expect(mockIsRsvpDueDateAfterEventDate).toHaveBeenCalledWith(
+            expect(mockInvitationService.validateEventDateIsFuture).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
+            expect(mockInvitationService.validateRsvpDueDateNotAfterEventDate).toHaveBeenCalledWith(
                 updateInvitationDto.rsvpDueDate,
                 updateInvitationDto.date?.gregorianDate,
             );
 
-            expect(mockInvitationRepository.update).toHaveBeenCalledWith(
+            expect(mockInvitationRepository.updateByIdAndUserId).toHaveBeenCalledWith(
                 invitationId,
+                userId,
                 expect.objectContaining({
                     type: InvitationType.WEDDING,
                     title: 'Updated Title',
@@ -221,240 +193,83 @@ describe('@invitation/application/use-cases/update', () => {
                     ]),
                     rsvpDueDate: expect.any(Date),
                 }),
-                userId,
             );
 
             expect(result).toEqual(invitation);
         });
 
-        it('should throw NotFoundException when invitation not found', async() => {
+        it('should handle NotFoundException', async () => {
             const updateData: UpdateInvitationDto = {
                 title: 'Updated Title',
             };
 
-            mockInvitationRepository.findById.mockResolvedValue(null);
+            mockInvitationService.findByIdAndUserIdOrFail.mockRejectedValue(
+                new NotFoundException(invitationErrors.INVITATION_NOT_FOUND),
+            );
 
             await expect(
                 useCase.execute(
+                    user,
                     invitationId,
                     updateData,
-                    user,
                 ),
             ).rejects.toThrow(
                 new NotFoundException(invitationErrors.INVITATION_NOT_FOUND),
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockIsEventDateInThePast).not.toHaveBeenCalled();
-            expect(mockIsRsvpDueDateAfterEventDate).not.toHaveBeenCalled();
-            expect(mockInvitationRepository.update).not.toHaveBeenCalled();
+            expect(mockInvitationService.validateEventDateIsFuture).not.toHaveBeenCalled();
+            expect(mockInvitationService.validateRsvpDueDateNotAfterEventDate).not.toHaveBeenCalled();
+            expect(mockInvitationRepository.updateByIdAndUserId).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when event date is in the past', async() => {
-            mockIsEventDateInThePast.mockReturnValue(true);
+        it('should handle BadRequestException', async () => {
+            mockInvitationService.validateEventDateIsFuture.mockImplementation(() => {
+                throw new BadRequestException(invitationErrors.EVENT_DATE_IN_THE_PAST);
+            });
 
             await expect(useCase.execute(
+                user,
                 invitationId,
                 updateInvitationDto,
-                user,
             )).rejects.toThrow(
                 new BadRequestException(invitationErrors.EVENT_DATE_IN_THE_PAST),
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockIsEventDateInThePast).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
+            expect(mockInvitationService.validateEventDateIsFuture).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
 
-            expect(mockIsRsvpDueDateAfterEventDate).not.toHaveBeenCalled();
-            expect(mockInvitationRepository.update).not.toHaveBeenCalled();
+            expect(mockInvitationService.validateRsvpDueDateNotAfterEventDate).not.toHaveBeenCalled();
+            expect(mockInvitationRepository.updateByIdAndUserId).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when RSVP due date is after event date', async() => {
-            mockIsRsvpDueDateAfterEventDate.mockReturnValue(true);
+        it('should throw unexpected error', async () => {
+            mockInvitationService.findByIdAndUserIdOrFail.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
 
             await expect(useCase.execute(
+                user,
                 invitationId,
                 updateInvitationDto,
-                user,
             )).rejects.toThrow(
-                new BadRequestException(invitationErrors.RSVP_DUE_DATE_AFTER_EVENT_DATE),
+                new InternalServerErrorException(new Error('Unexpected error')),
             );
 
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
+            expect(mockInvitationService.findByIdAndUserIdOrFail).toHaveBeenCalledWith(
                 invitationId,
                 userId,
             );
 
-            expect(mockIsEventDateInThePast).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
-            expect(mockIsRsvpDueDateAfterEventDate).toHaveBeenCalledWith(
-                updateInvitationDto.rsvpDueDate,
-                updateInvitationDto.date?.gregorianDate,
-            );
-
-            expect(mockInvitationRepository.update).not.toHaveBeenCalled();
-        });
-
-        it('should throw NotFoundException when update operation fails to return the updated invitation', async() => {
-            mockInvitationRepository.findById.mockResolvedValue(invitation);
-            mockInvitationRepository.update.mockResolvedValue(null);
-
-            await expect(useCase.execute(
-                invitationId,
-                updateInvitationDto,
-                user,
-            )).rejects.toThrow(
-                new NotFoundException(invitationErrors.FAILED_TO_UPDATE_INVITATION),
-            );
-
-            expect(mockInvitationRepository.findById).toHaveBeenCalledWith(
-                invitationId,
-                userId,
-            );
-
-            expect(mockIsEventDateInThePast).toHaveBeenCalledWith(updateInvitationDto.date?.gregorianDate);
-            expect(mockIsRsvpDueDateAfterEventDate).toHaveBeenCalledWith(
-                updateInvitationDto.rsvpDueDate,
-                updateInvitationDto.date?.gregorianDate,
-            );
-
-            expect(mockInvitationRepository.update).toHaveBeenCalledWith(
-                invitationId,
-                expect.objectContaining({
-                    type: InvitationType.WEDDING,
-                    title: 'Updated Title',
-                    hosts: expect.arrayContaining([
-                        expect.objectContaining({
-                            name: 'John Doe',
-                            title: 'Groom',
-                            relationshipWithCelebratedPerson: RelationshipType.SPOUSE,
-                            phoneNumber: '+1234567890',
-                            email: 'john@example.com',
-                        }),
-                    ]),
-                    celebratedPersons: expect.arrayContaining([
-                        expect.objectContaining({
-                            name: 'Jane Doe',
-                            title: 'Bride',
-                            relationshipWithHost: RelationshipType.SPOUSE,
-                            celebrationDate: expect.any(Date),
-                            type: CelebratedPersonType.BRIDE,
-                        }),
-                    ]),
-                    date: expect.objectContaining({
-                        gregorianDate: expect.any(Date),
-                        hijriDate: '1446-10-20',
-                    }),
-                    location: expect.objectContaining({
-                        address: '123 Wedding St, City, Country',
-                        wazeLink: 'https://waze.com/ul/123',
-                        googleMapsLink: 'https://maps.google.com/?q=123',
-                    }),
-                    itineraries: expect.arrayContaining([
-                        expect.objectContaining({
-                            activities: ['Reception', 'Dinner', 'Dancing'],
-                            startTime: '18:00',
-                            endTime: '23:00',
-                        }),
-                    ]),
-                    contactPersons: expect.arrayContaining([
-                        expect.objectContaining({
-                            name: 'Contact Person',
-                            title: 'Wedding Coordinator',
-                            relationshipWithCelebratedPerson: RelationshipType.FRIEND,
-                            phoneNumber: '+1234567890',
-                            whatsappNumber: '+1234567890',
-                        }),
-                    ]),
-                    rsvpDueDate: expect.any(Date),
-                }),
-                userId,
-            );
-        });
-    });
-
-    describe('#isEventDateInThePast', () => {
-        beforeEach(() => {
-            jest.useFakeTimers();
-            jest.setSystemTime(new Date('2023-06-15T12:00:00.000Z'));
-        });
-
-        afterEach(() => {
-            jest.useRealTimers();
-        });
-
-        it('should return true when event date is in the past', () => {
-            const pastDate = '2020-01-01T00:00:00.000Z';
-            const now = DateTime.utc();
-
-            const result = useCase.isEventDateInThePast(pastDate);
-
-            expect(mockDateValidator.parseDate).toHaveBeenCalledWith(pastDate);
-
-            const parsedPastDate = mockDateValidator.parseDate.mock.results[0].value;
-            expect(mockDateValidator.isOnOrBeforeDate).toHaveBeenCalledWith(
-                parsedPastDate,
-                now,
-            );
-
-            expect(result).toBe(true);
-        });
-
-        it('should return false when event date is in the future', () => {
-            const futureDate = '2025-06-15T00:00:00.000Z';
-            const now = DateTime.utc();
-
-            const result = useCase.isEventDateInThePast(futureDate);
-
-            expect(mockDateValidator.parseDate).toHaveBeenCalledWith(futureDate);
-
-            const parsedFutureDate = mockDateValidator.parseDate.mock.results[0].value;
-            expect(mockDateValidator.isOnOrBeforeDate).toHaveBeenCalledWith(
-                parsedFutureDate,
-                now,
-            );
-
-            expect(result).toBe(false);
-        });
-    });
-
-    describe('#isRsvpDueDateAfterEventDate', () => {
-        const eventDate = '2025-06-15T00:00:00.000Z';
-
-        it('should return true when RSVP due date is after event date', () => {
-            const rsvpDate = '2025-06-20T00:00:00.000Z';
-
-            const result = useCase.isRsvpDueDateAfterEventDate(
-                rsvpDate,
-                eventDate,
-            );
-
-            expect(mockDateValidator.parseDate).toHaveBeenCalledTimes(2);
-            expect(mockDateValidator.parseDate).toHaveBeenNthCalledWith(1, rsvpDate);
-            expect(mockDateValidator.parseDate).toHaveBeenNthCalledWith(2, eventDate);
-
-            expect(result).toBe(true);
-        });
-
-        it('should return false when RSVP due date is before event date', () => {
-            const rsvpDate = '2025-06-10T00:00:00.000Z';
-
-            const result = useCase.isRsvpDueDateAfterEventDate(
-                rsvpDate,
-                eventDate,
-            );
-
-            expect(mockDateValidator.parseDate).toHaveBeenCalledTimes(2);
-            expect(mockDateValidator.parseDate).toHaveBeenNthCalledWith(1, rsvpDate);
-            expect(mockDateValidator.parseDate).toHaveBeenNthCalledWith(2, eventDate);
-
-            expect(result).toBe(false);
+            expect(mockInvitationRepository.updateByIdAndUserId).not.toHaveBeenCalled();
         });
     });
 });

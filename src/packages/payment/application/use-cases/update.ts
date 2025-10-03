@@ -1,107 +1,147 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
     BadRequestException,
+    InternalServerErrorException,
+    ConflictException,
 } from '@nestjs/common';
+import { PaymentService } from '@payment/application/services/payment';
 import {
     Payment,
     PaymentStatus,
+    UpdatePaymentProps,
 } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { UpdatePaymentDto } from '@payment/interfaces/http/dtos/update';
 
+import { paymentErrors } from '../../../shared/constants/error-codes';
+
 @Injectable()
 export class UpdatePaymentUseCase {
-    constructor(
-    @Inject('PaymentRepository')
-    private readonly paymentRepository: PaymentRepository,
-    ) {}
+    constructor (
+        private readonly paymentRepository: PaymentRepository,
 
-    async execute(
+        private readonly paymentService: PaymentService,
+    ) { }
+
+    async execute (
         id: string,
         updatePaymentDto: UpdatePaymentDto,
     ): Promise<Payment> {
-        const existingPayment = await this.paymentRepository.findById(id);
-        if (!existingPayment) {
-            throw new NotFoundException('Payment not found');
-        }
+        const {
+            amount,
+            currency,
+            paymentMethod,
+            referenceNumber,
+            description,
+            status,
+            planType,
+        } = updatePaymentDto;
 
-        // Check if new reference already exists
-        if (updatePaymentDto.reference !== undefined) {
-            const paymentWithSameReference =
-        await this.paymentRepository.findByReference(
-            updatePaymentDto.reference,
-        );
-            if (paymentWithSameReference && paymentWithSameReference.id !== id) {
-                throw new BadRequestException(
-                    'Payment with this reference already exists',
+        try {
+            const updates: Partial<UpdatePaymentProps> = {};
+
+            const existingPayment = await this.paymentService.findByIdOrFail(id);
+
+            if (referenceNumber !== undefined &&
+                referenceNumber !== existingPayment.referenceNumber
+            ) {
+                await this.paymentService.validateReferenceIsUnique(
+                    referenceNumber,
                 );
+
+                updates.referenceNumber = referenceNumber;
             }
-        }
 
-        // Handle status changes and prepare updates
-        const updates: Partial<Pick<Payment, 'status' | 'usedAt'>> = {};
+            if (updatePaymentDto.status !== undefined) {
+                UpdatePaymentUseCase.validateStatusTransition(
+                    existingPayment.status,
+                    updatePaymentDto.status,
+                );
 
-        if (updatePaymentDto.status !== undefined) {
-            UpdatePaymentUseCase.validateStatusTransition(
-                existingPayment.status,
-                updatePaymentDto.status,
+                updates.status = status;
+
+                if (updatePaymentDto.status === PaymentStatus.USED) {
+                    updates.usedAt = new Date();
+                }
+            }
+
+            if (amount !== undefined) {
+                updates.amount = amount;
+            }
+
+            if (currency !== undefined) {
+                updates.currency = currency;
+            }
+
+            if (paymentMethod !== undefined) {
+                updates.paymentMethod = paymentMethod;
+            }
+
+            if (description !== undefined) {
+                updates.description = description;
+            }
+
+            if (planType !== undefined) {
+                updates.planType = planType;
+            }
+
+            const result = await this.paymentRepository.updateById(
+                id,
+                updates,
             );
-            updates.status = updatePaymentDto.status;
 
-            if (updatePaymentDto.status === PaymentStatus.USED) {
-                updates.usedAt = new Date();
+            if (!result) {
+                throw new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND);
             }
-        }
 
-        const updatedPayment = await this.paymentRepository.update(id, updates);
-        if (!updatedPayment) {
-            throw new NotFoundException('Payment not found');
+            return result;
+        } catch (error) {
+            if (
+                error instanceof NotFoundException ||
+                error instanceof ConflictException ||
+                error instanceof BadRequestException
+            ) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
-        return updatedPayment;
     }
 
-    static validateStatusTransition(
+    static validateStatusTransition (
         currentStatus: PaymentStatus,
         newStatus: PaymentStatus,
     ): void {
-        switch (newStatus) {
-        case PaymentStatus.VERIFIED:
-            if (currentStatus !== PaymentStatus.PENDING) {
-                throw new BadRequestException(
-                    'Only pending payments can be verified',
-                );
-            }
-            break;
-        case PaymentStatus.USED:
-            if (currentStatus !== PaymentStatus.VERIFIED) {
-                throw new BadRequestException(
-                    'Only verified payments can be marked as used',
-                );
-            }
-            break;
-        case PaymentStatus.EXPIRED:
-            if (
-                currentStatus !== PaymentStatus.PENDING &&
-          currentStatus !== PaymentStatus.VERIFIED
-            ) {
-                throw new BadRequestException(
-                    'Only pending or verified payments can be marked as expired',
-                );
-            }
-            break;
-        case PaymentStatus.REFUNDED:
-            if (currentStatus === PaymentStatus.REFUNDED) {
-                throw new BadRequestException('Payment is already refunded');
-            }
-            break;
-        case PaymentStatus.PENDING:
-            // Reset to pending (admin override) - allowed from any status
-            break;
-        default:
+        const allowedTransitions = {
+            [PaymentStatus.PENDING]: [
+                PaymentStatus.PENDING,
+                PaymentStatus.VERIFIED,
+                PaymentStatus.EXPIRED,
+                PaymentStatus.REFUNDED,
+            ],
+            [PaymentStatus.VERIFIED]: [
+                PaymentStatus.VERIFIED,
+                PaymentStatus.USED,
+                PaymentStatus.EXPIRED,
+                PaymentStatus.REFUNDED,
+            ],
+            [PaymentStatus.USED]: [
+                PaymentStatus.USED,
+                PaymentStatus.REFUNDED,
+            ],
+            [PaymentStatus.EXPIRED]: [
+                PaymentStatus.EXPIRED,
+                PaymentStatus.REFUNDED,
+            ],
+            [PaymentStatus.REFUNDED]: [
+                PaymentStatus.REFUNDED,
+            ],
+        };
+
+        if (!allowedTransitions[currentStatus].includes(newStatus)) {
             throw new BadRequestException(
-                `Invalid status transition to ${String(newStatus)}`,
+                paymentErrors.INVALID_STATUS_TRANSITION,
             );
         }
     }

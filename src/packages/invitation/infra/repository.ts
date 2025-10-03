@@ -46,16 +46,16 @@ interface DeleteFilter {
 
 @Injectable()
 export class InvitationRepository {
-    constructor(
+    constructor (
     @InjectModel(InvitationMongoModelName)
     private readonly invitationModel: Model<InvitationHydrated>,
     ) {}
 
-    static getCollectionName(): string {
+    static getCollectionName (): string {
         return 'invitations';
     }
 
-    static toDomain(
+    static toDomain (
         document: InvitationLean,
     ): Invitation {
         return Invitation.createFromDb({
@@ -70,14 +70,14 @@ export class InvitationRepository {
             itineraries: document.itineraries,
             contactPersons: document.contactPersons,
             rsvpDueDate: document.rsvpDueDate,
-            isDeleted: document.isDeleted ?? false,
+            isDeleted: document.isDeleted,
             createdAt: document.createdAt,
             updatedAt: document.updatedAt,
-            deletedAt: document.deletedAt ?? null,
+            deletedAt: document.deletedAt,
         });
     }
 
-    static toDocument(
+    static toDocument (
         invitation: Invitation,
         model: Model<InvitationHydrated>,
     ): InvitationHydrated {
@@ -100,7 +100,9 @@ export class InvitationRepository {
         });
     }
 
-    async create(invitation: Invitation): Promise<Invitation> {
+    async create (
+        invitation: Invitation,
+    ): Promise<Invitation> {
         const document = InvitationRepository.toDocument(
             invitation,
             this.invitationModel,
@@ -112,7 +114,7 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(createdInvitation);
     }
 
-    async findAllWithPagination(
+    async findAllWithPagination (
         userId?: string,
         next?: string,
         previous?: string,
@@ -136,6 +138,7 @@ export class InvitationRepository {
             if (/^[0-9a-fA-F]{24}$/.test(next)) {
                 filter._id = { $gt: next };
             } else {
+                // eslint-disable-next-line no-console
                 console.warn('Invalid next cursor format provided:', next);
             }
         } else if (previous) {
@@ -144,6 +147,7 @@ export class InvitationRepository {
             if (/^[0-9a-fA-F]{24}$/.test(previous)) {
                 filter._id = { $lt: previous };
             } else {
+                // eslint-disable-next-line no-console
                 console.warn('Invalid previous cursor format provided:', previous);
             }
         }
@@ -243,7 +247,7 @@ export class InvitationRepository {
         }
     }
 
-    async findById(
+    async findById (
         id: string,
     ): Promise<Invitation | null> {
         const document = await this._findByFilter({
@@ -257,7 +261,7 @@ export class InvitationRepository {
         return document;
     }
 
-    async findByIdAndUserId(
+    async findByIdAndUserId (
         id: string,
         userId: string,
     ): Promise<Invitation | null> {
@@ -273,7 +277,7 @@ export class InvitationRepository {
         return document;
     }
 
-    async _findByFilter(
+    async _findByFilter (
         filter: FindByFilter,
     ): Promise<Invitation | null> {
         const document = await this.invitationModel
@@ -288,14 +292,14 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async countByUserId(userId: string): Promise<number> {
+    async countByUserId (userId: string): Promise<number> {
         return await this.invitationModel.countDocuments({
             userId,
             isDeleted: false,
         });
     }
 
-    async updateById(
+    async updateById (
         id: string,
         updates: UpdateInvitationProps,
     ): Promise<Invitation | null> {
@@ -308,7 +312,7 @@ export class InvitationRepository {
         );
     }
 
-    async updateByIdAndUserId(
+    async updateByIdAndUserId (
         id: string,
         userId: string,
         updates: UpdateInvitationProps,
@@ -323,7 +327,7 @@ export class InvitationRepository {
         );
     }
 
-    async _update(
+    async _update (
         filter: UpdateFilter,
         updates: UpdateInvitationProps,
     ): Promise<Invitation | null> {
@@ -332,49 +336,47 @@ export class InvitationRepository {
             updatedAt: new Date(),
         };
 
-        if(updates.type !== undefined) {
+        if (updates.type !== undefined) {
             updatesToApply.type = updates.type;
         }
 
-        if(updates.title !== undefined) {
+        if (updates.title !== undefined) {
             updatesToApply.title = updates.title;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.hosts !== undefined) {
+        if (updates.hosts !== undefined) {
             updatesToApply.hosts = updates.hosts;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.celebratedPersons !== undefined) {
+        if (updates.celebratedPersons !== undefined) {
             updatesToApply.celebratedPersons = updates.celebratedPersons;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.date !== undefined) {
+        if (updates.date !== undefined) {
             updatesToApply.date = updates.date;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.location !== undefined) {
+        if (updates.location !== undefined) {
             updatesToApply.location = updates.location;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.itineraries !== undefined) {
+        if (updates.itineraries !== undefined) {
             updatesToApply.itineraries = updates.itineraries;
         }
 
         // TODO: Support partial updates without replacing whole objects
-        if(updates.contactPersons !== undefined) {
+        if (updates.contactPersons !== undefined) {
             updatesToApply.contactPersons = updates.contactPersons;
         }
 
-        if(updates.rsvpDueDate !== undefined) {
+        if (updates.rsvpDueDate !== undefined) {
             updatesToApply.rsvpDueDate = updates.rsvpDueDate;
         }
-
-        console.log('updatesToApply', updatesToApply);
 
         const document = await this.invitationModel
             .findOneAndUpdate(
@@ -393,7 +395,7 @@ export class InvitationRepository {
         return InvitationRepository.toDomain(document);
     }
 
-    async deleteById(
+    async deleteById (
         id: string,
     ): Promise<boolean> {
         const filter: DeleteFilter = {
@@ -406,7 +408,7 @@ export class InvitationRepository {
         return this._delete(filter);
     }
 
-    async deleteByIdAndUserId(
+    async deleteByIdAndUserId (
         id: string,
         userId: string,
     ): Promise<boolean> {
@@ -421,7 +423,7 @@ export class InvitationRepository {
         return this._delete(filter);
     }
 
-    async _delete(
+    async _delete (
         filter: DeleteFilter,
     ): Promise<boolean> {
         const result = await this.invitationModel.updateOne(

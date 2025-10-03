@@ -1,3 +1,4 @@
+import { UserFixture } from '@test/fixture/user';
 import { LoginDto } from '@user/interfaces/http/dtos/login';
 import { validate } from 'class-validator';
 
@@ -5,54 +6,48 @@ describe('@user/interfaces/http/dtos/login', () => {
     let dto: LoginDto;
 
     beforeEach(() => {
-        dto = new LoginDto();
-        dto.username = 'testuser';
-        dto.password = 'password123';
+        dto = UserFixture.getLoginDto();
     });
 
     describe('#validation', () => {
-        it('should pass validation with valid data', async() => {
+        it('should pass validation with valid data', async () => {
             const errors = await validate(dto);
-            expect(errors.length).toBe(0);
+            expect(errors).toHaveLength(0);
         });
 
         describe('username', () => {
-            it('should fail validate when username is not provided', async() => {
-                // @ts-expect-error - Testing undefined username
-                dto.username = undefined;
+            it('should fail validation when username is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.username;
 
                 const errors = await validate(dto);
-                expect(errors.length).toBeGreaterThan(0);
-                expect(errors[0].property).toBe('username');
+                expect(errors).toHaveValidationError('username');
             });
 
-            it('should fail validate when username is not a string', async() => {
-                // @ts-expect-error - Testing non-string username
+            it('should fail validation when username is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
                 dto.username = 1;
 
                 const errors = await validate(dto);
-                expect(errors.length).toBeGreaterThan(0);
-                expect(errors[0].property).toBe('username');
+                expect(errors).toHaveValidationError('username', 'isString');
             });
         });
 
         describe('password', () => {
-            it('should fail validate when password is not provided', async() => {
-                // @ts-expect-error - Testing undefined password
-                dto.password = undefined;
+            it('should fail validation when password is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.password;
 
                 const errors = await validate(dto);
-                expect(errors.length).toBeGreaterThan(0);
-                expect(errors[0].property).toBe('password');
+                expect(errors).toHaveValidationError('password');
             });
 
-            it('should fail validate when password is not a string', async() => {
-                // @ts-expect-error - Testing non-string password
+            it('should fail validation when password is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
                 dto.password = 1;
 
                 const errors = await validate(dto);
-                expect(errors.length).toBeGreaterThan(0);
-                expect(errors[0].property).toBe('password');
+                expect(errors).toHaveValidationError('password', 'isString');
             });
         });
     });

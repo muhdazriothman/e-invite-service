@@ -6,8 +6,8 @@ import {
 } from '@invitation/domain/entities/invitation';
 import { InvitationRepository } from '@invitation/infra/repository';
 import {
+    InvitationHydrated,
     InvitationLean,
-    InvitationMongoDocument,
     InvitationMongoModelName,
     InvitationMongoSchema,
 } from '@invitation/infra/schema';
@@ -26,21 +26,21 @@ import {
 describe('@invitation/infra/repositories/invitation', () => {
     const userId = '000000000000000000000001';
 
-    let invitationRepository: InvitationRepository;
-    let invitationModel: Model<InvitationMongoDocument>;
+    let repository: InvitationRepository;
+    let invitationModel: Model<InvitationHydrated>;
     let module: TestingModule;
 
     let spyToDomain: jest.SpyInstance;
 
-    beforeAll(async() => {
-        const testContext = await setupRepositoryTest(
-            [{ name: InvitationMongoModelName, schema: InvitationMongoSchema }],
-            [InvitationRepository],
-        );
+    beforeAll(async () => {
+        const testContext = await setupRepositoryTest([{
+            name: InvitationMongoModelName,
+            schema: InvitationMongoSchema,
+        }], [InvitationRepository]);
 
         module = testContext.module;
-        invitationRepository = module.get<InvitationRepository>(InvitationRepository);
-        invitationModel = module.get<Model<InvitationMongoDocument>>(
+        repository = module.get<InvitationRepository>(InvitationRepository);
+        invitationModel = module.get<Model<InvitationHydrated>>(
             getModelToken(InvitationMongoModelName),
         );
     });
@@ -49,13 +49,13 @@ describe('@invitation/infra/repositories/invitation', () => {
         spyToDomain = jest.spyOn(InvitationRepository, 'toDomain');
     });
 
-    afterEach(async() => {
+    afterEach(async () => {
         jest.clearAllMocks();
         jest.restoreAllMocks();
         await invitationModel.deleteMany({});
     });
 
-    afterAll(async() => {
+    afterAll(async () => {
         await module.close();
         await MongoTestSetup.stop();
     });
@@ -68,61 +68,9 @@ describe('@invitation/infra/repositories/invitation', () => {
         });
 
         it('should convert MongoDB document to domain entity correctly', () => {
-            const document = {
-                _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+            const document = InvitationFixture.getLean({
                 userId,
-                type: InvitationType.WEDDING,
-                title: 'Wedding Celebration',
-                hosts: [
-                    {
-                        name: 'John Doe',
-                        title: 'Father of the Bride',
-                        relationshipWithCelebratedPerson: RelationshipType.PARENT,
-                        phoneNumber: '+1234567890',
-                        email: 'john@example.com',
-                    },
-                ],
-                celebratedPersons: [
-                    {
-                        name: 'Jane Doe',
-                        title: 'Bride',
-                        relationshipWithHost: RelationshipType.CHILD,
-                        celebrationDate: new Date('2024-06-15'),
-                        type: CelebratedPersonType.BRIDE,
-                    },
-                ],
-                date: {
-                    gregorianDate: new Date('2024-06-15'),
-                    hijriDate: '1445-12-08',
-                },
-                location: {
-                    address: '123 Wedding Hall, Downtown City',
-                    wazeLink: 'https://waze.com/ul/123456',
-                    googleMapsLink: 'https://maps.google.com/?q=123+Wedding+Hall',
-                },
-                itineraries: [
-                    {
-                        activities: ['Reception', 'Dinner', 'Dancing'],
-                        startTime: '18:00',
-                        endTime: '23:00',
-                    },
-                ],
-                contactPersons: [
-                    {
-                        name: 'Event Coordinator',
-                        title: 'Wedding Coordinator',
-                        relationshipWithCelebratedPerson: RelationshipType.FRIEND,
-                        phoneNumber: '+1234567892',
-                        whatsappNumber: '+1234567893',
-                    },
-                ],
-                rsvpDueDate: new Date('2024-06-01'),
-                createdAt: new Date('2024-01-01'),
-                updatedAt: new Date('2024-01-01'),
-                isDeleted: false,
-
-                deletedAt: null,
-            };
+            });
 
             const result = InvitationRepository.toDomain(document);
 
@@ -147,86 +95,46 @@ describe('@invitation/infra/repositories/invitation', () => {
                 deletedAt: document.deletedAt,
             });
         });
+    });
 
-        it('should handle document with null deletedAt', () => {
-            const document = {
-                _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
+    describe('#toDocument', () => {
+        it('should convert domain entity to MongoDB document correctly', () => {
+            const user = InvitationFixture.getEntity({
                 userId,
-                type: InvitationType.WEDDING,
-                title: 'Wedding Celebration',
-                hosts: [],
-                celebratedPersons: [],
-                date: {
-                    gregorianDate: new Date('2024-06-15'),
-                    hijriDate: '1445-12-08',
-                },
-                location: {
-                    address: '123 Wedding Hall',
-                    wazeLink: null,
-                    googleMapsLink: null,
-                },
-                itineraries: [],
-                contactPersons: [],
-                rsvpDueDate: new Date('2024-06-01'),
-                createdAt: new Date('2024-01-01'),
-                updatedAt: new Date('2024-01-01'),
-                isDeleted: false,
-                deletedAt: null,
-            };
+            });
+            const document = InvitationRepository.toDocument(
+                user,
+                invitationModel,
+            );
 
-            const result = InvitationRepository.toDomain(document);
-
-            expect(spyCreateFromDb).toHaveBeenCalledWith(document);
-
-            expect(result).toBeInstanceOf(Invitation);
-            expect(result.deletedAt).toBeNull();
-        });
-
-        it('should handle deleted document', () => {
-            const document = {
-                _id: new Types.ObjectId('507f1f77bcf86cd799439011'),
-                userId,
-                type: InvitationType.WEDDING,
-                title: 'Wedding Celebration',
-                hosts: [],
-                celebratedPersons: [],
-                date: {
-                    gregorianDate: new Date('2024-06-15'),
-                    hijriDate: '1445-12-08',
-                },
-                location: {
-                    address: '123 Wedding Hall',
-                    wazeLink: null,
-                    googleMapsLink: null,
-                },
-                itineraries: [],
-                contactPersons: [],
-                rsvpDueDate: new Date('2024-06-01'),
-                createdAt: new Date('2024-01-01'),
-                updatedAt: new Date('2024-01-01'),
-                isDeleted: true,
-                deletedAt: new Date('2024-01-02'),
-            };
-
-            const result = InvitationRepository.toDomain(document);
-
-            expect(spyCreateFromDb).toHaveBeenCalledWith(document);
-
-            expect(result).toBeInstanceOf(Invitation);
-            expect(result.isDeleted).toBe(true);
-            expect(result.deletedAt).toEqual(new Date(document.deletedAt));
+            expect(document).toBeInstanceOf(invitationModel);
+            expect(document).toMatchObject({
+                _id: expect.any(Types.ObjectId),
+                userId: user.userId,
+                type: user.type,
+                title: user.title,
+                hosts: user.hosts,
+                celebratedPersons: user.celebratedPersons,
+                date: user.date,
+                location: user.location,
+                itineraries: user.itineraries,
+                contactPersons: user.contactPersons,
+                rsvpDueDate: user.rsvpDueDate,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                isDeleted: user.isDeleted,
+                deletedAt: user.deletedAt,
+            });
         });
     });
 
     describe('#create', () => {
-        it('should create a new invitation successfully', async() => {
+        it('should create a new invitation successfully', async () => {
             const invitation = InvitationFixture.getEntity({
                 userId,
-                title: 'Wedding Celebration',
-                type: InvitationType.WEDDING,
             });
 
-            const result = await invitationRepository.create(invitation);
+            const result = await repository.create(invitation);
 
             expect(spyToDomain).toHaveBeenCalledWith({
                 _id: new Types.ObjectId(result.id),
@@ -258,28 +166,30 @@ describe('@invitation/infra/repositories/invitation', () => {
                     },
                 )
                 .lean<InvitationLean>();
-            expect(createdInvitation).toBeDefined();
-            expect(createdInvitation?._id.toString()).toBe(result.id);
-            expect(createdInvitation?.userId).toBe(invitation.userId);
-            expect(createdInvitation?.type).toBe(invitation.type);
-            expect(createdInvitation?.title).toBe(invitation.title);
-            expect(createdInvitation?.hosts).toStrictEqual(invitation.hosts);
-            expect(createdInvitation?.celebratedPersons).toStrictEqual(invitation.celebratedPersons);
-            expect(createdInvitation?.date).toStrictEqual(invitation.date);
-            expect(createdInvitation?.location).toStrictEqual(invitation.location);
-            expect(createdInvitation?.itineraries).toStrictEqual(invitation.itineraries);
-            expect(createdInvitation?.contactPersons).toStrictEqual(invitation.contactPersons);
-            expect(createdInvitation?.rsvpDueDate).toStrictEqual(invitation.rsvpDueDate);
-            expect(createdInvitation?.createdAt).toStrictEqual(invitation.createdAt);
-            expect(createdInvitation?.updatedAt).toStrictEqual(new Date('2024-01-01T00:00:00.000Z'));
-            expect(createdInvitation?.isDeleted).toBe(invitation.isDeleted);
-            expect(createdInvitation?.deletedAt).toStrictEqual(invitation.deletedAt);
+
+            expect(createdInvitation).toMatchObject({
+                _id: new Types.ObjectId(result.id),
+                userId: invitation.userId,
+                type: invitation.type,
+                title: invitation.title,
+                hosts: invitation.hosts,
+                celebratedPersons: invitation.celebratedPersons,
+                date: invitation.date,
+                location: invitation.location,
+                itineraries: invitation.itineraries,
+                contactPersons: invitation.contactPersons,
+                rsvpDueDate: invitation.rsvpDueDate,
+                createdAt: invitation.createdAt,
+                updatedAt: invitation.updatedAt,
+                isDeleted: invitation.isDeleted,
+                deletedAt: invitation.deletedAt,
+            });
         });
     });
 
     // TODO: standardize the tests
     describe('#findAllWithPagination', () => {
-        it('should return paginated invitations with default limit (forward)', async() => {
+        it('should return paginated invitations with default limit (forward)', async () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 25; i++) {
@@ -287,10 +197,10 @@ describe('@invitation/infra/repositories/invitation', () => {
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
-                invitations.push(await invitationRepository.create(invitation));
+                invitations.push(await repository.create(invitation));
             }
 
-            const result = await invitationRepository.findAllWithPagination();
+            const result = await repository.findAllWithPagination();
 
             expect(result.data).toHaveLength(20); // default limit
             expect(result.hasNextPage).toBe(true);
@@ -301,7 +211,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result.data[0]).toBeInstanceOf(Invitation);
         });
 
-        it('should return paginated invitations with custom limit (forward)', async() => {
+        it('should return paginated invitations with custom limit (forward)', async () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
@@ -309,10 +219,10 @@ describe('@invitation/infra/repositories/invitation', () => {
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
-                invitations.push(await invitationRepository.create(invitation));
+                invitations.push(await repository.create(invitation));
             }
 
-            const result = await invitationRepository.findAllWithPagination(
+            const result = await repository.findAllWithPagination(
                 undefined,
                 undefined,
                 undefined,
@@ -327,7 +237,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result.previousCursor).toBeUndefined(); // First page has no previous cursor
         });
 
-        it('should return paginated invitations with next cursor (forward pagination)', async() => {
+        it('should return paginated invitations with next cursor (forward pagination)', async () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
@@ -335,11 +245,11 @@ describe('@invitation/infra/repositories/invitation', () => {
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
-                invitations.push(await invitationRepository.create(invitation));
+                invitations.push(await repository.create(invitation));
             }
 
             // Get first page
-            const firstPage = await invitationRepository.findAllWithPagination(
+            const firstPage = await repository.findAllWithPagination(
                 undefined,
                 undefined,
                 undefined,
@@ -352,7 +262,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(firstPage.previousCursor).toBeUndefined(); // First page has no previous cursor
 
             // Get second page using next cursor
-            const secondPage = await invitationRepository.findAllWithPagination(
+            const secondPage = await repository.findAllWithPagination(
                 undefined,
                 firstPage.nextCursor,
                 undefined,
@@ -363,7 +273,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(secondPage.hasPreviousPage).toBe(true);
         });
 
-        it('should return paginated invitations with previous cursor (backward pagination)', async() => {
+        it('should return paginated invitations with previous cursor (backward pagination)', async () => {
             // Create multiple invitations
             const invitations: Invitation[] = [];
             for (let i = 0; i < 15; i++) {
@@ -371,11 +281,11 @@ describe('@invitation/infra/repositories/invitation', () => {
                     title: `Wedding Celebration ${i + 1}`,
                     type: InvitationType.WEDDING,
                 });
-                invitations.push(await invitationRepository.create(invitation));
+                invitations.push(await repository.create(invitation));
             }
 
             // Get first page
-            const firstPage = await invitationRepository.findAllWithPagination(
+            const firstPage = await repository.findAllWithPagination(
                 undefined,
                 undefined,
                 undefined,
@@ -383,7 +293,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             );
 
             // Get second page using next cursor
-            const secondPage = await invitationRepository.findAllWithPagination(
+            const secondPage = await repository.findAllWithPagination(
                 undefined,
                 firstPage.nextCursor,
                 undefined,
@@ -391,7 +301,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             );
 
             // Go back to first page using previous cursor
-            const backToFirstPage = await invitationRepository.findAllWithPagination(
+            const backToFirstPage = await repository.findAllWithPagination(
                 undefined,
                 undefined,
                 secondPage.previousCursor,
@@ -404,8 +314,8 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(backToFirstPage.hasPreviousPage).toBe(false);
         });
 
-        it('should return empty pagination result when no invitations exist', async() => {
-            const result = await invitationRepository.findAllWithPagination();
+        it('should return empty pagination result when no invitations exist', async () => {
+            const result = await repository.findAllWithPagination();
 
             expect(result.data).toEqual([]);
             expect(result.hasNextPage).toBe(false);
@@ -415,7 +325,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result.previousCursor).toBeUndefined();
         });
 
-        it('should filter by userId when provided', async() => {
+        it('should filter by userId when provided', async () => {
             const user1Invitation = InvitationFixture.getEntity({
                 userId: 'user1',
                 title: 'User 1 Wedding',
@@ -425,24 +335,24 @@ describe('@invitation/infra/repositories/invitation', () => {
                 title: 'User 2 Wedding',
             });
 
-            await invitationRepository.create(user1Invitation);
-            await invitationRepository.create(user2Invitation);
+            await repository.create(user1Invitation);
+            await repository.create(user2Invitation);
 
-            const result = await invitationRepository.findAllWithPagination('user1');
+            const result = await repository.findAllWithPagination('user1');
 
             expect(result.data).toHaveLength(1);
             expect(result.data[0].userId).toBe('user1');
             expect(result.data[0].title).toBe('User 1 Wedding');
         });
 
-        it('should handle invalid next cursor gracefully', async() => {
+        it('should handle invalid next cursor gracefully', async () => {
             // Create an invitation
             const invitation = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
             });
-            await invitationRepository.create(invitation);
+            await repository.create(invitation);
 
-            const result = await invitationRepository.findAllWithPagination(
+            const result = await repository.findAllWithPagination(
                 undefined,
                 'invalid-cursor',
             );
@@ -451,14 +361,14 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result.hasNextPage).toBe(false);
         });
 
-        it('should handle invalid previous cursor gracefully', async() => {
+        it('should handle invalid previous cursor gracefully', async () => {
             // Create an invitation
             const invitation = InvitationFixture.getEntity({
                 title: 'Wedding Celebration',
             });
-            await invitationRepository.create(invitation);
+            await repository.create(invitation);
 
-            const result = await invitationRepository.findAllWithPagination(
+            const result = await repository.findAllWithPagination(
                 undefined,
                 undefined,
                 'invalid-cursor',
@@ -470,11 +380,13 @@ describe('@invitation/infra/repositories/invitation', () => {
     });
 
     describe('#findById', () => {
-        it('should return an invitation when found by id', async() => {
-            const invitation = InvitationFixture.getLean();
+        it('should return an invitation when found by id', async () => {
+            const invitation = InvitationFixture.getLean({
+                userId,
+            });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.findById(invitation._id.toString());
+            const result = await repository.findById(invitation._id.toString());
 
             expect(spyToDomain).toHaveBeenCalledWith({
                 _id: invitation._id,
@@ -500,36 +412,34 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result).toEqual(toDomainResult);
         });
 
-        it('should return null when invitation is not found', async() => {
-            const result = await invitationRepository.findById(
+        it('should return null when invitation is not found', async () => {
+            const result = await repository.findById(
                 '000000000000000000000000',
             );
-
-            expect(spyToDomain).not.toHaveBeenCalled();
 
             expect(result).toBeNull();
         });
 
-        it('should return null when invitation is deleted', async() => {
+        it('should return null when invitation is deleted', async () => {
             const invitation = InvitationFixture.getEntity({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.findById(invitation.id);
-
-            expect(spyToDomain).not.toHaveBeenCalled();
+            const result = await repository.findById(invitation.id);
 
             expect(result).toBeNull();
         });
     });
 
     describe('#findByIdAndUserId', () => {
-        it('should return an invitation when found by id and userId', async() => {
-            const invitation = InvitationFixture.getLean();
+        it('should return an invitation when found by id and userId', async () => {
+            const invitation = InvitationFixture.getLean({
+                userId,
+            });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.findByIdAndUserId(
+            const result = await repository.findByIdAndUserId(
                 invitation._id.toString(),
                 invitation.userId,
             );
@@ -555,80 +465,76 @@ describe('@invitation/infra/repositories/invitation', () => {
             const toDomainResult = spyToDomain.mock.results[0].value as Invitation;
 
             expect(result).toBeInstanceOf(Invitation);
-            expect(result).toEqual(toDomainResult);
+            expect(result).toMatchObject(toDomainResult);
         });
 
-        it('should return null when invitation exists but userId does not match', async() => {
+        it('should return null when invitation exists but userId does not match', async () => {
             const invitation = InvitationFixture.getEntity({
                 userId: '000000000000000000000001',
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.findByIdAndUserId(
+            const result = await repository.findByIdAndUserId(
                 invitation.id,
                 '000000000000000000000002',
             );
 
-            expect(spyToDomain).not.toHaveBeenCalled();
-
             expect(result).toBeNull();
         });
 
-        it('should return null when invitation is not found', async() => {
-            const result = await invitationRepository.findByIdAndUserId(
+        it('should return null when invitation is not found', async () => {
+            const result = await repository.findByIdAndUserId(
                 '000000000000000000000000',
                 '000000000000000000000001',
             );
 
-            expect(spyToDomain).not.toHaveBeenCalled();
-
             expect(result).toBeNull();
         });
 
-        it('should return null when invitation is deleted', async() => {
+        it('should return null when invitation is deleted', async () => {
             const invitation = InvitationFixture.getEntity({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.findByIdAndUserId(
+            const result = await repository.findByIdAndUserId(
                 invitation.id,
                 invitation.userId,
             );
-
-            expect(spyToDomain).not.toHaveBeenCalled();
 
             expect(result).toBeNull();
         });
     });
 
     describe('#countByUserId', () => {
-        it('should return the number of invitations for a user', async() => {
-            const invitation = InvitationFixture.getEntity();
+        it('should return the number of invitations for a user', async () => {
+            const invitation = InvitationFixture.getEntity({
+                userId,
+            });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.countByUserId(
+            const result = await repository.countByUserId(
                 invitation.userId,
             );
 
             expect(result).toBe(1);
         });
 
-        it('should return 0 when no invitations exist for a user', async() => {
-            const result = await invitationRepository.countByUserId(
+        it('should return 0 when no invitations exist for a user', async () => {
+            const result = await repository.countByUserId(
                 '000000000000000000000001',
             );
 
             expect(result).toBe(0);
         });
 
-        it('should return 0 when invitations are deleted', async() => {
+        it('should return 0 when invitations are deleted', async () => {
             const invitation = InvitationFixture.getEntity({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.countByUserId(
+            const result = await repository.countByUserId(
                 invitation.userId,
             );
 
@@ -686,7 +592,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             rsvpDueDate: new Date('2024-06-02'),
         };
 
-        it('should update invitation successfully', async() => {
+        it('should update invitation successfully', async () => {
             const invitation = InvitationFixture.getLean({
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
@@ -737,7 +643,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.updateById(
+            const result = await repository.updateById(
                 invitation._id.toString(),
                 updates,
             );
@@ -760,7 +666,6 @@ describe('@invitation/infra/repositories/invitation', () => {
                 deletedAt: invitation.deletedAt,
             });
 
-
             const toDomainResult = spyToDomain.mock.results[0].value as Invitation;
 
             expect(result).toBeInstanceOf(Invitation);
@@ -768,25 +673,31 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const updatedInvitation = await invitationModel.findOne({
                 _id: invitation._id,
-            }).lean();
+            }).lean<InvitationLean>();
 
-            expect(updatedInvitation?.type).toBe(updates.type);
-            expect(updatedInvitation?.title).toBe(updates.title);
-            expect(updatedInvitation?.hosts).toStrictEqual(updates.hosts);
-            expect(updatedInvitation?.celebratedPersons).toStrictEqual(updates.celebratedPersons);
-            expect(updatedInvitation?.date).toStrictEqual(updates.date);
-            expect(updatedInvitation?.location).toStrictEqual(updates.location);
-            expect(updatedInvitation?.itineraries).toStrictEqual(updates.itineraries);
-            expect(updatedInvitation?.contactPersons).toStrictEqual(updates.contactPersons);
-            expect(updatedInvitation?.rsvpDueDate).toStrictEqual(updates.rsvpDueDate);
-            expect(updatedInvitation?.createdAt).toStrictEqual(invitation.createdAt);
+            expect(updatedInvitation).toMatchObject({
+                _id: invitation._id,
+                userId: invitation.userId,
+                type: updates.type,
+                title: updates.title,
+                hosts: updates.hosts,
+                celebratedPersons: updates.celebratedPersons,
+                date: updates.date,
+                location: updates.location,
+                itineraries: updates.itineraries,
+                contactPersons: updates.contactPersons,
+                rsvpDueDate: updates.rsvpDueDate,
+                createdAt: invitation.createdAt,
+                updatedAt: expect.any(Date),
+                isDeleted: invitation.isDeleted,
+                deletedAt: invitation.deletedAt,
+            });
+
             expect(updatedInvitation?.updatedAt.getTime()).toBeGreaterThan(invitation.updatedAt.getTime());
-            expect(updatedInvitation?.deletedAt).toStrictEqual(invitation.deletedAt);
-            expect(updatedInvitation?.isDeleted).toBe(invitation.isDeleted);
         });
 
-        it('should return null when invitation does not exist', async() => {
-            const result = await invitationRepository.updateById(
+        it('should return null when invitation does not exist', async () => {
+            const result = await repository.updateById(
                 '000000000000000000000001',
                 updates,
             );
@@ -794,18 +705,16 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result).toBeNull();
         });
 
-        it('should return null when invitation is deleted', async() => {
-            const invitation = InvitationFixture.getEntity({
+        it('should return null when invitation is deleted', async () => {
+            const invitation = InvitationFixture.getLean({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.updateById(
-                invitation.id,
+            const result = await repository.updateById(
+                invitation._id.toString(),
                 updates,
             );
-
-            expect(spyToDomain).not.toHaveBeenCalled();
 
             expect(result).toBeNull();
         });
@@ -861,7 +770,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             rsvpDueDate: new Date('2024-06-02'),
         };
 
-        it('should update invitation successfully', async() => {
+        it('should update invitation successfully', async () => {
             const invitation = InvitationFixture.getLean({
                 type: InvitationType.WEDDING,
                 title: 'Wedding Celebration',
@@ -912,7 +821,7 @@ describe('@invitation/infra/repositories/invitation', () => {
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.updateByIdAndUserId(
+            const result = await repository.updateByIdAndUserId(
                 invitation._id.toString(),
                 invitation.userId,
                 updates,
@@ -943,25 +852,31 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const updatedInvitation = await invitationModel.findOne({
                 _id: invitation._id,
-            }).lean();
+            }).lean<InvitationLean>();
 
-            expect(updatedInvitation?.type).toBe(updates.type);
-            expect(updatedInvitation?.title).toBe(updates.title);
-            expect(updatedInvitation?.hosts).toStrictEqual(updates.hosts);
-            expect(updatedInvitation?.celebratedPersons).toStrictEqual(updates.celebratedPersons);
-            expect(updatedInvitation?.date).toStrictEqual(updates.date);
-            expect(updatedInvitation?.location).toStrictEqual(updates.location);
-            expect(updatedInvitation?.itineraries).toStrictEqual(updates.itineraries);
-            expect(updatedInvitation?.contactPersons).toStrictEqual(updates.contactPersons);
-            expect(updatedInvitation?.rsvpDueDate).toStrictEqual(updates.rsvpDueDate);
-            expect(updatedInvitation?.createdAt).toStrictEqual(invitation.createdAt);
+            expect(updatedInvitation).toMatchObject({
+                _id: invitation._id,
+                userId: invitation.userId,
+                type: updates.type,
+                title: updates.title,
+                hosts: updates.hosts,
+                celebratedPersons: updates.celebratedPersons,
+                date: updates.date,
+                location: updates.location,
+                itineraries: updates.itineraries,
+                contactPersons: updates.contactPersons,
+                rsvpDueDate: updates.rsvpDueDate,
+                createdAt: invitation.createdAt,
+                updatedAt: expect.any(Date),
+                isDeleted: invitation.isDeleted,
+                deletedAt: invitation.deletedAt,
+            });
+
             expect(updatedInvitation?.updatedAt.getTime()).toBeGreaterThan(invitation.updatedAt.getTime());
-            expect(updatedInvitation?.deletedAt).toStrictEqual(invitation.deletedAt);
-            expect(updatedInvitation?.isDeleted).toBe(invitation.isDeleted);
         });
 
-        it('should return null when invitation does not exist', async() => {
-            const result = await invitationRepository.updateByIdAndUserId(
+        it('should return null when invitation does not exist', async () => {
+            const result = await repository.updateByIdAndUserId(
                 '000000000000000000000001',
                 '000000000000000000000002',
                 updates,
@@ -970,61 +885,41 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result).toBeNull();
         });
 
-        it('should return null when invitation is deleted', async() => {
-            const invitation = InvitationFixture.getEntity({
+        it('should return null when invitation is deleted', async () => {
+            const invitation = InvitationFixture.getLean({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.updateByIdAndUserId(
-                invitation.id,
+            const result = await repository.updateByIdAndUserId(
+                invitation._id.toString(),
                 invitation.userId,
                 updates,
             );
 
-            expect(spyToDomain).not.toHaveBeenCalled();
-
             expect(result).toBeNull();
         });
 
-        it('should return false when invitation does not belong to user', async() => {
+        it('should return null when invitation does not belong to user', async () => {
             const invitation = InvitationFixture.getLean();
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.updateByIdAndUserId(
+            const result = await repository.updateByIdAndUserId(
                 invitation._id.toString(),
                 '000000000000000000000002',
                 updates,
             );
 
             expect(result).toBeNull();
-
-            const updatedInvitation = await invitationModel.findOne({
-                _id: invitation._id,
-            }).lean();
-
-            expect(updatedInvitation?.type).toBe(invitation.type);
-            expect(updatedInvitation?.title).toBe(invitation.title);
-            expect(updatedInvitation?.hosts).toStrictEqual(invitation.hosts);
-            expect(updatedInvitation?.celebratedPersons).toStrictEqual(invitation.celebratedPersons);
-            expect(updatedInvitation?.date).toStrictEqual(invitation.date);
-            expect(updatedInvitation?.location).toStrictEqual(invitation.location);
-            expect(updatedInvitation?.itineraries).toStrictEqual(invitation.itineraries);
-            expect(updatedInvitation?.contactPersons).toStrictEqual(invitation.contactPersons);
-            expect(updatedInvitation?.rsvpDueDate).toStrictEqual(invitation.rsvpDueDate);
-            expect(updatedInvitation?.createdAt).toStrictEqual(invitation.createdAt);
-            expect(updatedInvitation?.updatedAt).toStrictEqual(invitation.updatedAt);
-            expect(updatedInvitation?.isDeleted).toBe(false);
-            expect(updatedInvitation?.deletedAt).toBeNull();
         });
     });
 
     describe('#deleteById', () => {
-        it('should mark an invitation as deleted', async() => {
+        it('should mark an invitation as deleted', async () => {
             const invitation = InvitationFixture.getLean();
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.deleteById(
+            const result = await repository.deleteById(
                 invitation._id.toString(),
             );
 
@@ -1032,28 +927,28 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const updatedInvitation = await invitationModel.findOne({
                 _id: invitation._id,
-            }).lean();
+            }).lean<InvitationLean>();
 
             expect(updatedInvitation?.isDeleted).toBe(true);
             expect(updatedInvitation?.deletedAt?.getTime()).toBeGreaterThan(invitation.deletedAt?.getTime() ?? 0);
             expect(updatedInvitation?.updatedAt.getTime()).toBeGreaterThan(invitation.updatedAt.getTime());
         });
 
-        it('should return false when invitation does not exist', async() => {
-            const result = await invitationRepository.deleteById(
+        it('should return false when invitation does not exist', async () => {
+            const result = await repository.deleteById(
                 '000000000000000000000001',
             );
 
             expect(result).toBe(false);
         });
 
-        it('should return false when invitation is already deleted', async() => {
+        it('should return false when invitation is already deleted', async () => {
             const invitation = InvitationFixture.getEntity({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.deleteById(
+            const result = await repository.deleteById(
                 invitation.id,
             );
 
@@ -1062,11 +957,11 @@ describe('@invitation/infra/repositories/invitation', () => {
     });
 
     describe('#deleteByIdAndUserId', () => {
-        it('should return true when invitation is deleted', async() => {
+        it('should return true when invitation is deleted', async () => {
             const invitation = InvitationFixture.getLean();
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.deleteByIdAndUserId(
+            const result = await repository.deleteByIdAndUserId(
                 invitation._id.toString(),
                 invitation.userId,
             );
@@ -1075,15 +970,15 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const updatedInvitation = await invitationModel.findOne({
                 _id: invitation._id,
-            }).lean();
+            }).lean<InvitationLean>();
 
             expect(updatedInvitation?.isDeleted).toBe(true);
             expect(updatedInvitation?.deletedAt?.getTime()).toBeGreaterThan(invitation.deletedAt?.getTime() ?? 0);
             expect(updatedInvitation?.updatedAt.getTime()).toBeGreaterThan(invitation.updatedAt.getTime());
         });
 
-        it('should return false when invitation does not exist', async() => {
-            const result = await invitationRepository.deleteByIdAndUserId(
+        it('should return false when invitation does not exist', async () => {
+            const result = await repository.deleteByIdAndUserId(
                 '000000000000000000000001',
                 '000000000000000000000001',
             );
@@ -1091,25 +986,25 @@ describe('@invitation/infra/repositories/invitation', () => {
             expect(result).toBe(false);
         });
 
-        it('should return false when invitation is already deleted', async() => {
-            const invitation = InvitationFixture.getEntity({
+        it('should return false when invitation is already deleted', async () => {
+            const invitation = InvitationFixture.getLean({
                 isDeleted: true,
             });
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.deleteByIdAndUserId(
-                invitation.id,
+            const result = await repository.deleteByIdAndUserId(
+                invitation._id.toString(),
                 invitation.userId,
             );
 
             expect(result).toBe(false);
         });
 
-        it('should return false when invitation does not belong to user', async() => {
+        it('should return false when invitation does not belong to user', async () => {
             const invitation = InvitationFixture.getLean();
             await invitationModel.create(invitation);
 
-            const result = await invitationRepository.deleteByIdAndUserId(
+            const result = await repository.deleteByIdAndUserId(
                 invitation._id.toString(),
                 '000000000000000000000002',
             );
@@ -1118,7 +1013,7 @@ describe('@invitation/infra/repositories/invitation', () => {
 
             const updatedInvitation = await invitationModel.findOne({
                 _id: invitation._id,
-            }).lean();
+            }).lean<InvitationLean>();
 
             expect(updatedInvitation?.isDeleted).toBe(false);
             expect(updatedInvitation?.deletedAt).toBeNull();

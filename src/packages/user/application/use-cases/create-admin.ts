@@ -1,9 +1,10 @@
 import {
     Injectable,
-    Inject,
     ConflictException,
+    InternalServerErrorException,
 } from '@nestjs/common';
 import { HashService } from '@shared/services/hash';
+import { UserService } from '@user/application/services/user';
 import {
     User,
     UserType,
@@ -13,32 +14,41 @@ import { CreateAdminDto } from '@user/interfaces/http/dtos/create-admin';
 
 @Injectable()
 export class CreateAdminUseCase {
-    constructor(
-    @Inject('UserRepository')
-    private readonly userRepository: UserRepository,
+    constructor (
+        private readonly userRepository: UserRepository,
 
-    @Inject('HashService')
-    private readonly hashService: HashService,
-    ) {}
+        private readonly userService: UserService,
+    ) { }
 
-    async execute(createAdminDto: CreateAdminDto): Promise<User> {
-        const existingUser = await this.userRepository.findByEmail(
-            createAdminDto.email,
-        );
-        if (existingUser) {
-            throw new ConflictException('User with this email already exists');
+    async execute (
+        createAdminDto: CreateAdminDto,
+    ): Promise<User> {
+        try {
+            const {
+                name,
+                email,
+                password,
+            } = createAdminDto;
+
+            await this.userService.validateSameEmailExists(email);
+
+            const hashedPassword = await HashService.hash(password);
+
+            const user = User.createNewAdmin({
+                name,
+                email,
+                passwordHash: hashedPassword,
+                type: UserType.ADMIN,
+                paymentId: null,
+            });
+
+            return await this.userRepository.create(user);
+        } catch (error) {
+            if (error instanceof ConflictException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
-
-        const hashedPassword = await this.hashService.hash(createAdminDto.password);
-
-        const user = User.createNewAdmin({
-            name: createAdminDto.name,
-            email: createAdminDto.email,
-            passwordHash: hashedPassword,
-            type: UserType.ADMIN,
-            paymentId: null,
-        });
-
-        return await this.userRepository.create(user);
     }
 }

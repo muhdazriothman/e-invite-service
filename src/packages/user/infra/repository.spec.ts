@@ -8,7 +8,8 @@ import {
 import { User } from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import {
-    UserMongoDocument,
+    UserLean,
+    UserHydrated,
     UserMongoModelName,
     UserMongoSchema,
 } from '@user/infra/schema';
@@ -18,479 +19,497 @@ import {
 } from 'mongoose';
 
 describe('@user/infra/repository', () => {
-    let userRepository: UserRepository;
-    let userModel: Model<UserMongoDocument>;
+    let repository: UserRepository;
+    let userModel: Model<UserHydrated>;
     let module: TestingModule;
 
-    beforeAll(async() => {
+    let spyToDomain: jest.SpyInstance;
+
+    beforeAll(async () => {
         const testContext = await setupRepositoryTest(
-            [{ name: UserMongoModelName, schema: UserMongoSchema }],
+            [{
+                name: UserMongoModelName,
+                schema: UserMongoSchema,
+            }],
             [UserRepository],
         );
 
         module = testContext.module;
-        userRepository = module.get<UserRepository>(UserRepository);
-        userModel = module.get<Model<UserMongoDocument>>(
+        repository = module.get<UserRepository>(UserRepository);
+        userModel = module.get<Model<UserHydrated>>(
             getModelToken(UserMongoModelName),
         );
     });
 
-    afterAll(async() => {
+    beforeEach(() => {
+        spyToDomain = jest.spyOn(UserRepository, 'toDomain');
+    });
+
+    afterEach(async () => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
+        await userModel.deleteMany({});
+    });
+
+    afterAll(async () => {
         await module.close();
         await MongoTestSetup.stop();
     });
 
-    beforeEach(async() => {
-        await userModel.deleteMany({});
+    describe('#toDomain', () => {
+        let spyCreateFromDb: jest.SpyInstance;
+
+        beforeEach(() => {
+            spyCreateFromDb = jest.spyOn(User, 'createFromDb');
+        });
+
+        it('should convert MongoDB document to domain entity correctly', () => {
+            const document = UserFixture.getLean();
+
+            const result = UserRepository.toDomain(document);
+
+            expect(spyCreateFromDb).toHaveBeenCalledWith(document);
+
+            expect(result).toBeInstanceOf(User);
+            expect(result).toMatchObject({
+                id: document._id?.toString(),
+                name: document.name,
+                email: document.email,
+                passwordHash: document.passwordHash,
+                type: document.type,
+                capabilities: document.capabilities,
+                paymentId: document.paymentId?.toString(),
+                isDeleted: document.isDeleted,
+                createdAt: document.createdAt,
+                updatedAt: document.updatedAt,
+                deletedAt: document.deletedAt,
+            });
+        });
+    });
+
+    describe('#toDocument', () => {
+        it('should convert domain entity to MongoDB document correctly', () => {
+            const user = UserFixture.getEntity();
+            const document = UserRepository.toDocument(
+                user,
+                userModel,
+            );
+
+            expect(document).toBeInstanceOf(userModel);
+            expect(document).toMatchObject({
+                _id: expect.any(Types.ObjectId),
+                name: user.name,
+                email: user.email,
+                passwordHash: user.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: new Types.ObjectId(user.paymentId!),
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                isDeleted: user.isDeleted,
+                deletedAt: user.deletedAt,
+            });
+        });
     });
 
     describe('#create', () => {
-        it('should create a new user successfully', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'newuser',
-                email: 'newuser@example.com',
-                passwordHash: '$2b$10$hashedpassword',
+        it('should create a new user successfully', async () => {
+            const user = UserFixture.getEntity();
+
+            const result = await repository.create(user);
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: new Types.ObjectId(result.id),
+                name: user.name,
+                email: user.email,
+                passwordHash: user.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: new Types.ObjectId(user.paymentId!),
+                isDeleted: user.isDeleted,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                deletedAt: user.deletedAt,
             });
 
-            const result = await userRepository.create(createUserData);
+            const toDomainResult = spyToDomain.mock.results[0].value as User;
 
             expect(result).toBeInstanceOf(User);
-            expect(result.id).toBeDefined();
-            expect(result.name).toBe('newuser');
-            expect(result.email).toBe('newuser@example.com');
-            expect(result.passwordHash).toBe('$2b$10$hashedpassword');
-            expect(result.isDeleted).toBe(false);
-            expect(result.createdAt).toBeInstanceOf(Date);
-            expect(result.updatedAt).toBeInstanceOf(Date);
-            expect(result.deletedAt).toBeNull();
+            expect(result).toMatchObject(toDomainResult);
 
-            // Verify the user was actually saved to the database
-            const savedUser = await userModel.findOne({ name: 'newuser' }).lean();
-            expect(savedUser).toBeDefined();
-            expect(savedUser?.name).toBe('newuser');
-            expect(savedUser?.email).toBe('newuser@example.com');
-        });
+            const createdUser = await userModel
+                .findOne(
+                    {
+                        _id: result.id,
+                    },
+                )
+                .lean<UserLean>();
 
-        it('should create multiple users with different data', async() => {
-            const createUserData1 = UserFixture.getEntity({
-                name: 'user1',
-                email: 'user1@example.com',
-                passwordHash: '$2b$10$hash1',
+            expect(createdUser).toMatchObject({
+                _id: new Types.ObjectId(result.id),
+                name: result.name,
+                email: result.email,
+                passwordHash: result.passwordHash,
+                type: result.type,
+                capabilities: result.capabilities,
+                paymentId: new Types.ObjectId(result.paymentId!),
+                createdAt: result.createdAt,
+                updatedAt: result.updatedAt,
+                isDeleted: result.isDeleted,
+                deletedAt: result.deletedAt,
             });
-
-            const createUserData2 = UserFixture.getEntity({
-                name: 'user2',
-                email: 'user2@example.com',
-                passwordHash: '$2b$10$hash2',
-            });
-
-            const result1 = await userRepository.create(createUserData1);
-            const result2 = await userRepository.create(createUserData2);
-
-            expect(result1).toBeInstanceOf(User);
-            expect(result2).toBeInstanceOf(User);
-            expect(result1.id).not.toBe(result2.id);
-            expect(result1.name).toBe('user1');
-            expect(result2.name).toBe('user2');
-
-            // Verify both users were saved
-            const savedUsers = await userModel.find({}).lean();
-            expect(savedUsers).toHaveLength(2);
         });
     });
 
     describe('#findAll', () => {
-        it('should return all non-deleted users', async() => {
-            // Create test users
-            const createUserData1 = UserFixture.getEntity({
+        it('should return users', async () => {
+            const user1 = UserFixture.getLean({
+                id: '000000000000000000000001',
                 name: 'user1',
                 email: 'user1@example.com',
-                passwordHash: '$2b$10$hash1',
             });
 
-            const createUserData2 = UserFixture.getEntity({
+            const user2 = UserFixture.getLean({
+                id: '000000000000000000000002',
                 name: 'user2',
                 email: 'user2@example.com',
-                passwordHash: '$2b$10$hash2',
             });
 
-            await userRepository.create(createUserData1);
-            await userRepository.create(createUserData2);
+            await userModel.create([user1, user2]);
 
-            const result = await userRepository.findAll();
+            const result = await repository.findAll();
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user1._id,
+                name: user1.name,
+                email: user1.email,
+                passwordHash: user1.passwordHash,
+                type: user1.type,
+                capabilities: user1.capabilities,
+                paymentId: user1.paymentId,
+                isDeleted: user1.isDeleted,
+                createdAt: user1.createdAt,
+                updatedAt: user1.updatedAt,
+                deletedAt: user1.deletedAt,
+            });
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user2._id,
+                name: user2.name,
+                email: user2.email,
+                passwordHash: user2.passwordHash,
+                type: user2.type,
+                capabilities: user2.capabilities,
+                paymentId: user2.paymentId,
+                isDeleted: user2.isDeleted,
+                createdAt: user2.createdAt,
+                updatedAt: user2.updatedAt,
+                deletedAt: user2.deletedAt,
+            });
+
+            const toDomainResult1 = spyToDomain.mock.results[0].value as User;
+            const toDomainResult2 = spyToDomain.mock.results[1].value as User;
 
             expect(result).toHaveLength(2);
             expect(result[0]).toBeInstanceOf(User);
+            expect(result[0]).toMatchObject(toDomainResult1);
             expect(result[1]).toBeInstanceOf(User);
-            expect(result[0].name).toBe('user1');
-            expect(result[1].name).toBe('user2');
+            expect(result[1]).toMatchObject(toDomainResult2);
         });
 
-        it('should return empty array when no users exist', async() => {
-            const result = await userRepository.findAll();
+        it('should return empty array when no users exist', async () => {
+            const result = await repository.findAll();
 
             expect(result).toEqual([]);
         });
 
-        it('should exclude deleted users from results', async() => {
-            // Create a user
-            const createUserData = UserFixture.getEntity({
-                name: 'user1',
-                email: 'user1@example.com',
-                passwordHash: '$2b$10$hash1',
+        it('should exclude deleted users from results', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user
-            await userRepository.delete(user.id);
-
-            const result = await userRepository.findAll();
+            const result = await repository.findAll();
 
             expect(result).toEqual([]);
         });
     });
 
     describe('#findByName', () => {
-        it('should return a user when found by name', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash:
-          '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
+        it('should return a user when found by name', async () => {
+            const user = UserFixture.getLean();
+            await userModel.create(user);
+
+            const result = await repository.findByName(user.name);
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                passwordHash: user.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: user.paymentId,
+                isDeleted: user.isDeleted,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                deletedAt: user.deletedAt,
             });
 
-            await userRepository.create(createUserData);
-
-            const result = await userRepository.findByName('admin');
+            const toDomainResult = spyToDomain.mock.results[0].value as User;
 
             expect(result).toBeInstanceOf(User);
-            expect(result?.name).toBe('admin');
-            expect(result?.email).toBe('admin@example.com');
-            expect(result?.passwordHash).toBe(
-                '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
-            );
-            expect(result?.isDeleted).toBe(false);
+            expect(result).toMatchObject(toDomainResult);
         });
 
-        it('should return null when user is not found', async() => {
-            const result = await userRepository.findByName('nonexistentuser');
+        it('should return null when user is not found', async () => {
+            const result = await repository.findByName('nonexistentuser');
 
             expect(result).toBeNull();
         });
 
-        it('should exclude deleted users from search', async() => {
-            // Create a user
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
+        it('should exclude deleted users from search', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user
-            await userRepository.delete(user.id);
-
-            const result = await userRepository.findByName('admin');
+            const result = await repository.findByName(user.name);
 
             expect(result).toBeNull();
         });
     });
 
     describe('#findByEmail', () => {
-        it('should return a user when found by email', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash:
-          '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
+        it('should return a user when found by email', async () => {
+            const user = UserFixture.getLean();
+            await userModel.create(user);
+
+            const result = await repository.findByEmail(user.email);
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                passwordHash: user.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: user.paymentId,
+                isDeleted: user.isDeleted,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                deletedAt: user.deletedAt,
             });
 
-            await userRepository.create(createUserData);
-
-            const result = await userRepository.findByEmail('admin@example.com');
+            const toDomainResult = spyToDomain.mock.results[0].value as User;
 
             expect(result).toBeInstanceOf(User);
-            expect(result?.name).toBe('admin');
-            expect(result?.email).toBe('admin@example.com');
-            expect(result?.passwordHash).toBe(
-                '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
-            );
-            expect(result?.isDeleted).toBe(false);
+            expect(result).toMatchObject(toDomainResult);
         });
 
-        it('should return null when user is not found', async() => {
-            const result = await userRepository.findByEmail(
+        it('should return null when user is not found', async () => {
+            const result = await repository.findByEmail('nonexistent@example.com');
+
+            expect(result).toBeNull();
+        });
+
+        it('should exclude deleted users from search', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
+            });
+            await userModel.create(user);
+
+            const result = await repository.findByEmail(user.email);
+
+            expect(result).toBeNull();
+        });
+
+        it('should return null when user is not found', async () => {
+            const result = await repository.findByEmail(
                 'nonexistent@example.com',
             );
 
             expect(result).toBeNull();
         });
 
-        it('should exclude deleted users from search', async() => {
-            // Create a user
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
+        it('should return null when user is deleted', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user
-            await userRepository.delete(user.id);
-
-            const result = await userRepository.findByEmail('admin@example.com');
+            const result = await repository.findByEmail(user.email);
 
             expect(result).toBeNull();
         });
     });
 
     describe('#findById', () => {
-        it('should return a user when found by id', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash:
-          '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
+        it('should return a user when found by id', async () => {
+            const user = UserFixture.getLean();
+            await userModel.create(user);
+
+            const result = await repository.findById(user._id.toString());
+
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                passwordHash: user.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: user.paymentId,
+                isDeleted: user.isDeleted,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+                deletedAt: user.deletedAt,
             });
 
-            const createdUser = await userRepository.create(createUserData);
-
-            const result = await userRepository.findById(createdUser.id);
+            const toDomainResult = spyToDomain.mock.results[0].value as User;
 
             expect(result).toBeInstanceOf(User);
-            expect(result?.id).toBe(createdUser.id);
-            expect(result?.name).toBe('admin');
-            expect(result?.email).toBe('admin@example.com');
-            expect(result?.passwordHash).toBe(
-                '$2b$10$.wJX6XUYvbImd5I.uxRg5ebJlDlM9NU0N31TgsRRYOoo4F4JEKWtC',
-            );
-            expect(result?.isDeleted).toBe(false);
+            expect(result).toMatchObject(toDomainResult);
         });
 
-        it('should return null when user is not found', async() => {
-            const result = await userRepository.findById(
-                new Types.ObjectId().toString(),
+        it('should return null when user is not found', async () => {
+            const result = await repository.findById(
+                '000000000000000000000001',
             );
 
             expect(result).toBeNull();
         });
 
-        it('should exclude deleted users from search', async() => {
-            // Create a user
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
+        it('should return null when user is deleted', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user
-            await userRepository.delete(user.id);
-
-            const result = await userRepository.findById(user.id);
+            const result = await repository.findById(user._id.toString());
 
             expect(result).toBeNull();
         });
     });
 
-    describe('#update', () => {
-        it('should update user password hash successfully', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
+    describe('#updateById', () => {
+        const updates = {
+            name: 'new_admin',
+            passwordHash: '$2b$10$newhash',
+        };
+
+        it('should update user successfully', async () => {
+            const user = UserFixture.getLean({
+                name: 'old_admin',
                 passwordHash: '$2b$10$oldhash',
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-            const originalUpdatedAt = user.updatedAt;
-
-            // Wait a bit to ensure timestamp difference
-            await new Promise((resolve) => setTimeout(resolve, 10));
-
-            const newPasswordHash = '$2b$10$newhash';
-            const result = await userRepository.update(user.id, {
-                passwordHash: newPasswordHash,
-            });
-
-            expect(result).toBeInstanceOf(User);
-            expect(result?.id).toBe(user.id);
-            expect(result?.name).toBe('admin');
-            expect(result?.email).toBe('admin@example.com');
-            expect(result?.passwordHash).toBe(newPasswordHash);
-            expect(result?.updatedAt.getTime()).toBeGreaterThan(
-                originalUpdatedAt.getTime(),
+            const result = await repository.updateById(
+                user._id.toString(),
+                updates,
             );
 
-            // Verify the update was persisted
-            const updatedUser = await userRepository.findByName('admin');
-            expect(updatedUser?.passwordHash).toBe(newPasswordHash);
+            expect(spyToDomain).toHaveBeenCalledWith({
+                _id: user._id,
+                name: updates.name,
+                email: user.email,
+                passwordHash: updates.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: user.paymentId,
+                isDeleted: user.isDeleted,
+                createdAt: user.createdAt,
+                updatedAt: expect.any(Date),
+                deletedAt: user.deletedAt,
+            });
+
+            const toDomainResult = spyToDomain.mock.results[0].value as User;
+
+            expect(result).toBeInstanceOf(User);
+            expect(result).toMatchObject(toDomainResult);
+
+            const updatedUser = await userModel.findOne({
+                _id: user._id,
+            }).lean<UserLean>();
+
+            expect(updatedUser).toMatchObject({
+                _id: user._id,
+                name: updates.name,
+                email: user.email,
+                passwordHash: updates.passwordHash,
+                type: user.type,
+                capabilities: user.capabilities,
+                paymentId: user.paymentId,
+                createdAt: user.createdAt,
+                updatedAt: expect.any(Date),
+                isDeleted: user.isDeleted,
+                deletedAt: user.deletedAt,
+            });
+
+            expect(updatedUser?.updatedAt.getTime()).toBeGreaterThan(user.updatedAt.getTime());
         });
 
-        it('should return null when user does not exist', async() => {
-            const result = await userRepository.update(
-                new Types.ObjectId().toString(),
-                { passwordHash: '$2b$10$newhash' },
+        it('should return null when user does not exist', async () => {
+            const result = await repository.updateById(
+                '000000000000000000000001',
+                updates,
             );
 
             expect(result).toBeNull();
         });
 
-        it('should return null when user is deleted', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
+        it('should return null when user is deleted', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user
-            await userRepository.delete(user.id);
-
-            // Try to update deleted user
-            const result = await userRepository.update(user.id, {
-                passwordHash: '$2b$10$newhash',
-            });
+            const result = await repository.updateById(
+                user._id.toString(),
+                updates,
+            );
 
             expect(result).toBeNull();
-        });
-
-        it('should update only specified fields', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$oldhash',
-            });
-
-            const user = await userRepository.create(createUserData);
-            const originalEmail = user.email;
-            const originalName = user.name;
-
-            const newPasswordHash = '$2b$10$newhash';
-            const result = await userRepository.update(user.id, {
-                passwordHash: newPasswordHash,
-            });
-
-            expect(result).toBeInstanceOf(User);
-            expect(result?.passwordHash).toBe(newPasswordHash);
-            expect(result?.email).toBe(originalEmail);
-            expect(result?.name).toBe(originalName);
-        });
-
-        it('should update name successfully', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
-            });
-
-            const user = await userRepository.create(createUserData);
-            const originalUpdatedAt = user.updatedAt;
-
-            // Wait a bit to ensure timestamp difference
-            await new Promise((resolve) => setTimeout(resolve, 10));
-
-            const newName = 'newadmin';
-            const result = await userRepository.update(user.id, {
-                name: newName,
-            });
-
-            expect(result).toBeInstanceOf(User);
-            expect(result?.id).toBe(user.id);
-            expect(result?.name).toBe(newName);
-            expect(result?.email).toBe('admin@example.com');
-            expect(result?.passwordHash).toBe('$2b$10$hash');
-            expect(result?.updatedAt.getTime()).toBeGreaterThan(
-                originalUpdatedAt.getTime(),
-            );
-
-            // Verify the update was persisted
-            const updatedUser = await userRepository.findById(user.id);
-            expect(updatedUser?.name).toBe(newName);
-        });
-
-        it('should update name and password successfully', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$oldhash',
-            });
-
-            const user = await userRepository.create(createUserData);
-            const originalUpdatedAt = user.updatedAt;
-
-            // Wait a bit to ensure timestamp difference
-            await new Promise((resolve) => setTimeout(resolve, 10));
-
-            const newName = 'newadmin';
-            const newPasswordHash = '$2b$10$newhash';
-            const result = await userRepository.update(user.id, {
-                name: newName,
-                passwordHash: newPasswordHash,
-            });
-
-            expect(result).toBeInstanceOf(User);
-            expect(result?.id).toBe(user.id);
-            expect(result?.name).toBe(newName);
-            expect(result?.email).toBe('admin@example.com'); // email should remain unchanged
-            expect(result?.passwordHash).toBe(newPasswordHash);
-            expect(result?.updatedAt.getTime()).toBeGreaterThan(
-                originalUpdatedAt.getTime(),
-            );
-
-            // Verify the update was persisted
-            const updatedUser = await userRepository.findById(user.id);
-            expect(updatedUser?.name).toBe(newName);
-            expect(updatedUser?.email).toBe('admin@example.com'); // email should remain unchanged
-            expect(updatedUser?.passwordHash).toBe(newPasswordHash);
         });
     });
 
-    describe('#delete', () => {
-        it('should mark a user as deleted', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
-            });
+    describe('#deleteById', () => {
+        it('should mark a user as deleted', async () => {
+            const user = UserFixture.getLean();
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            const result = await userRepository.delete(user.id);
+            const result = await repository.deleteById(
+                user._id.toString(),
+            );
 
             expect(result).toBe(true);
 
-            // Verify the user is marked as deleted
-            const deletedUser = await userRepository.findByName('admin');
-            expect(deletedUser).toBeNull();
+            const updatedInvitation = await userModel.findOne({
+                _id: user._id,
+            }).lean<UserLean>();
+
+            expect(updatedInvitation?.isDeleted).toBe(true);
+            expect(updatedInvitation?.deletedAt?.getTime()).toBeGreaterThan(user.deletedAt?.getTime() ?? 0);
+            expect(updatedInvitation?.updatedAt.getTime()).toBeGreaterThan(user.updatedAt.getTime());
         });
 
-        it('should return false when user does not exist', async() => {
-            const result = await userRepository.delete(
-                new Types.ObjectId().toString(),
+        it('should return false when user does not exist', async () => {
+            const result = await repository.deleteById(
+                '000000000000000000000001',
             );
 
             expect(result).toBe(false);
         });
 
-        it('should return false when user is already deleted', async() => {
-            const createUserData = UserFixture.getEntity({
-                name: 'admin',
-                email: 'admin@example.com',
-                passwordHash: '$2b$10$hash',
+        it('should return false when user is already deleted', async () => {
+            const user = UserFixture.getLean({
+                isDeleted: true,
             });
+            await userModel.create(user);
 
-            const user = await userRepository.create(createUserData);
-
-            // Delete the user first time
-            await userRepository.delete(user.id);
-
-            // Try to delete again
-            const result = await userRepository.delete(user.id);
+            const result = await repository.deleteById(
+                user._id.toString(),
+            );
 
             expect(result).toBe(false);
         });

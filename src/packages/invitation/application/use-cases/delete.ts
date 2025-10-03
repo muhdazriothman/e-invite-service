@@ -1,33 +1,44 @@
+import { InvitationService } from '@invitation/application/services/invitation';
 import { InvitationRepository } from '@invitation/infra/repository';
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
-import { invitationErrors } from '@shared/constants/error-codes';
+import { User } from '@user/domain/entities/user';
 
 @Injectable()
 export class DeleteInvitationUseCase {
-    constructor(
-    @Inject('InvitationRepository')
-    private readonly invitationRepository: InvitationRepository,
-    ) {}
+    constructor (
+        private readonly invitationRepository: InvitationRepository,
 
-    async execute(
+        private readonly invitationService: InvitationService,
+    ) { }
+
+    async execute (
+        user: User,
         id: string,
-        userId?: string,
     ): Promise<void> {
-        const existingInvitation = await this.invitationRepository.findById(
-            id,
-            userId,
-        );
-        if (!existingInvitation) {
-            throw new NotFoundException(invitationErrors.INVITATION_NOT_FOUND);
-        }
+        const {
+            id: userId,
+        } = user;
 
-        const deleted = await this.invitationRepository.delete(id, userId);
-        if (!deleted) {
-            throw new NotFoundException(invitationErrors.FAILED_TO_DELETE_INVITATION);
+        try {
+            await this.invitationService.findByIdAndUserIdOrFail(
+                id,
+                userId,
+            );
+
+            await this.invitationRepository.deleteByIdAndUserId(
+                id,
+                userId,
+            );
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
     }
 }

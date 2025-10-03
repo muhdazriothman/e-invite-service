@@ -13,9 +13,12 @@ import {
 import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
 import { InvitationFixture } from '@test/fixture/invitation';
 import { UserFixture } from '@test/fixture/user';
-
+import { createMock } from '@test/utils/mocks';
 
 describe('@invitation/interfaces/http/controller', () => {
+    const userId = '000000000000000000000001';
+    const invitationId = '000000000000000000000002';
+
     let controller: InvitationController;
     let createInvitationUseCase: jest.Mocked<CreateInvitationUseCase>;
     let listInvitationsUseCase: jest.Mocked<ListInvitationsUseCase>;
@@ -23,58 +26,42 @@ describe('@invitation/interfaces/http/controller', () => {
     let updateInvitationUseCase: jest.Mocked<UpdateInvitationUseCase>;
     let deleteInvitationUseCase: jest.Mocked<DeleteInvitationUseCase>;
 
-    const createInvitationDto = InvitationFixture.getCreateInvitationDto();
-    const mockUser = UserFixture.getEntity({
-        id: '000000000000000000000001',
+    const user = UserFixture.getEntity({
+        id: userId,
     });
+
+    const invitation = InvitationFixture.getEntity({
+        id: invitationId,
+    });
+
     const mockRequest: RequestWithUser = {
-        user: { id: '000000000000000000000001' },
-        userData: mockUser,
+        user: { id: userId },
+        userData: user,
     } as RequestWithUser;
 
-    beforeEach(async() => {
-        const mockCreateInvitationUseCase = {
-            execute: jest.fn(),
-        };
-
-        const mockListInvitationsUseCase = {
-            execute: jest.fn(),
-        };
-
-        const mockGetInvitationByIdUseCase = {
-            execute: jest.fn(),
-        };
-
-        const mockUpdateInvitationUseCase = {
-            execute: jest.fn(),
-        };
-
-        const mockDeleteInvitationUseCase = {
-            execute: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [InvitationController],
             providers: [
                 {
                     provide: CreateInvitationUseCase,
-                    useValue: mockCreateInvitationUseCase,
+                    useValue: createMock<CreateInvitationUseCase>(),
                 },
                 {
                     provide: ListInvitationsUseCase,
-                    useValue: mockListInvitationsUseCase,
+                    useValue: createMock<ListInvitationsUseCase>(),
                 },
                 {
                     provide: GetInvitationByIdUseCase,
-                    useValue: mockGetInvitationByIdUseCase,
+                    useValue: createMock<GetInvitationByIdUseCase>(),
                 },
                 {
                     provide: UpdateInvitationUseCase,
-                    useValue: mockUpdateInvitationUseCase,
+                    useValue: createMock<UpdateInvitationUseCase>(),
                 },
                 {
                     provide: DeleteInvitationUseCase,
-                    useValue: mockDeleteInvitationUseCase,
+                    useValue: createMock<DeleteInvitationUseCase>(),
                 },
             ],
         }).compile();
@@ -91,72 +78,75 @@ describe('@invitation/interfaces/http/controller', () => {
         expect(controller).toBeDefined();
     });
 
-    describe('createInvitation', () => {
-        it('should create a new invitation', async() => {
-            const mockInvitation = InvitationFixture.getEntity();
+    describe('#createInvitation', () => {
+        const createDto = InvitationFixture.getCreateDto();
 
-            createInvitationUseCase.execute.mockResolvedValue(mockInvitation);
+        it('should create a new invitation', async () => {
+            createInvitationUseCase.execute.mockResolvedValue(invitation);
 
             const result = await controller.createInvitation(
-                createInvitationDto,
+                createDto,
                 mockRequest,
             );
 
             expect(createInvitationUseCase.execute).toHaveBeenCalledWith(
-                createInvitationDto,
-                mockUser,
+                user,
+                createDto,
             );
+
             expect(result).toEqual({
                 message: 'Invitation created successfully',
-                data: InvitationMapper.toDto(mockInvitation),
+                data: InvitationMapper.toDto(invitation),
             });
         });
 
-        it('should throw an error if the invitation creation fails', async() => {
+        it('should throw an error if the invitation creation fails', async () => {
             createInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation creation failed'),
             );
 
             await expect(
-                controller.createInvitation(createInvitationDto, mockRequest),
+                controller.createInvitation(createDto, mockRequest),
             ).rejects.toThrow('Invitation creation failed');
         });
     });
 
-    describe('listInvitations', () => {
-        it('should return paginated list of invitations', async() => {
-            const mockInvitations = [
+    describe('#listInvitations', () => {
+        it('should return paginated list of invitations', async () => {
+            const invitations = [
                 InvitationFixture.getEntity({
-                    id: 'invitation-1',
-                    title: 'Wedding Celebration 1',
+                    id: '000000000000000000000001',
                 }),
                 InvitationFixture.getEntity({
-                    id: 'invitation-2',
-                    title: 'Wedding Celebration 2',
+                    id: '000000000000000000000002',
                 }),
             ];
 
-            const mockPaginationResult = PaginationResult.create(
-                mockInvitations,
+            const paginationResult = PaginationResult.create(
+                invitations,
                 '000000000000000000000002',
                 '000000000000000000000001',
                 true,
                 false,
             );
 
-            listInvitationsUseCase.execute.mockResolvedValue(mockPaginationResult);
+            listInvitationsUseCase.execute.mockResolvedValue(paginationResult);
 
-            const result = await controller.listInvitations({}, mockRequest);
+            const result = await controller.listInvitations(
+                mockRequest,
+                {},
+            );
 
             expect(listInvitationsUseCase.execute).toHaveBeenCalledWith(
-                '000000000000000000000001',
+                user,
                 undefined,
                 undefined,
                 undefined,
             );
+
             expect(result).toEqual({
                 message: 'Invitations retrieved successfully',
-                data: mockInvitations.map((invitation) =>
+                data: invitations.map((invitation) =>
                     InvitationMapper.toDto(invitation),
                 ),
                 pagination: {
@@ -170,92 +160,82 @@ describe('@invitation/interfaces/http/controller', () => {
         });
     });
 
-    describe('getInvitationById', () => {
-        it('should return invitation by id', async() => {
-            const invitationId = 'invitation-id-1';
-            const mockInvitation = InvitationFixture.getEntity({
-                id: invitationId,
-                title: 'Wedding Celebration',
-            });
-
-            getInvitationByIdUseCase.execute.mockResolvedValue(mockInvitation);
+    describe('#getInvitationById', () => {
+        it('should return invitation by id', async () => {
+            getInvitationByIdUseCase.execute.mockResolvedValue(invitation);
 
             const result = await controller.getInvitationById(
-                invitationId,
                 mockRequest,
+                invitationId,
             );
 
             expect(getInvitationByIdUseCase.execute).toHaveBeenCalledWith(
+                user,
                 invitationId,
-                '000000000000000000000001',
             );
+
             expect(result).toEqual({
                 message: 'Invitation retrieved successfully',
-                data: InvitationMapper.toDto(mockInvitation),
+                data: InvitationMapper.toDto(invitation),
             });
         });
 
-        it('should throw an error if the invitation is not found', async() => {
+        it('should throw an error if the invitation is not found', async () => {
             getInvitationByIdUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );
 
             await expect(
-                controller.getInvitationById('non-existent-id', mockRequest),
+                controller.getInvitationById(
+                    mockRequest,
+                    'non-existent-id',
+                ),
             ).rejects.toThrow('Invitation not found');
         });
     });
 
-    describe('updateInvitation', () => {
-        it('should update invitation successfully', async() => {
-            const invitationId = 'invitation-id-1';
-            const updateInvitationDto = InvitationFixture.getCreateInvitationDto({
-                title: 'Updated Wedding Celebration',
-            });
+    describe('#updateInvitation', () => {
+        const updateDto = InvitationFixture.getUpdateDto();
 
-            const mockInvitation = InvitationFixture.getEntity({
-                id: invitationId,
-                title: updateInvitationDto.title,
-            });
+        it('should update invitation successfully', async () => {
 
-            updateInvitationUseCase.execute.mockResolvedValue(mockInvitation);
+            updateInvitationUseCase.execute.mockResolvedValue(invitation);
 
             const result = await controller.updateInvitation(
-                invitationId,
-                updateInvitationDto,
                 mockRequest,
+                invitationId,
+                updateDto,
             );
 
             expect(updateInvitationUseCase.execute).toHaveBeenCalledWith(
+                user,
                 invitationId,
-                updateInvitationDto,
-                '000000000000000000000001',
+                updateDto,
             );
+
             expect(result).toEqual({
                 message: 'Invitation updated successfully',
-                data: InvitationMapper.toDto(mockInvitation),
+                data: InvitationMapper.toDto(invitation),
             });
         });
 
-        it('should throw an error if the invitation is not found', async() => {
+        it('should throw an error if the invitation is not found', async () => {
             updateInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );
 
             await expect(
                 controller.updateInvitation(
-                    'non-existent-id',
-                    createInvitationDto,
                     mockRequest,
+                    'non-existent-id',
+                    updateDto,
                 ),
             ).rejects.toThrow('Invitation not found');
         });
     });
 
-    describe('deleteInvitation', () => {
-        it('should delete invitation successfully', async() => {
-            const invitationId = 'invitation-id-1';
-
+    describe('#deleteInvitation', () => {
+        it('should delete invitation successfully', async () => {
             deleteInvitationUseCase.execute.mockResolvedValue(undefined);
 
             const result = await controller.deleteInvitation(
@@ -264,15 +244,16 @@ describe('@invitation/interfaces/http/controller', () => {
             );
 
             expect(deleteInvitationUseCase.execute).toHaveBeenCalledWith(
+                user,
                 invitationId,
-                '000000000000000000000001',
             );
+
             expect(result).toEqual({
                 message: 'Invitation deleted successfully',
             });
         });
 
-        it('should throw an error if the invitation is not found', async() => {
+        it('should throw an error if the invitation is not found', async () => {
             deleteInvitationUseCase.execute.mockRejectedValue(
                 new Error('Invitation not found'),
             );

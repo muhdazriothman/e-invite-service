@@ -1,24 +1,25 @@
 import { Invitation } from '@invitation/domain/entities/invitation';
 import { InvitationRepository } from '@invitation/infra/repository';
-import {
-    Injectable,
-    Inject,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PaginationResult } from '@shared/domain/value-objects/pagination-result';
+import { User } from '@user/domain/entities/user';
 
 @Injectable()
 export class ListInvitationsUseCase {
-    constructor(
-    @Inject('InvitationRepository')
-    private readonly invitationRepository: InvitationRepository,
-    ) {}
+    constructor (
+        private readonly invitationRepository: InvitationRepository,
+    ) { }
 
-    async execute(
-        userId?: string,
+    async execute (
+        user: User,
         next?: string,
         previous?: string,
         limit: number = 20,
     ): Promise<PaginationResult<Invitation>> {
+        const {
+            id: userId,
+        } = user;
+
         return this.invitationRepository.findAllWithPagination(
             userId,
             next,

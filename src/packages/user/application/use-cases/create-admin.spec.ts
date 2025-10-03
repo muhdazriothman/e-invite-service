@@ -1,55 +1,62 @@
-import { ConflictException } from '@nestjs/common';
+import {
+    ConflictException,
+    InternalServerErrorException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { userErrors } from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
+import { UserService } from '@user/application/services/user';
 import { CreateAdminUseCase } from '@user/application/use-cases/create-admin';
-import { UserType } from '@user/domain/entities/user';
+import {
+    User,
+    UserType,
+} from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import { CreateAdminDto } from '@user/interfaces/http/dtos/create-admin';
 
 describe('@user/application/use-cases/create-admin', () => {
+    const userId = '000000000000000000000001';
+
     let useCase: CreateAdminUseCase;
-    let userRepository: jest.Mocked<UserRepository>;
-    let hashService: jest.Mocked<HashService>;
+    let mockUserRepository: jest.Mocked<UserRepository>;
+    let mockUserService: jest.Mocked<UserService>;
 
-    const adminUser = UserFixture.getAdminUser();
+    const admin = UserFixture.getEntity({
+        id: userId,
+        type: UserType.ADMIN,
+        capabilities: null,
+        paymentId: null,
+    });
 
-    beforeEach(async() => {
-        const mockUserRepository = {
-            create: jest.fn(),
-            findAll: jest.fn(),
-            findByName: jest.fn(),
-            findByEmail: jest.fn(),
-            findById: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
+    const createAdminDto: CreateAdminDto = {
+        name: 'Admin User',
+        email: 'admin@example.com',
+        password: 'password123',
+    };
 
-        const mockHashService = {
-            hash: jest.fn(),
-            compare: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CreateAdminUseCase,
                 {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
+                    provide: UserRepository,
+                    useValue: createMock<UserRepository>(),
                 },
                 {
-                    provide: 'HashService',
-                    useValue: mockHashService,
+                    provide: UserService,
+                    useValue: createMock<UserService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<CreateAdminUseCase>(CreateAdminUseCase);
-        userRepository = module.get('UserRepository');
-        hashService = module.get('HashService');
+        mockUserRepository = module.get(UserRepository);
+        mockUserService = module.get(UserService);
     });
 
     it('should be defined', () => {
@@ -57,57 +64,82 @@ describe('@user/application/use-cases/create-admin', () => {
     });
 
     describe('execute', () => {
-        const createAdminDto: CreateAdminDto = {
-            name: 'Admin User',
-            email: 'admin@example.com',
-            password: 'password123',
-        };
+        let mockValidateSameEmailExists: jest.SpyInstance;
+        let mockHash: jest.SpyInstance;
+        let spyCreateNewAdmin: jest.SpyInstance;
 
-        it('should create a new admin user when email does not exist', async() => {
-            const hashedPassword = 'hashed_password';
+        beforeEach(() => {
+            mockValidateSameEmailExists = jest.spyOn(
+                mockUserService,
+                'validateSameEmailExists',
+            ).mockResolvedValue();
 
-            userRepository.findByEmail.mockResolvedValue(null);
-            userRepository.create.mockResolvedValue(adminUser);
-            hashService.hash.mockResolvedValue(hashedPassword);
+            mockHash = jest.spyOn(
+                HashService,
+                'hash',
+            ).mockResolvedValue('hashed_password');
 
-            const result = await useCase.execute(createAdminDto);
+            spyCreateNewAdmin = jest.spyOn(
+                User,
+                'createNewAdmin',
+            );
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(
+            mockUserRepository.create.mockResolvedValue(admin);
+        });
+
+        it('should create a new admin user when email does not exist', async () => {
+            const result = await useCase.execute(
+                createAdminDto,
+            );
+
+            expect(mockValidateSameEmailExists).toHaveBeenCalledWith(
                 createAdminDto.email,
             );
-            expect(hashService.hash).toHaveBeenCalledWith(createAdminDto.password);
-            expect(userRepository.create).toHaveBeenCalledWith(
+
+            expect(mockHash).toHaveBeenCalledWith(createAdminDto.password);
+
+            const hashedPassword = await mockHash.mock.results[0].value;
+
+            expect(spyCreateNewAdmin).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: createAdminDto.name,
                     email: createAdminDto.email,
                     passwordHash: hashedPassword,
                     type: UserType.ADMIN,
-                    capabilities: null,
                     paymentId: null,
                 }),
             );
-            expect(result).toEqual(adminUser);
+
+            const createNewAdminResult = spyCreateNewAdmin.mock.results[0].value;
+
+            expect(mockUserRepository.create).toHaveBeenCalledWith(
+                createNewAdminResult,
+            );
+
+            expect(result).toEqual(admin);
         });
 
-        it('should throw ConflictException when email already exists', async() => {
-            const existingUser = UserFixture.getEntity({
-                id: '1',
-                name: 'existinguser',
-                email: createAdminDto.email,
-                passwordHash: 'existingHash',
-                type: UserType.USER,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(existingUser);
+        it('should handle ConflictException', async () => {
+            mockValidateSameEmailExists.mockRejectedValue(
+                new ConflictException(userErrors.EMAIL_ALREADY_EXISTS),
+            );
 
             await expect(useCase.execute(createAdminDto)).rejects.toThrow(
-                ConflictException,
+                new ConflictException(userErrors.EMAIL_ALREADY_EXISTS),
             );
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(
-                createAdminDto.email,
-            );
-            expect(hashService.hash).not.toHaveBeenCalled();
-            expect(userRepository.create).not.toHaveBeenCalled();
         });
+
+        it('should handle unexpected error', async () => {
+            mockValidateSameEmailExists.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(createAdminDto)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
+        });
+
     });
 });

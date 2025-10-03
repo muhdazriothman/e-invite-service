@@ -31,10 +31,10 @@ export interface InvitationLean {
     itineraries: Itinerary[];
     contactPersons: ContactPerson[];
     rsvpDueDate: Date;
-    isDeleted?: boolean;
+    isDeleted: boolean;
     createdAt: Date;
     updatedAt: Date;
-    deletedAt?: Date | null;
+    deletedAt: Date | null;
 }
 
 export type InvitationHydrated = HydratedDocument<InvitationMongoDocument>;
@@ -45,7 +45,7 @@ export class InvitationMongoDocument {
         required: true,
         index: true,
     })
-        userId: string;
+    userId: string;
 
     @Prop({
         type: String,
@@ -53,43 +53,64 @@ export class InvitationMongoDocument {
         required: true,
         index: true,
     })
-        type: InvitationType;
+    type: InvitationType;
 
     @Prop({
         required: true,
     })
-        title: string;
+    title: string;
 
     @Prop({
         type: [
             {
-                name: { type: String, required: true },
-                title: { type: String, required: true },
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
                 relationshipWithCelebratedPerson: {
                     type: String,
                     enum: Object.values(RelationshipType),
                     required: true,
                 },
-                phoneNumber: { type: String, default: null },
-                email: { type: String, default: null },
+                phoneNumber: {
+                    type: String,
+                    default: null,
+                },
+                email: {
+                    type: String,
+                    default: null,
+                },
                 _id: false,
             },
         ],
         required: true,
     })
-        hosts: Host[];
+    hosts: Host[];
 
     @Prop({
         type: [
             {
-                name: { type: String, required: true },
-                title: { type: String, required: true },
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
                 relationshipWithHost: {
                     type: String,
                     enum: Object.values(RelationshipType),
                     required: true,
                 },
-                celebrationDate: { type: Date, required: true },
+                celebrationDate: {
+                    type: Date,
+                    required: true,
+                },
                 type: {
                     type: String,
                     enum: Object.values(CelebratedPersonType),
@@ -100,90 +121,125 @@ export class InvitationMongoDocument {
         ],
         required: true,
     })
-        celebratedPersons: CelebratedPerson[];
+    celebratedPersons: CelebratedPerson[];
 
     @Prop({
         type: {
-            gregorianDate: { type: Date, required: true },
-            hijriDate: { type: String, default: null },
+            gregorianDate: {
+                type: Date,
+                required: true,
+            },
+            hijriDate: {
+                type: String,
+                default: null,
+            },
             _id: false,
         },
         required: true,
     })
-        date: EventDate;
+    date: EventDate;
 
     @Prop({
         type: {
-            address: { type: String, required: true },
-            wazeLink: { type: String, default: null },
-            googleMapsLink: { type: String, default: null },
+            address: {
+                type: String,
+                required: true,
+            },
+            wazeLink: {
+                type: String,
+                default: null,
+            },
+            googleMapsLink: {
+                type: String,
+                default: null,
+            },
             _id: false,
         },
         required: true,
     })
-        location: Location;
+    location: Location;
 
     @Prop({
         type: [
             {
-                activities: [{ type: String }],
-                startTime: { type: String, required: true },
-                endTime: { type: String, required: true },
+                activities: [{
+                    type: String,
+                }],
+                startTime: {
+                    type: String,
+                    required: true,
+                },
+                endTime: {
+                    type: String,
+                    required: true,
+                },
                 _id: false,
             },
         ],
         required: true,
     })
-        itineraries: Itinerary[];
+    itineraries: Itinerary[];
 
     @Prop({
         type: [
             {
-                name: { type: String, required: true },
-                title: { type: String, required: true },
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
                 relationshipWithCelebratedPerson: {
                     type: String,
                     enum: Object.values(RelationshipType),
                     required: true,
                 },
-                phoneNumber: { type: String, default: null },
-                whatsappNumber: { type: String, default: null },
+                phoneNumber: {
+                    type: String,
+                    default: null,
+                },
+                whatsappNumber: {
+                    type: String,
+                    default: null,
+                },
                 _id: false,
             },
         ],
         required: true,
     })
-        contactPersons: ContactPerson[];
+    contactPersons: ContactPerson[];
 
     @Prop({
         type: Date,
         required: true,
     })
-        rsvpDueDate: Date;
+    rsvpDueDate: Date;
 
     @Prop({
         type: Date,
         required: true,
     })
-        createdAt: Date;
+    createdAt: Date;
 
     @Prop({
         type: Date,
         required: true,
     })
-        updatedAt: Date;
+    updatedAt: Date;
 
     @Prop({
         default: false,
         index: true,
     })
-        isDeleted: boolean;
+    isDeleted: boolean;
 
     @Prop({
         type: Date,
         default: null,
     })
-        deletedAt?: Date | null;
+    deletedAt: Date | null;
 }
 
 export const InvitationMongoSchema = SchemaFactory.createForClass(

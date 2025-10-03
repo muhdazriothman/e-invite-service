@@ -23,10 +23,10 @@ export class PaymentDto {
       status: PaymentStatus;
 
   @ApiProperty()
-      reference: string;
+      referenceNumber: string;
 
   @ApiProperty({ required: false })
-      description?: string;
+      description: string | null;
 
   @ApiProperty({ enum: PlanType })
       planType: PlanType;
@@ -61,14 +61,14 @@ export class PaymentListResponseDto {
 }
 
 export class PaymentMapper {
-    static toDto(payment: Payment): PaymentDto {
+    static toDto (payment: Payment): PaymentDto {
         return {
             id: payment.id,
             amount: payment.amount,
             currency: payment.currency,
             paymentMethod: payment.paymentMethod,
             status: payment.status,
-            reference: payment.reference,
+            referenceNumber: payment.referenceNumber,
             description: payment.description,
             planType: payment.planType,
             usedAt: payment.usedAt,

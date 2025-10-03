@@ -2,8 +2,14 @@ import { PaginationResult } from '@shared/domain/value-objects/pagination-result
 
 describe('@shared/domain/value-objects/pagination-result', () => {
     const mockData = [
-        { id: '1', name: 'Test 1' },
-        { id: '2', name: 'Test 2' },
+        {
+            id: '1',
+            name: 'Test 1',
+        },
+        {
+            id: '2',
+            name: 'Test 2',
+        },
     ];
 
     describe('constructor', () => {

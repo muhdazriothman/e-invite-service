@@ -1,3 +1,4 @@
+import { UserFixture } from '@test/fixture/user';
 import { UserType } from '@user/domain/entities/user';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 import { validate } from 'class-validator';
@@ -6,160 +7,141 @@ describe('@user/interfaces/http/dtos/create', () => {
     let dto: CreateUserDto;
 
     beforeEach(() => {
-        dto = new CreateUserDto();
+        dto = UserFixture.getCreateDto();
     });
 
-    describe('validation', () => {
-        it('should pass validation with valid data', async() => {
-            dto.name = 'John Doe';
-            dto.email = 'john@example.com';
-            dto.password = 'password123';
-            dto.type = UserType.USER;
-            dto.paymentId = '507f1f77bcf86cd799439011';
-
+    describe('#validation', () => {
+        it('should pass validation with valid data', async () => {
             const errors = await validate(dto);
-
             expect(errors).toHaveLength(0);
         });
 
         describe('name', () => {
-            it('should pass validation with valid name', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when name is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.name;
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(0);
+                expect(errors).toHaveValidationError('name');
             });
 
-            it('should fail validation with empty name', async() => {
-                dto.name = '';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when name is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.name = 123;
 
                 const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'isString');
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('name');
-                expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+            it('should fail validation when name is empty', async () => {
+                dto.name = '';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'isNotEmpty');
             });
         });
 
         describe('email', () => {
-            it('should pass validation with valid email', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when email is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.email;
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(0);
+                expect(errors).toHaveValidationError('email');
             });
 
-            it('should fail validation with invalid email', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'invalid-email';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when email is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.email = 123;
 
                 const errors = await validate(dto);
+                expect(errors).toHaveValidationError('email', 'isEmail');
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('email');
-                expect(errors[0].constraints).toHaveProperty('isEmail');
+            it('should fail validation when email is not a valid email format', async () => {
+                dto.email = 'invalid-email';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('email', 'isEmail');
             });
         });
 
-        describe('password validation', () => {
-            it('should pass validation with valid email', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+        describe('password', () => {
+            it('should fail validation when password is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.password;
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(0);
+                expect(errors).toHaveValidationError('password');
             });
 
-            it('should fail validation with short password', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = '123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when password is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.password = 123;
 
                 const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'isString');
+            });
 
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('password');
-                expect(errors[0].constraints).toHaveProperty('minLength');
+            it('should fail validation when password is too short', async () => {
+                dto.password = '123';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'minLength');
             });
         });
 
         describe('type', () => {
-            it('should pass validation with valid user type', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.ADMIN;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            const validTypes = [UserType.USER, UserType.ADMIN];
+
+            for (const type of validTypes) {
+                it(`should pass validation when type is ${type}`, async () => {
+                    dto.type = type;
+
+                    const errors = await validate(dto);
+                    expect(errors).toHaveLength(0);
+                });
+            }
+
+            it('should fail validation when type is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.type;
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(0);
+                expect(errors).toHaveValidationError('type');
             });
 
-            it('should fail validation with invalid user type', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                // @ts-expect-error Testing invalid enum value
+            it('should fail validation when type is not a valid enum value', async () => {
+                // @ts-expect-error - we want to test the validation
                 dto.type = 'invalid';
-                dto.paymentId = '507f1f77bcf86cd799439011';
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('type');
-                expect(errors[0].constraints).toHaveProperty('isEnum');
+                expect(errors).toHaveValidationError('type', 'isEnum');
             });
         });
 
         describe('paymentId', () => {
-            it('should pass validation with valid string', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
-                dto.paymentId = '507f1f77bcf86cd799439011';
+            it('should fail validation when paymentId is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.paymentId;
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(0);
+                expect(errors).toHaveValidationError('paymentId');
             });
 
-            it('should fail validation with empty string', async() => {
-                dto.name = 'John Doe';
-                dto.email = 'john@example.com';
-                dto.password = 'password123';
-                dto.type = UserType.USER;
+            it('should fail validation when paymentId is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.paymentId = 123;
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('paymentId', 'isString');
+            });
+
+            it('should fail validation when paymentId is empty', async () => {
                 dto.paymentId = '';
 
                 const errors = await validate(dto);
-
-                expect(errors).toHaveLength(1);
-                expect(errors[0].property).toBe('paymentId');
-                expect(errors[0].constraints).toHaveProperty('isNotEmpty');
+                expect(errors).toHaveValidationError('paymentId', 'isNotEmpty');
             });
         });
     });

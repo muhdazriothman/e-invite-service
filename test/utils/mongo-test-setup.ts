@@ -31,7 +31,7 @@ export class MongoTestSetup {
     private static connection: MongoConnection;
     private static module: TestingModule;
 
-    static async setup(
+    static async setup (
         options: MongoTestSetupOptions,
     ): Promise<MongoTestContext> {
     // Start in-memory MongoDB server if not already started
@@ -57,13 +57,13 @@ export class MongoTestSetup {
             connection: this.connection,
             module: this.module,
             mongoMemoryServer: this.mongoMemoryServer,
-            cleanup: async() => {
+            cleanup: async () => {
                 await this.cleanup();
             },
         };
     }
 
-    static async cleanup(): Promise<void> {
+    static async cleanup (): Promise<void> {
         if (this.connection) {
             await disconnect();
         }
@@ -72,7 +72,7 @@ export class MongoTestSetup {
         }
     }
 
-    static async stop(): Promise<void> {
+    static async stop (): Promise<void> {
         await this.cleanup();
         if (this.mongoMemoryServer) {
             await this.mongoMemoryServer.stop();
@@ -82,19 +82,22 @@ export class MongoTestSetup {
         }
     }
 
-    static getConnection(): MongoConnection {
+    static getConnection (): MongoConnection {
         return this.connection;
     }
 
-    static getModule(): TestingModule {
+    static getModule (): TestingModule {
         return this.module;
     }
 }
 
 // Helper function for repository tests
-export async function setupRepositoryTest(
+export async function setupRepositoryTest (
     schemas: Array<{ name: string; schema: Schema }>,
     providers: any[] = [],
 ): Promise<MongoTestContext> {
-    return MongoTestSetup.setup({ schemas, providers });
+    return MongoTestSetup.setup({
+        schemas,
+        providers,
+    });
 }

@@ -1,52 +1,64 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
+import { userErrors } from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
-import { User } from '@user/domain/entities/user';
+import { UserService } from '@user/application/services/user';
+import {
+    UpdateUserProps,
+    User,
+} from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
-
-export interface UpdateUserRequest {
-  name?: string;
-  password?: string;
-}
+import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
 
 @Injectable()
 export class UpdateUserUseCase {
-    constructor(
-    @Inject('UserRepository')
-    private readonly userRepository: UserRepository,
+    constructor (
+        private readonly userRepository: UserRepository,
 
-    @Inject('HashService')
-    private readonly hashService: HashService,
-    ) {}
+        private readonly userService: UserService,
+    ) { }
 
-    async execute(id: string, updateData: UpdateUserRequest): Promise<User> {
-        const existingUser = await this.userRepository.findById(id);
-        if (!existingUser) {
-            throw new NotFoundException(`User with id ${id} not found`);
+    async execute (
+        id: string,
+        updateData: UpdateUserDto,
+    ): Promise<User> {
+        const {
+            name,
+            password,
+        } = updateData;
+
+        try {
+            await this.userService.findByIdOrFail(id);
+
+            const updates: Partial<UpdateUserProps> = {};
+
+            if (name !== undefined) {
+                updates.name = updateData.name;
+            }
+
+            if (password !== undefined) {
+                updates.passwordHash = await HashService.hash(password);
+            }
+
+            const result = await this.userRepository.updateById(
+                id,
+                updates,
+            );
+
+            if (!result) {
+                throw new NotFoundException(userErrors.NOT_FOUND);
+            }
+
+            return result;
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
         }
-
-        const updates: Partial<{ name: string; passwordHash: string }> = {};
-
-        if (updateData.name && updateData.name !== existingUser.name) {
-            updates.name = updateData.name;
-        }
-
-        if (updateData.password) {
-            updates.passwordHash = await this.hashService.hash(updateData.password);
-        }
-
-        if (Object.keys(updates).length === 0) {
-            return existingUser;
-        }
-
-        const updatedUser = await this.userRepository.update(id, updates);
-        if (!updatedUser) {
-            throw new NotFoundException(`User with id ${id} not found`);
-        }
-
-        return updatedUser;
     }
 }

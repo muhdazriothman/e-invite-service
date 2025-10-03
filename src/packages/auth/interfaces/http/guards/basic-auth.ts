@@ -5,17 +5,16 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
+import { authErrors } from '@shared/constants/error-codes';
 import { Request } from 'express';
-
-import { authErrors } from '../../../../shared/constants/error-codes';
 
 @Injectable()
 export class BasicAuthGuard extends AuthGuard('basic') {
-    constructor(private readonly configService: ConfigService) {
+    constructor (private readonly configService: ConfigService) {
         super();
     }
 
-    canActivate(context: ExecutionContext): boolean {
+    canActivate (context: ExecutionContext): boolean {
         const request: Request = context.switchToHttp().getRequest();
         const authHeader = request.headers.authorization;
 

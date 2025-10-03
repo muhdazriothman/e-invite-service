@@ -1,4 +1,7 @@
-import { ConflictException } from '@nestjs/common';
+import {
+    ConflictException,
+    InternalServerErrorException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
@@ -7,108 +10,141 @@ import { CreatePaymentUseCase } from '@payment/application/use-cases/create';
 import {
     Payment,
     PaymentMethod,
-    PaymentStatus,
     PlanType,
 } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
 import { CreatePaymentDto } from '@payment/interfaces/http/dtos/create';
+import { paymentErrors } from '@shared/constants/error-codes';
 import { PaymentFixture } from '@test/fixture/payment';
-
+import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
 
 describe('@payment/application/use-cases/create', () => {
+    const userId = '000000000000000000000001';
+    const paymentId = '000000000000000000000002';
+    const referenceNumber = 'PAY-001';
+
     let useCase: CreatePaymentUseCase;
-    let paymentRepository: jest.Mocked<PaymentRepository>;
+    let mockPaymentRepository: jest.Mocked<PaymentRepository>;
 
-    beforeEach(async() => {
-        const mockPaymentRepository = {
-            create: jest.fn(),
-            findById: jest.fn(),
-            findByReference: jest.fn(),
-            findAll: jest.fn(),
-            findAvailableForUserCreation: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
+    const user = UserFixture.getEntity({
+        id: userId,
+    });
 
+    const createPaymentDto: CreatePaymentDto = {
+        amount: 100,
+        currency: 'USD',
+        paymentMethod: PaymentMethod.BANK_TRANSFER,
+        referenceNumber: 'PAY-001',
+        description: 'Test payment',
+        planType: PlanType.BASIC,
+    };
+
+    const payment = PaymentFixture.getEntity({
+        id: paymentId,
+        referenceNumber,
+    });
+
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CreatePaymentUseCase,
                 {
-                    provide: 'PaymentRepository',
-                    useValue: mockPaymentRepository,
+                    provide: PaymentRepository,
+                    useValue: createMock<PaymentRepository>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<CreatePaymentUseCase>(CreatePaymentUseCase);
-        paymentRepository = module.get('PaymentRepository');
+        mockPaymentRepository = module.get(PaymentRepository);
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     describe('#execute', () => {
-        it('should create a new payment successfully', async() => {
-            const createPaymentDto: CreatePaymentDto = {
-                currency: 'USD',
-                paymentMethod: PaymentMethod.BANK_TRANSFER,
-                reference: 'PAY-001',
-                description: 'Test payment',
-                planType: PlanType.BASIC,
-            };
-            const createdBy = 'admin-123';
+        let mockValidateReferenceIsUnique: jest.SpyInstance;
+        let spyPaymentCreateNew: jest.SpyInstance;
 
-            const expectedPayment = PaymentFixture.getEntity({
-                currency: createPaymentDto.currency,
-                paymentMethod: createPaymentDto.paymentMethod,
-                reference: createPaymentDto.reference,
-                description: createPaymentDto.description,
-                planType: createPaymentDto.planType,
-                createdBy,
-                status: PaymentStatus.PENDING,
-            });
+        beforeEach(() => {
+            mockValidateReferenceIsUnique = jest.spyOn(
+                useCase,
+                'validateReferenceIsUnique',
+            ).mockResolvedValue();
 
-            paymentRepository.findByReference.mockResolvedValue(null);
-            paymentRepository.create.mockResolvedValue(expectedPayment);
-
-            const result = await useCase.execute(createPaymentDto, createdBy);
-
-            expect(paymentRepository.findByReference).toHaveBeenCalledWith(
-                createPaymentDto.reference,
+            spyPaymentCreateNew = jest.spyOn(
+                Payment,
+                'createNew',
             );
-            expect(paymentRepository.create).toHaveBeenCalledWith(
-                expect.any(Payment),
-            );
-            expect(result).toEqual(expectedPayment);
-            expect(result.status).toBe(PaymentStatus.PENDING);
+
+            mockPaymentRepository.findByReferenceNumber.mockResolvedValue(null);
+            mockPaymentRepository.create.mockResolvedValue(payment);
         });
 
-        it('should throw ConflictException when payment reference already exists', async() => {
-            const createPaymentDto: CreatePaymentDto = {
-                currency: 'USD',
-                paymentMethod: PaymentMethod.BANK_TRANSFER,
-                reference: 'PAY-001',
-                description: 'Test payment',
-                planType: PlanType.BASIC,
-            };
-            const createdBy = 'admin-123';
+        it('should create payment successfully', async () => {
+            const result = await useCase.execute(
+                user,
+                createPaymentDto,
+            );
 
-            const existingPayment = PaymentFixture.getEntity({
+            expect(mockValidateReferenceIsUnique).toHaveBeenCalledWith(
+                createPaymentDto.referenceNumber,
+            );
+
+            expect(spyPaymentCreateNew).toHaveBeenCalledWith({
+                amount: createPaymentDto.amount,
                 currency: createPaymentDto.currency,
                 paymentMethod: createPaymentDto.paymentMethod,
-                reference: createPaymentDto.reference,
+                referenceNumber: createPaymentDto.referenceNumber,
                 description: createPaymentDto.description,
                 planType: createPaymentDto.planType,
-                createdBy: 'admin-456',
+                createdBy: userId,
             });
 
-            paymentRepository.findByReference.mockResolvedValue(existingPayment);
+            const paymentCreateNewResult = spyPaymentCreateNew.mock.results[0].value;
 
-            await expect(
-                useCase.execute(createPaymentDto, createdBy),
-            ).rejects.toThrow(ConflictException);
-
-            expect(paymentRepository.findByReference).toHaveBeenCalledWith(
-                createPaymentDto.reference,
+            expect(mockPaymentRepository.create).toHaveBeenCalledWith(
+                paymentCreateNewResult,
             );
-            expect(paymentRepository.create).not.toHaveBeenCalled();
+
+            expect(result).toEqual(payment);
+        });
+
+        it('should handle ConflictException', async () => {
+            mockValidateReferenceIsUnique.mockImplementation(
+                () => {
+                    throw new ConflictException(
+                        paymentErrors.PAYMENT_REFERENCE_ALREADY_EXISTS,
+                    );
+                },
+            );
+
+            await expect(useCase.execute(
+                user,
+                createPaymentDto,
+            )).rejects.toThrow(
+                new ConflictException(
+                    paymentErrors.PAYMENT_REFERENCE_ALREADY_EXISTS,
+                ),
+            );
+        });
+
+        it('should handle unexpected error', async () => {
+            mockPaymentRepository.create.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(
+                user,
+                createPaymentDto,
+            )).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
         });
     });
 });

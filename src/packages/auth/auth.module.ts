@@ -18,23 +18,11 @@ import { SharedModule } from '@shared/shared.module';
 import { UserAuthService } from '@user/application/services/user-auth.service';
 import { UserRepository } from '@user/infra/repository';
 import {
-    UserMongoDocument,
+    UserHydrated,
     UserMongoModelName,
     UserMongoSchema,
 } from '@user/infra/schema';
 import { Model } from 'mongoose';
-
-const createUserRepository = (userModel: Model<UserMongoDocument>) =>
-    new UserRepository(userModel);
-
-const createMockUserRepository = () => ({
-    create: jest.fn(),
-    findById: jest.fn(),
-    findByEmail: jest.fn(),
-    findAll: jest.fn(),
-    update: jest.fn(),
-    delete: jest.fn(),
-});
 
 @Module({
     imports: [
@@ -48,13 +36,12 @@ const createMockUserRepository = () => ({
             }),
             inject: [ConfigService],
         }),
-        ...(process.env.NODE_ENV === 'test'
-            ? []
-            : [
-                MongooseModule.forFeature([
-                    { name: UserMongoModelName, schema: UserMongoSchema },
-                ]),
-            ]),
+        MongooseModule.forFeature([
+            {
+                name: UserMongoModelName,
+                schema: UserMongoSchema,
+            },
+        ]),
     ],
     controllers: [AuthController],
     providers: [
@@ -64,21 +51,12 @@ const createMockUserRepository = () => ({
         BasicAuthGuard,
         LoginUseCase,
         {
-            provide: 'UserRepository',
-            useFactory:
-                process.env.NODE_ENV === 'test'
-                    ? createMockUserRepository
-                    : createUserRepository,
-            inject:
-                process.env.NODE_ENV === 'test'
-                    ? []
-                    : [getModelToken(UserMongoModelName)],
+            provide: UserRepository,
+            useFactory: (userModel: Model<UserHydrated>) => new UserRepository(userModel),
+            inject: [getModelToken(UserMongoModelName)],
         },
-        {
-            provide: 'UserAuthService',
-            useClass: UserAuthService,
-        },
+        UserAuthService,
     ],
-    exports: [JwtAuthGuard, AdminAuthGuard, BasicAuthGuard, 'UserAuthService'],
+    exports: [JwtAuthGuard, AdminAuthGuard, BasicAuthGuard, UserAuthService],
 })
 export class AuthModule {}

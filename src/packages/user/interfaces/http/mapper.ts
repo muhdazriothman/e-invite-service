@@ -46,7 +46,7 @@ export class UserListResponseDto {
 }
 
 export class UserMapper {
-    static toDto(user: User): UserDto {
+    static toDto (user: User): UserDto {
         return {
             id: user.id,
             name: user.name,

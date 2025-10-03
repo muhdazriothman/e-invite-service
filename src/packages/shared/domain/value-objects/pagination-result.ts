@@ -1,5 +1,5 @@
 export class PaginationResult<T> {
-    constructor(
+    constructor (
     public readonly data: T[],
     public readonly hasNextPage: boolean,
     public readonly hasPreviousPage: boolean,
@@ -8,7 +8,7 @@ export class PaginationResult<T> {
     public readonly previousCursor?: string,
     ) {}
 
-    static create<T>(
+    static create<T> (
         data: T[],
         nextCursor?: string,
         previousCursor?: string,

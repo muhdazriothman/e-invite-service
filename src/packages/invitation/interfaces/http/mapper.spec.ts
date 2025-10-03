@@ -5,7 +5,6 @@ import {
 import { InvitationMapper } from '@invitation/interfaces/http/mapper';
 import { InvitationFixture } from '@test/fixture/invitation';
 
-
 describe('@invitation/interfaces/http/mapper', () => {
     describe('toDto', () => {
         it('should convert Invitation domain object to InvitationDto', () => {
@@ -25,6 +24,7 @@ describe('@invitation/interfaces/http/mapper', () => {
                     type: CelebratedPersonType.BRIDE,
                 },
             ]);
+
             expect(result.date).toEqual({
                 gregorianDate: '2024-06-15T00:00:00.000Z',
                 hijriDate: '1445-12-08',

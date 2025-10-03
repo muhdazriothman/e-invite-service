@@ -1,112 +1,93 @@
+import { UserFixture } from '@test/fixture/user';
+import { CreateAdminDto } from '@user/interfaces/http/dtos/create-admin';
 import { validate } from 'class-validator';
 
-import { CreateAdminDto } from './create-admin';
-
-describe('CreateAdminDto', () => {
+describe('@user/interfaces/http/dtos/create-admin', () => {
     let dto: CreateAdminDto;
 
     beforeEach(() => {
-        dto = new CreateAdminDto();
+        dto = UserFixture.getCreateAdminDto();
     });
 
-    describe('name', () => {
-        it('should pass validation with valid name', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'admin@example.com';
-            dto.password = 'password123';
-
+    describe('#validation', () => {
+        it('should pass validation with valid data', async () => {
             const errors = await validate(dto);
-            const nameErrors = errors.filter(error => error.property === 'name');
-
-            expect(nameErrors).toHaveLength(0);
+            expect(errors).toHaveLength(0);
         });
 
-        it('should fail validation with empty name', async() => {
-            dto.name = '';
-            dto.email = 'admin@example.com';
-            dto.password = 'password123';
+        describe('name', () => {
+            it('should fail validation when name is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.name;
 
-            const errors = await validate(dto);
-            const nameErrors = errors.filter(error => error.property === 'name');
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name');
+            });
 
-            expect(nameErrors).toHaveLength(1);
-            expect(nameErrors[0].constraints).toHaveProperty('isNotEmpty');
+            it('should fail validation when name is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.name = 123;
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'isString');
+            });
+
+            it('should fail validation when name is empty', async () => {
+                dto.name = '';
+
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'isNotEmpty');
+            });
         });
 
-        it('should fail validation with non-string name', async() => {
-            // @ts-expect-error Testing validation error for non-string value
-            dto.name = 123;
-            dto.email = 'admin@example.com';
-            dto.password = 'password123';
+        describe('email', () => {
+            it('should fail validation when email is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.email;
 
-            const errors = await validate(dto);
-            const nameErrors = errors.filter(error => error.property === 'name');
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('email');
+            });
 
-            expect(nameErrors).toHaveLength(1);
-            expect(nameErrors[0].constraints).toHaveProperty('isString');
-        });
-    });
+            it('should fail validation when email is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.email = 123;
 
-    describe('email', () => {
-        it('should pass validation with valid email', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'admin@example.com';
-            dto.password = 'password123';
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('email', 'isEmail');
+            });
 
-            const errors = await validate(dto);
-            const emailErrors = errors.filter(error => error.property === 'email');
+            it('should fail validation when email is not a valid email format', async () => {
+                dto.email = 'invalid-email';
 
-            expect(emailErrors).toHaveLength(0);
-        });
-
-        it('should fail validation with invalid email', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'invalid-email';
-            dto.password = 'password123';
-
-            const errors = await validate(dto);
-            const emailErrors = errors.filter(error => error.property === 'email');
-
-            expect(emailErrors).toHaveLength(1);
-            expect(emailErrors[0].constraints).toHaveProperty('isEmail');
-        });
-    });
-
-    describe('password', () => {
-        it('should pass validation with valid password', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'admin@example.com';
-            dto.password = 'password123';
-
-            const errors = await validate(dto);
-            const passwordErrors = errors.filter(error => error.property === 'password');
-
-            expect(passwordErrors).toHaveLength(0);
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('email', 'isEmail');
+            });
         });
 
-        it('should fail validation with short password', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'admin@example.com';
-            dto.password = '12345';
+        describe('password', () => {
+            it('should fail validation when password is not provided', async () => {
+                // @ts-expect-error - we want to test the validation
+                delete dto.password;
 
-            const errors = await validate(dto);
-            const passwordErrors = errors.filter(error => error.property === 'password');
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password');
+            });
 
-            expect(passwordErrors).toHaveLength(1);
-            expect(passwordErrors[0].constraints).toHaveProperty('minLength');
-        });
+            it('should fail validation when password is not a string', async () => {
+                // @ts-expect-error - we want to test the validation
+                dto.password = 123;
 
-        it('should fail validation with non-string password', async() => {
-            dto.name = 'Admin User';
-            dto.email = 'admin@example.com';
-            // @ts-expect-error Testing validation error for non-string value
-            dto.password = 123;
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'isString');
+            });
 
-            const errors = await validate(dto);
-            const passwordErrors = errors.filter(error => error.property === 'password');
+            it('should fail validation when password is too short', async () => {
+                dto.password = '12345';
 
-            expect(passwordErrors).toHaveLength(1);
-            expect(passwordErrors[0].constraints).toHaveProperty('isString');
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'minLength');
+            });
         });
     });
 });

@@ -4,22 +4,20 @@ import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { AuthFixture } from '@test/fixture/auth';
+import { createMock } from '@test/utils/mocks';
 
 describe('@auth/interfaces/http/controller', () => {
     let controller: AuthController;
     let loginUseCase: jest.Mocked<LoginUseCase>;
 
-    beforeEach(async() => {
-        const mockLoginUseCase = {
-            execute: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AuthController],
             providers: [
                 {
                     provide: LoginUseCase,
-                    useValue: mockLoginUseCase,
+                    useValue: createMock<LoginUseCase>(),
                 },
             ],
         }).compile();
@@ -32,13 +30,10 @@ describe('@auth/interfaces/http/controller', () => {
         expect(controller).toBeDefined();
     });
 
-    describe('login', () => {
-        it('should login a user and return token', async() => {
-            const loginDto = {
-                email: 'test@example.com',
-                password: 'password123',
-            };
+    describe('#login', () => {
+        const loginDto = AuthFixture.getLoginDto();
 
+        it('should login a user and return token', async () => {
             const mockToken = { token: 'jwt-token' };
 
             loginUseCase.execute.mockResolvedValue(mockToken);
@@ -50,6 +45,16 @@ describe('@auth/interfaces/http/controller', () => {
                 statusCode: 200,
                 data: mockToken,
             });
+        });
+
+        it('should throw an error if the login fails', async () => {
+            loginUseCase.execute.mockRejectedValue(
+                new Error('Invalid credentials'),
+            );
+
+            await expect(
+                controller.login(loginDto),
+            ).rejects.toThrow('Invalid credentials');
         });
     });
 });

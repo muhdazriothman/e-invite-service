@@ -1,44 +1,42 @@
-import { NotFoundException } from '@nestjs/common';
+import {
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
+import { userErrors } from '@shared/constants/error-codes';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
+import { UserService } from '@user/application/services/user';
 import { GetUserByIdUseCase } from '@user/application/use-cases/get-by-id';
 import { UserType } from '@user/domain/entities/user';
-import { UserRepository } from '@user/infra/repository';
-
 
 describe('@user/application/use-cases/get-by-id', () => {
-    let useCase: GetUserByIdUseCase;
-    let mockRepository: jest.Mocked<UserRepository>;
+    const userId = '000000000000000000000001';
 
-    const mockUser = UserFixture.getEntity({
-        id: 'user-id-1',
-        name: 'testuser',
-        email: 'test@example.com',
-        passwordHash: 'hashedpassword123',
+    let useCase: GetUserByIdUseCase;
+    let mockUserService: jest.Mocked<UserService>;
+
+    const user = UserFixture.getEntity({
+        id: userId,
         type: UserType.USER,
-        paymentId: 'payment-id-123',
     });
 
-    beforeEach(async() => {
-        const mockUserRepository = {
-            findById: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 GetUserByIdUseCase,
                 {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
+                    provide: UserService,
+                    useValue: createMock<UserService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<GetUserByIdUseCase>(GetUserByIdUseCase);
-        mockRepository = module.get('UserRepository');
+        mockUserService = module.get(UserService);
     });
 
     it('should be defined', () => {
@@ -46,22 +44,42 @@ describe('@user/application/use-cases/get-by-id', () => {
     });
 
     describe('execute', () => {
-        it('should return user when found', async() => {
-            mockRepository.findById.mockResolvedValue(mockUser);
+        let mockFindByIdOrFail: jest.SpyInstance;
 
-            const result = await useCase.execute('user-id-1');
-
-            expect(mockRepository.findById).toHaveBeenCalledWith('user-id-1');
-            expect(result).toEqual(mockUser);
+        beforeEach(() => {
+            mockFindByIdOrFail = jest.spyOn(
+                mockUserService,
+                'findByIdOrFail',
+            ).mockResolvedValue(user);
         });
 
-        it('should throw NotFoundException when user not found', async() => {
-            mockRepository.findById.mockResolvedValue(null);
+        it('should return user when found', async () => {
+            const result = await useCase.execute(userId);
 
-            await expect(useCase.execute('non-existent-id')).rejects.toThrow(
-                NotFoundException,
+            expect(mockFindByIdOrFail).toHaveBeenCalledWith(userId);
+            expect(result).toEqual(user);
+        });
+
+        it('should handle NotFoundException when user does not exist', async () => {
+            mockFindByIdOrFail.mockRejectedValue(
+                new NotFoundException(userErrors.NOT_FOUND),
             );
-            expect(mockRepository.findById).toHaveBeenCalledWith('non-existent-id');
+
+            await expect(useCase.execute(userId)).rejects.toThrow(
+                new NotFoundException(userErrors.NOT_FOUND),
+            );
+        });
+
+        it('should handle unexpected error', async () => {
+            mockFindByIdOrFail.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
+
+            await expect(useCase.execute(userId)).rejects.toThrow(
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
+            );
         });
     });
 });

@@ -16,7 +16,7 @@ declare global {
 }
 
 export const validationMatchers = {
-    toHaveValidationError(
+    toHaveValidationError (
         received: ValidationError[],
         property: string,
         constraint?: string,
@@ -42,7 +42,7 @@ export const validationMatchers = {
         }
     },
 
-    toHaveNestedValidationError(
+    toHaveNestedValidationError (
         received: ValidationError[],
         parentProperty: string,
         nestedProperty: string,

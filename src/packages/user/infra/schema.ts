@@ -5,12 +5,12 @@ import {
 } from '@nestjs/mongoose';
 import { UserType } from '@user/domain/entities/user';
 import {
-    Document,
+    HydratedDocument,
     Types,
 } from 'mongoose';
 
-export interface UserDocumentSchema {
-  _id: unknown;
+export interface UserLean {
+  _id: Types.ObjectId;
   name: string;
   email: string;
   passwordHash: string;
@@ -19,56 +19,90 @@ export interface UserDocumentSchema {
     invitationLimit: number;
   } | null;
   paymentId: Types.ObjectId | null;
-  isDeleted?: boolean;
+  isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date | null;
+  deletedAt: Date | null;
 }
 
-@Schema({ timestamps: true })
-export class UserMongoDocument extends Document {
-  @Prop({ required: true, index: true })
-      name: string;
+export type UserHydrated = HydratedDocument<UserMongoDocument>;
 
-  @Prop({ required: true, unique: true, index: true })
-      email: string;
+@Schema({ versionKey: false })
+export class UserMongoDocument {
+    @Prop({
+        required: true,
+        index: true,
+    })
+        name: string;
 
-  @Prop({ required: true })
-      passwordHash: string;
+    @Prop({
+        required: true,
+        unique: true,
+        index: true,
+    })
+        email: string;
 
-  @Prop({
-      type: String,
-      enum: Object.values(UserType),
-      required: true,
-      index: true,
-  })
-      type: UserType;
+    @Prop({
+        required: true,
+    })
+        passwordHash: string;
 
-  @Prop({
-      type: {
-          invitationLimit: { type: Number, required: true },
-          _id: false,
-      },
-      required: false,
-      default: null,
-  })
-      capabilities: {
-    invitationLimit: number;
-  } | null;
+    @Prop({
+        type: String,
+        enum: Object.values(UserType),
+        required: true,
+        index: true,
+    })
+        type: UserType;
 
-  @Prop({ type: Types.ObjectId, required: false, index: true, default: null })
-      paymentId: Types.ObjectId | null;
+    @Prop({
+        type: {
+            invitationLimit: {
+                type: Number,
+                required: true,
+            },
+            _id: false,
+        },
+        required: false,
+    })
+        capabilities: {
+            invitationLimit: number;
+        } | null;
 
-  @Prop({ default: false, index: true })
-      isDeleted: boolean;
+    @Prop({
+        type: Types.ObjectId,
+        required: false,
+        index: true,
+    })
+        paymentId: Types.ObjectId | null;
 
-  @Prop({ type: Date, default: null })
-      deletedAt: Date;
+    @Prop({
+        type: Date,
+        required: true,
+    })
+        createdAt: Date;
 
-  createdAt: Date;
-  updatedAt: Date;
+    @Prop({
+        type: Date,
+        required: true,
+    })
+        updatedAt: Date;
+
+    @Prop({
+        default: false,
+        index: true,
+    })
+        isDeleted: boolean;
+
+    @Prop({
+        type: Date,
+        default: null,
+    })
+        deletedAt: Date | null;
 }
 
-export const UserMongoSchema = SchemaFactory.createForClass(UserMongoDocument);
+export const UserMongoSchema = SchemaFactory.createForClass(
+    UserMongoDocument,
+);
 
 export const UserMongoModelName = 'User';

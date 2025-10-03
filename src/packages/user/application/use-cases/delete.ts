@@ -1,26 +1,43 @@
 import {
     Injectable,
-    Inject,
     NotFoundException,
+    InternalServerErrorException,
 } from '@nestjs/common';
+import { userErrors } from '@shared/constants/error-codes';
 import { UserRepository } from '@user/infra/repository';
+
+import { UserService } from '../services/user';
 
 @Injectable()
 export class DeleteUserUseCase {
-    constructor(
-    @Inject('UserRepository')
-    private readonly userRepository: UserRepository,
+    constructor (
+        private readonly userRepository: UserRepository,
+
+        private readonly userService: UserService,
     ) {}
 
-    async execute(id: string): Promise<void> {
-        const existingUser = await this.userRepository.findById(id);
-        if (!existingUser) {
-            throw new NotFoundException(`User with id ${id} not found`);
-        }
+    async execute (
+        id: string,
+    ): Promise<void> {
+        try {
+            await this.userService.findByIdOrFail(id);
 
-        const deleted = await this.userRepository.delete(id);
+            await this.deleteUser(id);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+
+            throw new InternalServerErrorException(error);
+        }
+    }
+
+    async deleteUser (
+        id: string,
+    ): Promise<void> {
+        const deleted = await this.userRepository.deleteById(id);
         if (!deleted) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new NotFoundException(userErrors.NOT_FOUND);
         }
     }
 }

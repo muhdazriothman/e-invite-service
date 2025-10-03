@@ -19,9 +19,9 @@ export interface RequestWithUser extends Request {
 
 @Injectable()
 export class UserContextMiddleware implements NestMiddleware {
-    constructor(private readonly userRepository: UserRepository) {}
+    constructor (private readonly userRepository: UserRepository) {}
 
-    async use(req: RequestWithUser, res: Response, next: NextFunction) {
+    async use (req: RequestWithUser, res: Response, next: NextFunction) {
         const userId = req.user?.id;
 
         if (!userId) {

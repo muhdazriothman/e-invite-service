@@ -1,4 +1,3 @@
-import { BasicAuthGuard } from '@auth/interfaces/http/guards/basic-auth';
 import {
     ExecutionContext,
     UnauthorizedException,
@@ -9,202 +8,154 @@ import {
     TestingModule,
 } from '@nestjs/testing';
 import { authErrors } from '@shared/constants/error-codes';
+import { createMock } from '@test/utils/mocks';
 
-interface MockRequestHeaders {
-    authorization?: string | null;
-}
+import { BasicAuthGuard } from './basic-auth';
 
-describe('BasicAuthGuard', () => {
+describe('@auth/interfaces/http/guards/basic-auth', () => {
     let guard: BasicAuthGuard;
-    let configService: jest.Mocked<ConfigService>;
-    let mockExecutionContext: jest.Mocked<ExecutionContext>;
+    let mockConfigService: jest.Mocked<ConfigService>;
 
-    beforeEach(async() => {
-        const mockConfigService = {
-            get: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 BasicAuthGuard,
                 {
                     provide: ConfigService,
-                    useValue: mockConfigService,
+                    useValue: createMock<ConfigService>(),
                 },
             ],
         }).compile();
 
         guard = module.get<BasicAuthGuard>(BasicAuthGuard);
-        configService = module.get(ConfigService);
+        mockConfigService = module.get(ConfigService);
+    });
 
-        // Mock ExecutionContext
-        mockExecutionContext = {
-            switchToHttp: jest.fn(),
-        } as any;
+    afterEach(() => {
+        jest.clearAllMocks();
+        jest.restoreAllMocks();
     });
 
     it('should be defined', () => {
         expect(guard).toBeDefined();
     });
 
-    describe('canActivate', () => {
+    describe('#canActivate', () => {
         const validUsername = 'admin';
         const validPassword = 'secret123';
 
+        let mockContext: ExecutionContext;
+
+        const setupMockRequest = (authorization?: string | null) => {
+            mockContext = {
+                switchToHttp: jest.fn().mockReturnValue({
+                    getRequest: jest.fn().mockReturnValue({
+                        headers: { authorization },
+                    }),
+                }),
+            } as unknown as ExecutionContext;
+        };
+
         beforeEach(() => {
-            configService.get.mockImplementation((key: string) => {
+            mockConfigService.get.mockImplementation((key: string) => {
                 if (key === 'ADMIN_CREATE_USERNAME') return validUsername;
                 if (key === 'ADMIN_CREATE_PASSWORD') return validPassword;
                 return undefined;
             });
         });
 
-        const setupMockRequest = (headers: MockRequestHeaders) => {
-            mockExecutionContext.switchToHttp.mockReturnValue({
-                getRequest: jest.fn().mockReturnValue({ headers }),
-                getResponse: jest.fn().mockReturnValue({}),
-                getNext: jest.fn().mockReturnValue({}),
-            });
-        };
-
-        it('should return true for valid credentials', () => {
+        it('should return true when credentials are valid', () => {
             const credentials = Buffer.from(`${validUsername}:${validPassword}`).toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            const result = guard.canActivate(mockExecutionContext);
+            const result = guard.canActivate(mockContext);
 
+            expect(mockConfigService.get).toHaveBeenCalledWith('ADMIN_CREATE_USERNAME');
+            expect(mockConfigService.get).toHaveBeenCalledWith('ADMIN_CREATE_PASSWORD');
             expect(result).toBe(true);
         });
 
         it('should throw UnauthorizedException when authorization header is missing', () => {
-            setupMockRequest({});
+            setupMockRequest(undefined);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
             );
-        });
 
-        it('should throw UnauthorizedException when authorization header is null', () => {
-            setupMockRequest({
-                authorization: null,
-            });
-
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
-            );
+            expect(mockConfigService.get).not.toHaveBeenCalled();
         });
 
         it('should throw UnauthorizedException when authorization header does not start with Basic', () => {
-            setupMockRequest({
-                authorization: 'Bearer token123',
-            });
+            setupMockRequest('Bearer token123');
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.BASIC_AUTH_REQUIRED),
             );
+
+            expect(mockConfigService.get).not.toHaveBeenCalled();
         });
 
         it('should throw UnauthorizedException when credentials are not configured', () => {
-            configService.get.mockReturnValue(undefined);
+            mockConfigService.get.mockReturnValue(undefined);
             const credentials = Buffer.from(`${validUsername}:${validPassword}`).toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.ADMIN_CREATION_CREDENTIALS_NOT_CONFIGURED),
             );
         });
 
         it('should throw UnauthorizedException when username is incorrect', () => {
             const credentials = Buffer.from(`wronguser:${validPassword}`).toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
         it('should throw UnauthorizedException when password is incorrect', () => {
             const credentials = Buffer.from(`${validUsername}:wrongpassword`).toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
-        it('should throw UnauthorizedException when both username and password are incorrect', () => {
-            const credentials = Buffer.from('wronguser:wrongpassword').toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+        it('should throw UnauthorizedException when credentials are malformed base64', () => {
+            setupMockRequest('Basic invalid-base64!');
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
-        it('should handle malformed base64 credentials', () => {
-            setupMockRequest({
-                authorization: 'Basic invalid-base64!',
-            });
-
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
-                new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
-            );
-        });
-
-        it('should handle credentials without colon separator', () => {
+        it('should throw UnauthorizedException when credentials have no colon separator', () => {
             const credentials = Buffer.from('usernamewithoutcolon').toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
-        it('should handle empty credentials', () => {
+        it('should throw UnauthorizedException when credentials are empty', () => {
             const credentials = Buffer.from('').toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
         });
 
-        it('should handle credentials with multiple colons', () => {
+        it('should throw UnauthorizedException when credentials have multiple colons', () => {
             const credentials = Buffer.from('user:pass:extra').toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
+            setupMockRequest(`Basic ${credentials}`);
 
-            expect(() => guard.canActivate(mockExecutionContext)).toThrow(
+            expect(() => guard.canActivate(mockContext)).toThrow(
                 new UnauthorizedException(authErrors.INVALID_ADMIN_CREATION_CREDENTIALS),
             );
-        });
-
-        it('should call configService.get with correct parameters', () => {
-            const credentials = Buffer.from(`${validUsername}:${validPassword}`).toString('base64');
-            setupMockRequest({
-                authorization: `Basic ${credentials}`,
-            });
-
-            guard.canActivate(mockExecutionContext);
-
-            expect(configService.get).toHaveBeenCalledWith('ADMIN_CREATE_USERNAME');
-            expect(configService.get).toHaveBeenCalledWith('ADMIN_CREATE_PASSWORD');
-            expect(configService.get).toHaveBeenCalledTimes(2);
         });
     });
 });

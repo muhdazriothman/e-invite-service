@@ -13,9 +13,10 @@ export const userErrors = {
 } as const;
 
 export const paymentErrors = {
-    RECORD_NOT_FOUND: 'payment.record.not_found',
-    RECORD_NOT_AVAILABLE: 'payment.record.not_available',
-    STATUS_NOT_VERIFIED: 'payment.status.not_verified',
+    PAYMENT_NOT_FOUND: 'payment.not_found',
+    PAYMENT_REFERENCE_ALREADY_EXISTS: 'payment.reference_number.already_exists',
+    INVALID_STATUS_TRANSITION: 'payment.invalid_status_transition',
+    PAYMENT_MUST_BE_VERIFIED: 'payment.must_be_verified',
 } as const;
 
 export const invitationErrors = {

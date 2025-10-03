@@ -2,6 +2,7 @@
 import eslint from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
 import importNewlinesPlugin from 'eslint-plugin-import-newlines';
+import newlineDestructuringPlugin from 'eslint-plugin-newline-destructuring';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -15,6 +16,7 @@ export default tseslint.config(
         plugins: {
             import: importPlugin,
             'import-newlines': importNewlinesPlugin,
+            'newline-destructuring': newlineDestructuringPlugin,
         },
         languageOptions: {
             globals: {
@@ -69,7 +71,14 @@ export default tseslint.config(
             'quotes': ['error', 'single'],
             'comma-dangle': ['error', 'always-multiline'],
             'semi': ['error', 'always'],
-            'indent': ['error', 4],
+            'indent': ['error', 4, {
+                'ignoredNodes': [
+                    'PropertyDefinition[decorators.length > 0]',
+                    'PropertyDefinition[decorators.length > 0] > .key',
+                    'PropertyDefinition[decorators.length > 0] > .value'
+                ],
+                'SwitchCase': 1
+            }],
             'no-trailing-spaces': 'error',
             'eol-last': 'error',
             'object-curly-spacing': ['error', 'always'],
@@ -77,13 +86,34 @@ export default tseslint.config(
             'comma-spacing': ['error', { before: false, after: true }],
             'key-spacing': ['error', { beforeColon: false, afterColon: true }],
             'space-before-blocks': 'error',
-            'space-before-function-paren': ['error', 'never'],
+            'space-before-function-paren': ['error', 'always'],
+            'keyword-spacing': ['error', { before: true, after: true }],
             'space-in-parens': ['error', 'never'],
             'space-infix-ops': 'error',
             'space-unary-ops': 'error',
             'spaced-comment': ['error', 'always'],
-            'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
+            'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
             'max-len': ['error', { code: 150, ignoreUrls: true, ignoreStrings: true }],
+            'no-console': 'error',
+            'no-nested-ternary': 'error',
+            'operator-linebreak': ['error', 'after'],
+            'arrow-parens': ['error', 'always'],
+            'object-property-newline': ['error', { allowMultiplePropertiesPerLine: false }],
+            'object-curly-newline': ['error', {
+                minProperties: 2,
+                multiline: true,
+                consistent: true,
+            }],
+            'newline-destructuring/newline': ['error', {
+                items: 1,
+                consistent: true,
+            }],
+            'class-methods-use-this': 'error',
+            'padding-line-between-statements': ['error', {
+                blankLine: 'always',
+                prev: 'multiline-expression',
+                next: 'multiline-expression',
+            }],
         },
     },
     {

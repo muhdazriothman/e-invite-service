@@ -14,26 +14,18 @@ import * as Joi from 'joi';
     imports: [
         ConfigModule.forRoot({
             isGlobal: true,
-            ...(process.env.NODE_ENV !== 'test' && {
-                validationSchema: Joi.object({
-                    JWT_SECRET: Joi.string().required(),
-                    MONGODB_URI: Joi.string().uri().required(),
-                    PORT: Joi.number().default(3000),
-                }),
+            validationSchema: Joi.object({
+                JWT_SECRET: Joi.string().required(),
+                MONGODB_URI: Joi.string().uri().required(),
+                PORT: Joi.number().default(3000),
             }),
         }),
-        ...(process.env.NODE_ENV === 'test'
-            ? []
-            : [
-                MongooseModule.forRootAsync({
-                    inject: [ConfigService],
-                    useFactory: (config: ConfigService) => ({
-                        uri:
-                config.get<string>('MONGODB_URI') ||
-                'mongodb://localhost:55000/einvite',
-                    }),
-                }),
-            ]),
+        MongooseModule.forRootAsync({
+            inject: [ConfigService],
+            useFactory: (config: ConfigService) => ({
+                uri: config.get<string>('MONGODB_URI') || 'mongodb://localhost:55000/einvite',
+            }),
+        }),
         AuthModule,
         UserModule,
         InvitationModule,

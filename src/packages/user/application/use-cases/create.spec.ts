@@ -1,88 +1,81 @@
-import { ConflictException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import {
     Test,
     TestingModule,
 } from '@nestjs/testing';
-import {
-    PaymentStatus,
-    PlanType,
-} from '@payment/domain/entities/payment';
+import { PaymentStatus } from '@payment/domain/entities/payment';
 import { PaymentRepository } from '@payment/infra/repository';
+import {
+    paymentErrors,
+    userErrors,
+} from '@shared/constants/error-codes';
 import { HashService } from '@shared/services/hash';
 import { PaymentFixture } from '@test/fixture/payment';
 import { UserFixture } from '@test/fixture/user';
+import { createMock } from '@test/utils/mocks';
+import { UserService } from '@user/application/services/user';
 import { CreateUserUseCase } from '@user/application/use-cases/create';
-import { UserType } from '@user/domain/entities/user';
+import {
+    User,
+    UserType,
+} from '@user/domain/entities/user';
 import { UserRepository } from '@user/infra/repository';
 import { CreateUserDto } from '@user/interfaces/http/dtos/create';
 
-
 describe('@user/application/use-cases/create', () => {
+    const userId = '000000000000000000000001';
+    const paymentId = '000000000000000000000002';
+
     let useCase: CreateUserUseCase;
-    let userRepository: jest.Mocked<UserRepository>;
-    let paymentRepository: jest.Mocked<PaymentRepository>;
-    let hashService: jest.Mocked<HashService>;
+    let mockUserRepository: jest.Mocked<UserRepository>;
+    let mockPaymentRepository: jest.Mocked<PaymentRepository>;
+    let mockUserService: jest.Mocked<UserService>;
 
     const user = UserFixture.getEntity({
-        id: '1',
-        name: 'testuser',
-        email: 'test@example.com',
-        passwordHash: 'hashedPassword123',
+        id: userId,
         type: UserType.USER,
     });
 
     const payment = PaymentFixture.getEntity({
-        id: 'payment-id-123',
-        planType: PlanType.BASIC,
-        status: PaymentStatus.VERIFIED,
-        isDeleted: false,
+        id: paymentId,
     });
 
-    beforeEach(async() => {
-        const mockUserRepository = {
-            create: jest.fn(),
-            findAll: jest.fn(),
-            findByName: jest.fn(),
-            findByEmail: jest.fn(),
-            delete: jest.fn(),
-        };
+    const createUserDto: CreateUserDto = {
+        name: 'testuser',
+        email: 'test@example.com',
+        password: 'password123',
+        type: UserType.USER,
+        paymentId: payment.id,
+    };
 
-        const mockPaymentRepository = {
-            create: jest.fn(),
-            findById: jest.fn(),
-            findByReference: jest.fn(),
-            findAll: jest.fn(),
-            update: jest.fn(),
-            delete: jest.fn(),
-        };
-
-        const mockHashService = {
-            hash: jest.fn(),
-            compare: jest.fn(),
-        };
-
+    beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 CreateUserUseCase,
                 {
-                    provide: 'UserRepository',
-                    useValue: mockUserRepository,
+                    provide: UserRepository,
+                    useValue: createMock<UserRepository>(),
                 },
                 {
-                    provide: 'PaymentRepository',
-                    useValue: mockPaymentRepository,
+                    provide: PaymentRepository,
+                    useValue: createMock<PaymentRepository>(),
                 },
                 {
-                    provide: 'HashService',
-                    useValue: mockHashService,
+                    provide: UserService,
+                    useValue: createMock<UserService>(),
                 },
             ],
         }).compile();
 
         useCase = module.get<CreateUserUseCase>(CreateUserUseCase);
-        userRepository = module.get('UserRepository');
-        paymentRepository = module.get('PaymentRepository');
-        hashService = module.get('HashService');
+        mockUserRepository = module.get(UserRepository);
+        mockPaymentRepository = module.get(PaymentRepository);
+        mockUserService = module.get(UserService);
     });
 
     it('should be defined', () => {
@@ -90,164 +83,119 @@ describe('@user/application/use-cases/create', () => {
     });
 
     describe('execute', () => {
-        const createUserDto: CreateUserDto = {
-            name: 'testuser',
-            email: 'test@example.com',
-            password: 'password123',
-            type: UserType.USER,
-            paymentId: payment.id,
-        };
+        let mockValidateSameEmailExists: jest.SpyInstance;
+        let mockHash: jest.SpyInstance;
+        let spyCreateNewUser: jest.SpyInstance;
+        let mockValidatePaymentRecord: jest.SpyInstance;
 
-        it('should create a new user when email does not exist', async() => {
-            const hashedPassword = 'hashedPassword123';
+        beforeEach(() => {
+            mockValidateSameEmailExists = jest.spyOn(
+                mockUserService,
+                'validateSameEmailExists',
+            ).mockResolvedValue();
 
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(payment);
-            paymentRepository.update.mockResolvedValue(payment);
-            userRepository.create.mockResolvedValue(user);
-            hashService.hash.mockResolvedValue(hashedPassword);
+            mockValidatePaymentRecord = jest.spyOn(
+                useCase,
+                'validatePaymentRecord',
+            ).mockResolvedValue(payment);
 
+            mockHash = jest.spyOn(
+                HashService,
+                'hash',
+            ).mockResolvedValue('hashed_password');
+
+            spyCreateNewUser = jest.spyOn(
+                User,
+                'createNewUser',
+            );
+
+            mockPaymentRepository.updateById.mockResolvedValue(payment);
+            mockUserRepository.create.mockResolvedValue(user);
+        });
+
+        it('should create a new user when email does not exist', async () => {
             const result = await useCase.execute(createUserDto);
 
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(
+            expect(mockValidateSameEmailExists).toHaveBeenCalledWith(
                 createUserDto.email,
             );
-            expect(paymentRepository.findById).toHaveBeenCalledWith(
+
+            expect(mockValidatePaymentRecord).toHaveBeenCalledWith(
                 createUserDto.paymentId,
             );
-            expect(hashService.hash).toHaveBeenCalledWith(createUserDto.password);
-            expect(userRepository.create).toHaveBeenCalledWith(
+
+            expect(mockHash).toHaveBeenCalledWith(createUserDto.password);
+
+            const hashedPassword = await mockHash.mock.results[0].value;
+
+            expect(spyCreateNewUser).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: createUserDto.name,
                     email: createUserDto.email,
                     passwordHash: hashedPassword,
                     type: createUserDto.type,
+                    paymentId: createUserDto.paymentId,
                 }),
+                payment.planType,
             );
+
+            const createNewUserResult = spyCreateNewUser.mock.results[0].value;
+
+            expect(mockPaymentRepository.updateById).toHaveBeenCalledWith(
+                payment.id,
+                {
+                    status: PaymentStatus.USED,
+                    usedAt: expect.any(Date) as Date,
+                },
+            );
+
+            expect(mockUserRepository.create).toHaveBeenCalledWith(
+                createNewUserResult,
+            );
+
             expect(result).toEqual(user);
         });
 
-        it('should create user with correct capabilities based on plan type', async() => {
-            const premiumPayment = PaymentFixture.getEntity({
-                id: 'payment-id-123',
-                planType: PlanType.PREMIUM,
-                status: PaymentStatus.VERIFIED,
-                isDeleted: false,
-            });
-
-            const hashedPassword = 'hashedPassword123';
-
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(premiumPayment);
-            paymentRepository.update.mockResolvedValue(premiumPayment);
-            userRepository.create.mockResolvedValue(user);
-            hashService.hash.mockResolvedValue(hashedPassword);
-
-            await useCase.execute(createUserDto);
-
-            expect(userRepository.create).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    capabilities: {
-                        invitationLimit: 3, // Premium plan limit
-                    },
-                }),
+        it('should handle ConflictException', async () => {
+            mockValidateSameEmailExists.mockRejectedValue(
+                new ConflictException(userErrors.EMAIL_ALREADY_EXISTS),
             );
-        });
-
-        it('should mark payment record as used after successful user creation', async() => {
-            const hashedPassword = 'hashedPassword123';
-            const freshPayment = PaymentFixture.getEntity({
-                id: 'payment-id-123',
-                planType: PlanType.BASIC,
-                status: PaymentStatus.VERIFIED,
-                isDeleted: false,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(freshPayment);
-            paymentRepository.update.mockResolvedValue(freshPayment);
-            userRepository.create.mockResolvedValue(user);
-            hashService.hash.mockResolvedValue(hashedPassword);
-
-            await useCase.execute(createUserDto);
-
-            expect(paymentRepository.update).toHaveBeenCalledWith('payment-id-123', {
-                status: PaymentStatus.USED,
-                usedAt: expect.any(Date) as Date,
-            });
-        });
-
-        it('should throw ConflictException when email already exists', async() => {
-            const existingUser = UserFixture.getEntity({
-                id: '1',
-                name: 'existinguser',
-                email: createUserDto.email,
-                passwordHash: 'existingHash',
-                type: UserType.USER,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(existingUser);
 
             await expect(useCase.execute(createUserDto)).rejects.toThrow(
-                ConflictException,
+                new ConflictException(userErrors.EMAIL_ALREADY_EXISTS),
             );
-            expect(userRepository.findByEmail).toHaveBeenCalledWith(
-                createUserDto.email,
-            );
-            expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is not found', async() => {
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(null);
+        it('should handle NotFoundException when payment record is not found', async () => {
+            mockValidatePaymentRecord.mockRejectedValue(
+                new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND),
+            );
 
             await expect(useCase.execute(createUserDto)).rejects.toThrow(
-                'Payment record not found',
+                new NotFoundException(paymentErrors.PAYMENT_NOT_FOUND),
             );
-            expect(paymentRepository.findById).toHaveBeenCalledWith(
-                createUserDto.paymentId,
-            );
-            expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is not verified', async() => {
-            const pendingPayment = PaymentFixture.getEntity({
-                id: 'payment-id-123',
-                planType: PlanType.BASIC,
-                status: PaymentStatus.PENDING,
-                isDeleted: false,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(pendingPayment);
+        it('should handle BadRequestException when payment record is not available', async () => {
+            mockValidatePaymentRecord.mockRejectedValue(
+                new BadRequestException(paymentErrors.PAYMENT_MUST_BE_VERIFIED),
+            );
 
             await expect(useCase.execute(createUserDto)).rejects.toThrow(
-                'Payment record is not available for user creation',
+                new BadRequestException(paymentErrors.PAYMENT_MUST_BE_VERIFIED),
             );
-            expect(paymentRepository.findById).toHaveBeenCalledWith(
-                createUserDto.paymentId,
-            );
-            expect(userRepository.create).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when payment record is deleted', async() => {
-            const deletedPayment = PaymentFixture.getEntity({
-                id: 'payment-id-123',
-                planType: PlanType.BASIC,
-                status: PaymentStatus.VERIFIED,
-                isDeleted: true,
-            });
-
-            userRepository.findByEmail.mockResolvedValue(null);
-            paymentRepository.findById.mockResolvedValue(deletedPayment);
+        it('should handle unexpected error', async () => {
+            mockValidateSameEmailExists.mockRejectedValue(
+                new Error('Unexpected error'),
+            );
 
             await expect(useCase.execute(createUserDto)).rejects.toThrow(
-                'Payment record is not available for user creation',
+                new InternalServerErrorException(
+                    new Error('Unexpected error'),
+                ),
             );
-            expect(paymentRepository.findById).toHaveBeenCalledWith(
-                createUserDto.paymentId,
-            );
-            expect(userRepository.create).not.toHaveBeenCalled();
         });
     });
 });

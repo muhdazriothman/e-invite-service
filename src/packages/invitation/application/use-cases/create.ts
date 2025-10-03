@@ -1,3 +1,4 @@
+import { InvitationService } from '@invitation/application/services/invitation';
 import {
     CelebratedPerson,
     ContactPerson,
@@ -8,29 +9,24 @@ import {
 import { InvitationRepository } from '@invitation/infra/repository';
 import { CreateInvitationDto } from '@invitation/interfaces/http/dtos/create';
 import {
-    Injectable,
-    Inject,
     BadRequestException,
+    Injectable,
+    InternalServerErrorException,
 } from '@nestjs/common';
-import { DateValidator } from '@shared/utils/date';
+import { invitationErrors } from '@shared/constants/error-codes';
 import { User } from '@user/domain/entities/user';
-import { DateTime } from 'luxon';
-
-import { invitationErrors } from '../../../shared/constants/error-codes';
 
 @Injectable()
 export class CreateInvitationUseCase {
-    constructor(
-    @Inject('InvitationRepository')
-    private readonly invitationRepository: InvitationRepository,
+    constructor (
+        private readonly invitationRepository: InvitationRepository,
 
-    @Inject('DateValidator')
-    private readonly dateValidator: DateValidator,
-    ) {}
+        private readonly invitationService: InvitationService,
+    ) { }
 
-    async execute(
-        createInvitationDto: CreateInvitationDto,
+    async execute (
         user: User,
+        createInvitationDto: CreateInvitationDto,
     ): Promise<Invitation> {
         const {
             id: userId,
@@ -50,21 +46,13 @@ export class CreateInvitationUseCase {
         } = createInvitationDto;
 
         try {
-            if (!CreateInvitationUseCase.doesUserHaveInvitationLimitCapabilities(capabilities?.invitationLimit)) {
-                throw new BadRequestException(invitationErrors.CAPABILITIES_NOT_FOUND);
-            }
+            CreateInvitationUseCase.validateInvitationLimitCapabilities(capabilities?.invitationLimit);
 
-            if (await this.hasInvitationLimitReached(userId, capabilities!.invitationLimit)) {
-                throw new BadRequestException(invitationErrors.LIMIT_REACHED);
-            }
+            await this.validateInvitationLimitReached(userId, capabilities!.invitationLimit);
 
-            if (this.isEventDateInThePast(date.gregorianDate)) {
-                throw new BadRequestException(invitationErrors.EVENT_DATE_IN_THE_PAST);
-            }
+            this.invitationService.validateEventDateIsFuture(date.gregorianDate);
 
-            if (this.isRsvpDueDateAfterEventDate(rsvpDueDate, date.gregorianDate)) {
-                throw new BadRequestException(invitationErrors.RSVP_DUE_DATE_AFTER_EVENT_DATE);
-            }
+            this.invitationService.validateRsvpDueDateNotAfterEventDate(rsvpDueDate, date.gregorianDate);
 
             const mappedHosts: Host[] = [];
             for (const host of hosts) {
@@ -128,38 +116,26 @@ export class CreateInvitationUseCase {
                 throw error;
             }
 
-            throw new Error('Unexpected error: ' + error);
+            throw new InternalServerErrorException(error);
         }
     }
 
-    static doesUserHaveInvitationLimitCapabilities(invitationLimit: number | undefined): boolean {
-        return invitationLimit !== undefined && invitationLimit > 0;
+    static validateInvitationLimitCapabilities (
+        invitationLimit: number | undefined,
+    ): void {
+        const hasInvitationLimitCapabilities = invitationLimit !== undefined && invitationLimit > 0;
+        if (!hasInvitationLimitCapabilities) {
+            throw new BadRequestException(invitationErrors.CAPABILITIES_NOT_FOUND);
+        }
     }
 
-    async hasInvitationLimitReached(
+    async validateInvitationLimitReached (
         userId: string,
         invitationLimit: number,
-    ): Promise<boolean> {
+    ): Promise<void> {
         const currentInvitationCount = await this.invitationRepository.countByUserId(userId);
-        return currentInvitationCount >= invitationLimit;
-    }
-
-    isEventDateInThePast(eventDate: string): boolean {
-        const now = DateTime.utc();
-        const parsedDate = this.dateValidator.parseDate(eventDate);
-
-        return this.dateValidator.isOnOrBeforeDate(
-            parsedDate,
-            now,
-        );
-    }
-
-    isRsvpDueDateAfterEventDate(
-        rsvpDueDate: string,
-        eventDate: string,
-    ): boolean {
-        const parsedRsvpDate = this.dateValidator.parseDate(rsvpDueDate);
-        const parsedEventDate = this.dateValidator.parseDate(eventDate);
-        return parsedRsvpDate > parsedEventDate;
+        if (currentInvitationCount >= invitationLimit) {
+            throw new BadRequestException(invitationErrors.LIMIT_REACHED);
+        }
     }
 }

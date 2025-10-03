@@ -26,7 +26,7 @@ describe('UserContextMiddleware', () => {
     const mockResponse = {} as Response;
     const mockNext = jest.fn();
 
-    beforeEach(async() => {
+    beforeEach(async () => {
         const mockUserRepositoryInstance = {
             findById: jest.fn(),
         };
@@ -50,7 +50,7 @@ describe('UserContextMiddleware', () => {
     });
 
     describe('use', () => {
-        it('should attach user data to request when user exists', async() => {
+        it('should attach user data to request when user exists', async () => {
             const user = UserFixture.getEntity({
                 id: '000000000000000000000001',
             });
@@ -66,7 +66,7 @@ describe('UserContextMiddleware', () => {
             expect(mockNext).toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when user ID is not found in request', async() => {
+        it('should throw BadRequestException when user ID is not found in request', async () => {
             const requestWithoutUser: RequestWithUser = {} as RequestWithUser;
 
             await expect(
@@ -76,7 +76,7 @@ describe('UserContextMiddleware', () => {
             expect(mockUserRepository.findById).not.toHaveBeenCalled();
         });
 
-        it('should throw BadRequestException when user is not found in database', async() => {
+        it('should throw BadRequestException when user is not found in database', async () => {
             mockUserRepository.findById.mockResolvedValue(null);
 
             await expect(

@@ -1,63 +1,92 @@
+import { UserFixture } from '@test/fixture/user';
 import { UpdateUserDto } from '@user/interfaces/http/dtos/update';
+import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 
-
 describe('@user/interfaces/http/dtos/update', () => {
-    it('should be defined', () => {
-        expect(UpdateUserDto).toBeDefined();
-    });
-
-    describe('validation', () => {
-        it('should pass validation with valid data', async() => {
-            const dto = new UpdateUserDto();
-            dto.name = 'newusername';
-            dto.password = 'newpassword123';
-
+    describe('#validation', () => {
+        it('should pass validation with empty object', async () => {
+            const dto = plainToClass(UpdateUserDto, {});
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with partial data', async() => {
-            const dto = new UpdateUserDto();
-            dto.name = 'newusername';
-
+        it('should pass validation with partial data', async () => {
+            const dto = plainToClass(UpdateUserDto, {
+                name: 'Updated User',
+            });
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
 
-        it('should pass validation with empty dto', async() => {
-            const dto = new UpdateUserDto();
-
+        it('should pass validation with complete data', async () => {
+            const dto = UserFixture.getUpdateDto();
             const errors = await validate(dto);
             expect(errors).toHaveLength(0);
         });
 
-        it('should fail validation with short name', async() => {
-            const dto = new UpdateUserDto();
-            dto.name = 'ab';
+        describe('name', () => {
+            it('should pass validation when name is not provided', async () => {
+                const dto = plainToClass(UpdateUserDto, {});
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-            const errors = await validate(dto);
-            expect(errors).toHaveLength(1);
-            expect(errors[0].constraints?.minLength).toBeDefined();
+            it('should pass validation when name is provided', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    name: 'Updated User Name',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
+
+            it('should fail validation when name is not a string', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    name: 123,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'isString');
+            });
+
+            it('should fail validation when name is too short', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    name: 'ab',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('name', 'minLength');
+            });
         });
 
-        it('should fail validation with short password', async() => {
-            const dto = new UpdateUserDto();
-            dto.password = '123';
+        describe('password', () => {
+            it('should pass validation when password is not provided', async () => {
+                const dto = plainToClass(UpdateUserDto, {});
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-            const errors = await validate(dto);
-            expect(errors).toHaveLength(1);
-            expect(errors[0].constraints?.minLength).toBeDefined();
-        });
+            it('should pass validation when password is provided', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    password: 'newpassword123',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveLength(0);
+            });
 
-        it('should fail validation with non-string name', async() => {
-            const dto = new UpdateUserDto();
-            // @ts-expect-error Testing invalid type assignment
-            dto.name = 123;
+            it('should fail validation when password is not a string', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    password: 123,
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'isString');
+            });
 
-            const errors = await validate(dto);
-            expect(errors).toHaveLength(1);
-            expect(errors[0].constraints?.isString).toBeDefined();
+            it('should fail validation when password is too short', async () => {
+                const dto = plainToClass(UpdateUserDto, {
+                    password: '123',
+                });
+                const errors = await validate(dto);
+                expect(errors).toHaveValidationError('password', 'minLength');
+            });
         });
     });
 });
