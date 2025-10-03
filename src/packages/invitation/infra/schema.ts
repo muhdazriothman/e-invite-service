@@ -1,0 +1,249 @@
+import {
+    InvitationType,
+    CelebratedPersonType,
+    RelationshipType,
+    Host,
+    CelebratedPerson,
+    EventDate,
+    Location,
+    Itinerary,
+    ContactPerson,
+} from '@invitation/domain/entities/invitation';
+import {
+    Prop,
+    Schema,
+    SchemaFactory,
+} from '@nestjs/mongoose';
+import {
+    HydratedDocument,
+    Types,
+} from 'mongoose';
+
+export interface InvitationLean {
+    _id: Types.ObjectId;
+    userId: string;
+    type: InvitationType;
+    title: string;
+    hosts: Host[];
+    celebratedPersons: CelebratedPerson[];
+    date: EventDate;
+    location: Location;
+    itineraries: Itinerary[];
+    contactPersons: ContactPerson[];
+    rsvpDueDate: Date;
+    isDeleted: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+}
+
+export type InvitationHydrated = HydratedDocument<InvitationMongoDocument>;
+
+@Schema({ versionKey: false })
+export class InvitationMongoDocument {
+    @Prop({
+        required: true,
+        index: true,
+    })
+    userId: string;
+
+    @Prop({
+        type: String,
+        enum: Object.values(InvitationType),
+        required: true,
+        index: true,
+    })
+    type: InvitationType;
+
+    @Prop({
+        required: true,
+    })
+    title: string;
+
+    @Prop({
+        type: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
+                relationshipWithCelebratedPerson: {
+                    type: String,
+                    enum: Object.values(RelationshipType),
+                    required: true,
+                },
+                phoneNumber: {
+                    type: String,
+                    default: null,
+                },
+                email: {
+                    type: String,
+                    default: null,
+                },
+                _id: false,
+            },
+        ],
+        required: true,
+    })
+    hosts: Host[];
+
+    @Prop({
+        type: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
+                relationshipWithHost: {
+                    type: String,
+                    enum: Object.values(RelationshipType),
+                    required: true,
+                },
+                celebrationDate: {
+                    type: Date,
+                    required: true,
+                },
+                type: {
+                    type: String,
+                    enum: Object.values(CelebratedPersonType),
+                    required: true,
+                },
+                _id: false,
+            },
+        ],
+        required: true,
+    })
+    celebratedPersons: CelebratedPerson[];
+
+    @Prop({
+        type: {
+            gregorianDate: {
+                type: Date,
+                required: true,
+            },
+            hijriDate: {
+                type: String,
+                default: null,
+            },
+            _id: false,
+        },
+        required: true,
+    })
+    date: EventDate;
+
+    @Prop({
+        type: {
+            address: {
+                type: String,
+                required: true,
+            },
+            wazeLink: {
+                type: String,
+                default: null,
+            },
+            googleMapsLink: {
+                type: String,
+                default: null,
+            },
+            _id: false,
+        },
+        required: true,
+    })
+    location: Location;
+
+    @Prop({
+        type: [
+            {
+                activities: [{
+                    type: String,
+                }],
+                startTime: {
+                    type: String,
+                    required: true,
+                },
+                endTime: {
+                    type: String,
+                    required: true,
+                },
+                _id: false,
+            },
+        ],
+        required: true,
+    })
+    itineraries: Itinerary[];
+
+    @Prop({
+        type: [
+            {
+                name: {
+                    type: String,
+                    required: true,
+                },
+                title: {
+                    type: String,
+                    required: true,
+                },
+                relationshipWithCelebratedPerson: {
+                    type: String,
+                    enum: Object.values(RelationshipType),
+                    required: true,
+                },
+                phoneNumber: {
+                    type: String,
+                    default: null,
+                },
+                whatsappNumber: {
+                    type: String,
+                    default: null,
+                },
+                _id: false,
+            },
+        ],
+        required: true,
+    })
+    contactPersons: ContactPerson[];
+
+    @Prop({
+        type: Date,
+        required: true,
+    })
+    rsvpDueDate: Date;
+
+    @Prop({
+        type: Date,
+        required: true,
+    })
+    createdAt: Date;
+
+    @Prop({
+        type: Date,
+        required: true,
+    })
+    updatedAt: Date;
+
+    @Prop({
+        default: false,
+        index: true,
+    })
+    isDeleted: boolean;
+
+    @Prop({
+        type: Date,
+        default: null,
+    })
+    deletedAt: Date | null;
+}
+
+export const InvitationMongoSchema = SchemaFactory.createForClass(
+    InvitationMongoDocument,
+);
+
+export const InvitationMongoModelName = 'Invitation';

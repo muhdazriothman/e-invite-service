@@ -1,0 +1,27 @@
+{
+    "moduleFileExtensions": [
+        "js",
+        "json",
+        "ts"
+    ],
+    "rootDir": ".",
+    "testEnvironment": "node",
+    "testRegex": ".e2e-spec.ts$",
+    "transform": {
+        "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "setupFiles": [
+        "<rootDir>/setup-env.ts"
+    ],
+    "moduleNameMapper": {
+        "^@auth/(.*)$": "<rootDir>/../src/packages/auth/$1",
+        "^@shared/(.*)$": "<rootDir>/../src/packages/shared/$1",
+        "^@flight/(.*)$": "<rootDir>/../src/packages/flight/$1",
+        "^@invitation/(.*)$": "<rootDir>/../src/packages/invitation/$1",
+        "^@modules/(.*)$": "<rootDir>/../src/modules/$1",
+        "^@test/(.*)$": "<rootDir>/$1",
+        "^@user/(.*)$": "<rootDir>/../src/packages/user/$1",
+        "^@/(.*)$": "<rootDir>/../src/$1",
+        "^test/(.*)$": "<rootDir>/$1"
+    }
+}

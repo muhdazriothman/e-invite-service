@@ -1,30 +1,128 @@
+// @ts-check
+import eslint from '@eslint/js';
+import importPlugin from 'eslint-plugin-import';
+import importNewlinesPlugin from 'eslint-plugin-import-newlines';
+import newlineDestructuringPlugin from 'eslint-plugin-newline-destructuring';
 import globals from 'globals';
-import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-/** @type {import('eslint').Linter.Config[]} */
-export default [
-    { files: ['**/*.{js,mjs,cjs,ts}'] },
-    { languageOptions: { globals: globals.browser } },
-    pluginJs.configs.recommended,
-    ...tseslint.configs.recommended,
+export default tseslint.config(
+    {
+        ignores: ['eslint.config.mjs', 'dist/**', 'jest.config.js'],
+    },
+    eslint.configs.recommended,
+    ...tseslint.configs.recommendedTypeChecked,
+    {
+        plugins: {
+            import: importPlugin,
+            'import-newlines': importNewlinesPlugin,
+            'newline-destructuring': newlineDestructuringPlugin,
+        },
+        languageOptions: {
+            globals: {
+                ...globals.node,
+                ...globals.jest,
+            },
+            sourceType: 'commonjs',
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+    },
     {
         rules: {
-            'semi': ['error', 'always'],
-            'quotes': ['error', 'single'],
-            'eqeqeq': ['error', 'always'],
-            'no-console': 'warn',
-            'curly': ['error', 'all'],
-            '@typescript-eslint/no-unused-vars': ['error'],
-            '@typescript-eslint/explicit-function-return-type': 'warn',
-            '@typescript-eslint/no-explicit-any': 'error',
-            'comma-dangle': ['error', 'never'],
-            'newline-before-return': 'error',
-            'require-await': 'error',
-            'padding-line-between-statements': [
+            // TypeScript rules
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-floating-promises': 'warn',
+            '@typescript-eslint/no-unsafe-argument': 'warn',
+
+            // Import organization rules
+            'import/order': [
                 'error',
-                { blankLine: 'always', prev: 'block-like', next: '*' }
-            ]
-        }
-    }
-];
+                {
+                    groups: [
+                        'builtin',
+                        'external',
+                        'internal',
+                        'parent',
+                        'sibling',
+                        'index',
+                    ],
+                    'newlines-between': 'always',
+                    alphabetize: {
+                        order: 'asc',
+                        caseInsensitive: true,
+                    },
+                },
+            ],
+            'import/newline-after-import': 'error',
+            'import/no-duplicates': 'error',
+            'import-newlines/enforce': [
+                'error',
+                {
+                    items: 1,
+                    maxLen: 100,
+                    semi: true,
+                },
+            ],
+
+            // Code formatting rules (replacing Prettier)
+            'quotes': ['error', 'single'],
+            'comma-dangle': ['error', 'always-multiline'],
+            'semi': ['error', 'always'],
+            'indent': ['error', 4, {
+                'ignoredNodes': [
+                    'PropertyDefinition[decorators.length > 0]',
+                    'PropertyDefinition[decorators.length > 0] > .key',
+                    'PropertyDefinition[decorators.length > 0] > .value'
+                ],
+                'SwitchCase': 1
+            }],
+            'no-trailing-spaces': 'error',
+            'eol-last': 'error',
+            'object-curly-spacing': ['error', 'always'],
+            'array-bracket-spacing': ['error', 'never'],
+            'comma-spacing': ['error', { before: false, after: true }],
+            'key-spacing': ['error', { beforeColon: false, afterColon: true }],
+            'space-before-blocks': 'error',
+            'space-before-function-paren': ['error', 'always'],
+            'keyword-spacing': ['error', { before: true, after: true }],
+            'space-in-parens': ['error', 'never'],
+            'space-infix-ops': 'error',
+            'space-unary-ops': 'error',
+            'spaced-comment': ['error', 'always'],
+            'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
+            'max-len': ['error', { code: 150, ignoreUrls: true, ignoreStrings: true }],
+            'no-console': 'error',
+            'no-nested-ternary': 'error',
+            'operator-linebreak': ['error', 'after'],
+            'arrow-parens': ['error', 'always'],
+            'object-property-newline': ['error', { allowMultiplePropertiesPerLine: false }],
+            'object-curly-newline': ['error', {
+                minProperties: 2,
+                multiline: true,
+                consistent: true,
+            }],
+            'newline-destructuring/newline': ['error', {
+                items: 1,
+                consistent: true,
+            }],
+            'class-methods-use-this': 'error',
+            'padding-line-between-statements': ['error', {
+                blankLine: 'always',
+                prev: 'multiline-expression',
+                next: 'multiline-expression',
+            }],
+        },
+    },
+    {
+        files: ['**/*.spec.ts', '**/*.test.ts', '**/test/**/*.ts'],
+        rules: {
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+        },
+    },
+);

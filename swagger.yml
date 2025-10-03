@@ -1,0 +1,220 @@
+openapi: 3.0.3
+info:
+  title: Air Travel API
+  version: 1.0.0
+  description: API for air travel services including flight search, booking, and management
+
+servers:
+  - url: http://localhost:3000
+
+tags:
+  - name: Authentication
+    description: Authentication related endpoints
+  - name: Flight
+    description: Flight related endpoints
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login with credentials
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: admin
+                password:
+                  type: string
+                  example: admin
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid credentials"
+                  error:
+                    type: string
+                    example: "Unauthorized"
+                  statusCode:
+                    type: integer
+                    example: 401
+
+  /flight/search:
+    get:
+      tags:
+        - Flight
+      summary: Search for round-trip flights
+      parameters:
+        - name: departureDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: 2025-05-15
+        - name: returnDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: 2025-05-27
+        - name: origin
+          in: query
+          required: true
+          schema:
+            type: string
+            example: origin
+        - name: originId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: originId
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+            example: destination
+        - name: destinationId
+          in: query
+          required: true
+          schema:
+            type: string
+            example: destinationId
+      responses:
+        '200':
+          description: List of available round-trip flights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statusCode:
+                    type: integer
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "11442-2505121038--32573-1-12240-2505121708|12240-2505152130--32573-1-12712-2505161528"
+                        legs:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              arrival:
+                                type: string
+                                format: date-time
+                              departure:
+                                type: string
+                                format: date-time
+                              originCode:
+                                type: string
+                              originName:
+                                type: string
+                              destinationCode:
+                                type: string
+                              destinationName:
+                                type: string
+                              durationInMinutes:
+                                type: integer
+                              stopCount:
+                                type: integer
+                              segments:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    arrival:
+                                      type: string
+                                      format: date-time
+                                    departure:
+                                      type: string
+                                      format: date-time
+                                    originCode:
+                                      type: string
+                                    originName:
+                                      type: string
+                                    destinationCode:
+                                      type: string
+                                    destinationName:
+                                      type: string
+                                    carrier:
+                                      type: string
+                                    flightNumber:
+                                      type: string
+                        price:
+                          type: number
+                        priceFormatted:
+                          type: string
+                        priceAfterDiscount:
+                          type: number
+                        priceAfterDiscountFormatted:
+                          type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "departureDate must be in the future"
+                  error:
+                    type: string
+                    example: "Bad Request"
+                  statusCode:
+                    type: integer
+                    example: 400
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  statusCode:
+                    type: integer
+                    example: 500
